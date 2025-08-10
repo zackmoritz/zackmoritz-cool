@@ -22,23 +22,20 @@ function loadLocal(){ try{ const raw=localStorage.getItem(APP_KEY); return raw?J
 const $ = s => document.querySelector(s);
 function toast(msg){ const el=$('.toast'); if(!el) return; el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),1200); }
 
-// ---- Required habits (your desired order) -----------------------------------
+// ---- Required habits (your desired order)
 const requiredHabits = [
-  { id:'h-chastity',  title:'Law of Chastity (daily)',     schedule:'daily',  type:'check',   target:1,   difficulty:3, archived:false },
-  { id:'h-read',      title:'Read (100 min/day)',          schedule:'daily',  type:'minutes', target:100, difficulty:2, archived:false },
-  { id:'h-audio',     title:'Audiobook (60–120 min/day)',  schedule:'daily',  type:'minutes', target:60,  difficulty:2, archived:false },
-  { id:'h-yoga',      title:'Yoga: 3 poses (daily)',       schedule:'daily',  type:'check',   target:1,   difficulty:2, archived:false },
-  { id:'h-taichi',    title:'Tai Chi (8 min/day)',         schedule:'daily',  type:'minutes', target:8,   difficulty:2, archived:false },
-  { id:'h-kungfu',    title:'Kung Fu footwork',            schedule:'daily',  type:'check',   target:1,   difficulty:2, archived:false },
-  { id:'h-deepsquat', title:'Deep squat (5 min)',          schedule:'daily',  type:'minutes', target:5,   difficulty:2, archived:false },
   { id:'h-earthing',  title:'Earthing (5 min/day)',        schedule:'daily',  type:'minutes', target:5,   difficulty:1, archived:false },
-
-  // keep the rest (after your top 8)
-  { id:'h-run',       title:'Run 5k (weekly)',             schedule:'weekly', type:'check',   target:1,   difficulty:3, archived:false },
   { id:'h-meditate',  title:'Meditate (10 min/day)',       schedule:'daily',  type:'minutes', target:10,  difficulty:2, archived:false },
-  { id:'h-workout',   title:'Working out',                 schedule:'daily',  type:'check',   target:1,   difficulty:2, archived:false }
+  { id:'h-workout',   title:'Working out',                 schedule:'daily',  type:'check',   target:1,   difficulty:2, archived:false },
+  { id:'h-run',       title:'Run 5k (weekly)',             schedule:'weekly', type:'check',   target:1,   difficulty:3, archived:false },
+  { id:'h-deepsquat', title:'Deep squat (5 min)',          schedule:'daily',  type:'minutes', target:5,   difficulty:2, archived:false },
+  { id:'h-kungfu',    title:'Kung Fu footwork',            schedule:'daily',  type:'check',   target:1,   difficulty:2, archived:false },
+  { id:'h-taichi',    title:'Tai Chi (8 min/day)',         schedule:'daily',  type:'minutes', target:8,   difficulty:2, archived:false },
+  { id:'h-yoga',      title:'Yoga: 3 poses (daily)',       schedule:'daily',  type:'check',   target:1,   difficulty:2, archived:false },
+  { id:'h-audio',     title:'Audiobook (60–120 min/day)',  schedule:'daily',  type:'minutes', target:60,  difficulty:2, archived:false },
+  { id:'h-read',      title:'Read (100 min/day)',          schedule:'daily',  type:'minutes', target:100, difficulty:2, archived:false },
+  { id:'h-chastity',  title:'Law of Chastity (daily)',     schedule:'daily',  type:'check',   target:1,   difficulty:3, archived:false }
 ];
-
 const defaultData = {
   createdAt: new Date().toISOString(),
   xp: 0, coins: 0,
@@ -81,7 +78,14 @@ function calcXP({difficulty=1, proportion=1}){
 }
 
 // ---- Ensure required habits exist + enforce order ---------------------------
-function ensureRequired(){
+function ensureRequired()function enforceHabitOrder(){
+  const order = new Map(requiredHabits.map((h,i)=>[h.id, i]));
+  state.habits.sort((a,b)=>{
+    const ai = order.has(a.id) ? order.get(a.id) : 9999;
+    const bi = order.has(b.id) ? order.get(b.id) : 9999;
+    return ai - bi;
+  });
+}{
   if (!Array.isArray(state.habits)) state.habits = [];
   const have = new Set(state.habits.map(h=>h.id));
   requiredHabits.forEach(req=>{ if(!have.has(req.id)) state.habits.push({...req}); });
