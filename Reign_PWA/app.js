@@ -1,6 +1,7 @@
-// Reign Safe Mode — minimal, cloud-first, KV save/load, habits playable
+// Reign Safe Mode vSM2 — cloud-first + debounced cloud save
 const CREDS = { userId: 'zack', token: 'test-token-123' };
 const APP_KEY = 'reign-safe-state';
+
 const defaultHabits = [
   { id:'h-read',      title:'Read (100 min/day)',  schedule:'daily',  type:'minutes', target:100, difficulty:2, archived:false },
   { id:'h-meditate',  title:'Meditate (10 min)',   schedule:'daily',  type:'minutes', target:10,  difficulty:2, archived:false },
@@ -33,14 +34,22 @@ async function api(path, body){
   return res.json();
 }
 async function cloudLoad(){ try{ return await api('/api/load', CREDS); }catch{ return null; } }
-async function cloudSave(){ try{ await api('/api/save', {...CREDS, state}); }catch(e){ console.warn('save failed', e); } }
+
+// Debounced save so we don’t spam KV
+let saveTimer = null;
+async function cloudSaveNow(){ try{ await api('/api/save', {...CREDS, state}); }catch(e){ console.warn('save failed', e); } }
+function cloudSaveDebounced(){
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(cloudSaveNow, 400);
+}
 
 function saveLocal(){ localStorage.setItem(APP_KEY, JSON.stringify(state)); }
 function loadLocal(){
   try { const raw = localStorage.getItem(APP_KEY); return raw ? JSON.parse(raw) : null; } catch { return null; }
 }
 
-function mergeInRequiredHabits(){
+function mergeDefaults(){
+  if (!Array.isArray(state.habits)) state.habits = [];
   const have = new Set(state.habits.map(h=>h.id));
   defaultHabits.forEach(r => { if (!have.has(r.id)) state.habits.push({...r}); });
   state.habits.forEach(h => { if (defaultHabits.some(r => r.id===h.id)) h.archived=false; });
@@ -58,8 +67,14 @@ function complete(h, minutes){
   const base = 10 + h.difficulty*5;
   const xp = Math.round(base * proportion);
   const coins = Math.max(1, Math.ceil(xp/10));
+
   state.completions.push({ id: crypto.randomUUID(), habitId: h.id, value: val, dateISO: new Date().toISOString(), xp, coins });
-  state.xp += xp; state.coins = (state.coins||0) + coins;
+  state.xp += xp;
+  state.coins = (state.coins||0) + coins;
+
+  // history (for future charts)
+  const k = todayKey(); if(!state.history[k]) state.history[k] = { xp:0, coins:0 };
+  state.history[k].xp += xp; state.history[k].coins = (state.history[k].coins||0) + coins;
 }
 
 function renderToday(){
@@ -72,56 +87,65 @@ function renderToday(){
       <div class="meta">${h.schedule==='daily'?'Daily':'Weekly'} • Diff ${h.difficulty}</div>
       <div class="controls"></div>`;
     const ctr = card.querySelector('.controls');
+
     if (h.type==='minutes'){
       const input = document.createElement('input'); input.type='number'; input.placeholder=`${h.target} min`; input.min='1';
       const btn = document.createElement('button'); btn.textContent = due ? 'Log minutes' : 'Done';
       btn.onclick = async ()=>{
         if (!due) { toast('Already completed today'); return; }
         const mins = parseInt(input.value||`${h.target}`, 10);
-        complete(h, mins); saveLocal(); renderHeader(); renderToday(); await cloudSave(); toast(`+${mins}m ✅`);
+        complete(h, mins);
+        saveLocal(); cloudSaveDebounced();
+        renderHeader(); renderToday();
+        toast(`+${mins}m • +XP`);
       };
       ctr.append(input, btn);
     } else {
       const btn = document.createElement('button'); btn.textContent = due ? 'Complete' : 'Done';
       btn.onclick = async ()=>{
         if (!due) { toast('Already completed today'); return; }
-        complete(h, 1); saveLocal(); renderHeader(); renderToday(); await cloudSave(); toast('+XP ✅');
+        complete(h, 1);
+        saveLocal(); cloudSaveDebounced();
+        renderHeader(); renderToday();
+        toast('+XP');
       };
       ctr.append(btn);
     }
+
     wrap.append(card);
   });
 }
 
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-// FIXED boot(): always shows defaults if cloud/local are empty
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// Cloud-first boot (with fallbacks)
 async function boot(){
   let remote = null;
   try { remote = await cloudLoad(); } catch(e) { console.warn('cloud load failed', e); }
 
   if (remote && Array.isArray(remote.habits) && remote.habits.length) {
-    state = remote;                   // use cloud if it has habits
+    state = remote;               // prefer cloud
   } else {
-    state = loadLocal();              // else try local
-    if (!state || !Array.isArray(state.habits) || !state.habits.length) {
-      state = {...defaultState};      // final fallback: defaults
-    }
+    state = loadLocal() || {...defaultState};  // fallback to local or defaults
   }
 
-  mergeInRequiredHabits(); // ensure Read/Meditate/Deep Squat exist
-  saveLocal();             // keep a local copy
-  await cloudSave();       // push to KV too
+  mergeDefaults();  // guarantee Read/Meditate/Deep Squat present
+  saveLocal();      // keep a local copy
+  cloudSaveDebounced(); // push to KV soon
+
   renderHeader();
   renderToday();
 }
-// <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-document.getElementById('sync-cloud').onclick = async()=>{
+$('#sync-cloud').onclick = async()=>{
   const remote = await cloudLoad();
-  if (remote){ state = remote; mergeInRequiredHabits(); saveLocal(); renderHeader(); renderToday(); toast('Synced'); }
-  else toast('No cloud data');
+  if (remote){
+    state = remote; mergeDefaults(); saveLocal(); renderHeader(); renderToday(); toast('Synced from cloud');
+  } else toast('No cloud data');
 };
-document.getElementById('push-cloud').onclick = async()=>{ saveLocal(); await cloudSave(); toast('Saved'); };
+$('#push-cloud').onclick = async()=>{
+  saveLocal(); await cloudSaveNow(); toast('Saved to cloud');
+};
+
+// Bonus: auto-save on backgrounding the app
+document.addEventListener('visibilitychange', ()=>{ if (document.visibilityState === 'hidden') { saveLocal(); cloudSaveNow(); } });
 
 boot();
