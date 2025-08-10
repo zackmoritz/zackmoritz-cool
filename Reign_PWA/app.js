@@ -1,4 +1,4 @@
-// Reign v1.2.22 — local-day bucketing (no midnight jumps) + cloud-first + full UI hooks
+// Reign v1.2.30 — local-day bucketing (no midnight jumps) + cloud-first + full UI + Settings: Clear Today
 
 // ---- Cloud + storage --------------------------------------------------------
 const APP_KEY = 'reign-data-v1';
@@ -66,6 +66,8 @@ function localWeekKey(d = new Date()){ // Monday start
   dt.setDate(dt.getDate() - diff);
   return localDayKey(dt);
 }
+// Parse yyyy-mm-dd as LOCAL date (Safari treats Date('yyyy-mm-dd') as UTC)
+function dateFromKey(k){ const [y,m,d]=k.split('-').map(n=>parseInt(n,10)); return new Date(y, m-1, d); }
 
 // ---- Game math --------------------------------------------------------------
 function levelFromXP(xp){ return Math.floor(Math.sqrt(xp/50)) + 1; }
@@ -92,7 +94,9 @@ function isDue(h){
   }
   if (h.schedule === 'weekly') {
     const wk = localWeekKey();
-    return !state.completions.some(c => c.habitId === h.id && localWeekKey(new Date(c.dayKey)) === wk);
+    return !state.completions.some(c =>
+      c.habitId === h.id && localWeekKey(dateFromKey(c.dayKey)) === wk
+    );
   }
   return true;
 }
@@ -236,7 +240,7 @@ function render(){
   // Progress numbers + chart
   const weekStart=localWeekKey(new Date());
   let weekXP=0; Object.entries(state.history||{}).forEach(([k,v])=>{
-    if(localWeekKey(new Date(k))===weekStart) weekXP += v.xp||0;
+    if(localWeekKey(dateFromKey(k))===weekStart) weekXP += v.xp||0;
   });
   const allXP = state.xp||0;
   const dailyStreak = calcDailyStreak();
@@ -312,34 +316,46 @@ function wireForms(){
 
   saveLocal(); cloudSave(); render();
 })();
-document.getElementById('clear-today-btn').addEventListener('click', () => {
-  if (!confirm('Clear all completions for today? This cannot be undone.')) return;
 
-  const today = (typeof localDayKey==='function')
-    ? localDayKey(new Date())
-    : new Date().toISOString().slice(0,10);
+// ---- Settings: Clear Today (safe, idempotent wiring) -----------------------
+(function setupClearToday(){
+  function handler(){
+    const today = (typeof localDayKey==='function')
+      ? localDayKey(new Date())
+      : new Date().toISOString().slice(0,10);
 
-  const removed = (state.completions||[]).filter(c =>
-    (c.dayKey ? c.dayKey===today : (c.dateISO||'').slice(0,10)===today)
-  );
+    const removed = (state.completions||[]).filter(c =>
+      (c.dayKey ? c.dayKey===today : (c.dateISO||'').slice(0,10)===today)
+    );
+    const xpBack   = removed.reduce((a,c)=>a+(c.xp||0),0);
+    const coinBack = removed.reduce((a,c)=>a+(c.coins||0),0);
 
-  const xpBack   = removed.reduce((a,c)=>a+(c.xp||0),0);
-  const coinBack = removed.reduce((a,c)=>a+(c.coins||0),0);
+    state.completions = (state.completions||[]).filter(c =>
+      (c.dayKey ? c.dayKey!==today : (c.dateISO||'').slice(0,10)!==today)
+    );
 
-  state.completions = (state.completions||[]).filter(c =>
-    (c.dayKey ? c.dayKey!==today : (c.dateISO||'').slice(0,10)!==today)
-  );
+    if (!state.history) state.history = {};
+    state.history[today] = { xp:0, coins:0 };
 
-  if (!state.history) state.history = {};
-  state.history[today] = { xp:0, coins:0 };
+    state.xp    = Math.max(0, (state.xp||0) - xpBack);
+    state.coins = Math.max(0, (state.coins||0) - coinBack);
 
-  state.xp    = Math.max(0, (state.xp||0) - xpBack);
-  state.coins = Math.max(0, (state.coins||0) - coinBack);
+    if (!Array.isArray(state.badges)) state.badges = [];
+    saveLocal(); cloudSave(); render();
+    alert('Cleared today — you can redo your habits now.');
+  }
 
-  if (!Array.isArray(state.badges)) state.badges = [];
-  if (typeof saveLocal==='function') saveLocal();
-  if (typeof cloudSave==='function') cloudSave();
-  if (typeof render==='function') render();
+  function attach(){
+    const btn = document.getElementById('clear-today-btn');
+    if (btn && !btn._wired) {
+      btn._wired = true;
+      btn.addEventListener('click', ()=> {
+        if (!confirm('Clear all completions for today? This cannot be undone.')) return;
+        handler();
+      });
+    }
+  }
 
-  alert('Cleared today — you can redo your habits now.');
-});
+  if (document.readyState !== 'loading') attach();
+  else document.addEventListener('DOMContentLoaded', attach);
+})();
