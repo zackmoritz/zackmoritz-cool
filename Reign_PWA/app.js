@@ -24,17 +24,14 @@ function toast(msg){ const el=$('.toast'); if(!el) return; el.textContent=msg; e
 
 // ---- Required habits --------------------------------------------------------
 const requiredHabits = [
+  { id:'h-chastity',  title:'Law of Chastity (daily)',     schedule:'daily',  type:'check',   target:1,   difficulty:3, archived:false },
   { id:'h-read',      title:'Read (100 min/day)',          schedule:'daily',  type:'minutes', target:100, difficulty:2, archived:false },
   { id:'h-audio',     title:'Audiobook (60–120 min/day)',  schedule:'daily',  type:'minutes', target:60,  difficulty:2, archived:false },
-  { id:'h-kungfu',    title:'Kung Fu footwork',            schedule:'daily',  type:'check',   target:1,   difficulty:2, archived:false },
-  { id:'h-taichi',    title:'Tai Chi (8 min/day)',         schedule:'daily',  type:'minutes', target:8,   difficulty:2, archived:false },
-  { id:'h-chastity',  title:'Law of Chastity (daily)',     schedule:'daily',  type:'check',   target:1,   difficulty:3, archived:false },
-  { id:'h-run',       title:'Run 5k (weekly)',             schedule:'weekly', type:'check',   target:1,   difficulty:3, archived:false },
-  { id:'h-meditate',  title:'Meditate (10 min/day)',       schedule:'daily',  type:'minutes', target:10,  difficulty:2, archived:false },
-  { id:'h-earthing',  title:'Earthing (5 min/day)',        schedule:'daily',  type:'minutes', target:5,   difficulty:1, archived:false },
   { id:'h-yoga',      title:'Yoga: 3 poses (daily)',       schedule:'daily',  type:'check',   target:1,   difficulty:2, archived:false },
-  { id:'h-workout',   title:'Working out',                 schedule:'daily',  type:'check',   target:1,   difficulty:2, archived:false },
-  { id:'h-deepsquat', title:'Deep squat (5 min)',          schedule:'daily',  type:'minutes', target:5,   difficulty:2, archived:false }
+  { id:'h-taichi',    title:'Tai Chi (8 min/day)',         schedule:'daily',  type:'minutes', target:8,   difficulty:2, archived:false },
+  { id:'h-kungfu',    title:'Kung Fu footwork',            schedule:'daily',  type:'check',   target:1,   difficulty:2, archived:false },
+  { id:'h-deepsquat', title:'Deep squat (5 min)',          schedule:'daily',  type:'minutes', target:5,   difficulty:2, archived:false },
+  { id:'h-earthing',  title:'Earthing (5 min/day)',        schedule:'daily',  type:'minutes', target:5,   difficulty:1, archived:false }
 ];
 
 const defaultData = {
