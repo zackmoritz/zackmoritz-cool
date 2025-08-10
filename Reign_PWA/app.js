@@ -312,3 +312,34 @@ function wireForms(){
 
   saveLocal(); cloudSave(); render();
 })();
+document.getElementById('clear-today-btn').addEventListener('click', () => {
+  if (!confirm('Clear all completions for today? This cannot be undone.')) return;
+
+  const today = (typeof localDayKey==='function')
+    ? localDayKey(new Date())
+    : new Date().toISOString().slice(0,10);
+
+  const removed = (state.completions||[]).filter(c =>
+    (c.dayKey ? c.dayKey===today : (c.dateISO||'').slice(0,10)===today)
+  );
+
+  const xpBack   = removed.reduce((a,c)=>a+(c.xp||0),0);
+  const coinBack = removed.reduce((a,c)=>a+(c.coins||0),0);
+
+  state.completions = (state.completions||[]).filter(c =>
+    (c.dayKey ? c.dayKey!==today : (c.dateISO||'').slice(0,10)!==today)
+  );
+
+  if (!state.history) state.history = {};
+  state.history[today] = { xp:0, coins:0 };
+
+  state.xp    = Math.max(0, (state.xp||0) - xpBack);
+  state.coins = Math.max(0, (state.coins||0) - coinBack);
+
+  if (!Array.isArray(state.badges)) state.badges = [];
+  if (typeof saveLocal==='function') saveLocal();
+  if (typeof cloudSave==='function') cloudSave();
+  if (typeof render==='function') render();
+
+  alert('Cleared today — you can redo your habits now.');
+});
