@@ -1,45 +1,94 @@
-<!-- At the top of your index.html body -->
-<h1>Reign PWA v1.2.17 — GitHub Test</h1>
-<p style="color: lime;">✅ This came from the GitHub repo.</p>
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Reign — Safe Mode</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Reign</title>
   <meta name="theme-color" content="#111827" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-	<h1>Reign — Safe Mode (Git Deploy Test)</h1>
-<p class="hint">Cloud‑first · KV save/load · vSM2</p>
-
-<main class="view active">
-  <h2>Today</h2>
-  <div id="today" class="cards"></div>
-</main>
-<section class="panel">
-  <button id="sync-cloud">Sync from Cloud</button>
-  <button id="push-cloud">Push to Cloud</button>
-</section>
-
-<div class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
   <header class="app-header">
-    <div class="brand">♛ Reign — Safe Mode</div>
-    <div class="level-wrap"><span id="level">Lv 1</span> · <span id="xp">0 XP</span></div>
+    <div class="brand"><span class="crown">♛</span><span>Reign</span></div>
+    <div class="level-wrap"><span id="level">Lv 1</span><span id="xp">0 XP</span><span id="coins">0 ⦿</span></div>
   </header>
 
-  <main class="view active">
+  <main id="view-today" class="view active">
     <h2>Today</h2>
-    <div id="today" class="cards"></div>
-    <p class="hint">Cloud-first · KV save/load · vSM1</p>
+    <div id="today-list" class="cards"></div>
+    <div class="hint">v1.2.17 UI • Cloud‑first</div>
   </main>
 
-  <section class="panel">
-    <button id="sync-cloud">Sync from Cloud</button>
-    <button id="push-cloud">Push to Cloud</button>
-  </section>
+  <main id="view-progress" class="view">
+    <h2>Progress</h2>
+    <div class="stats-grid">
+      <div class="stat"><div class="label">Streak (daily)</div><div id="daily-streak" class="value">0</div></div>
+      <div class="stat"><div class="label">This week XP</div><div id="week-xp" class="value">0</div></div>
+      <div class="stat"><div class="label">All-time XP</div><div id="alltime-xp" class="value">0</div></div>
+    </div>
+    <canvas id="weekly-chart" width="400" height="180" aria-label="Weekly XP chart"></canvas>
+    <div class="badges"><h3>Badges</h3><div id="badges" class="badge-row"></div></div>
+  </main>
 
+  <main id="view-rewards" class="view">
+    <h2>Rewards Shop</h2>
+    <div id="rewards-list" class="cards"></div>
+    <form id="reward-form" class="form-row">
+      <input id="reward-title" placeholder="Reward name (e.g., 1 hr YouTube)" required />
+      <input id="reward-cost" type="number" step="1" min="1" placeholder="Cost" required />
+      <button type="submit">Add</button>
+    </form>
+  </main>
+
+  <main id="view-settings" class="view">
+    <h2>Settings</h2>
+    <details open>
+      <summary>Habits & Quests</summary>
+      <div id="habit-admin"></div>
+      <form id="habit-form" class="form-col">
+        <input id="habit-title" placeholder="Title" required />
+        <select id="habit-schedule">
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+        </select>
+        <select id="habit-type">
+          <option value="check">Checklist</option>
+          <option value="minutes">Minutes</option>
+        </select>
+        <input id="habit-target" type="number" min="1" step="1" placeholder="Target (e.g., 100 min)" />
+        <select id="habit-difficulty">
+          <option value="1">Difficulty 1</option>
+          <option value="2" selected>Difficulty 2</option>
+          <option value="3">Difficulty 3</option>
+        </select>
+        <div class="btn-row">
+          <button type="submit">Add Habit</button>
+          <button type="button" id="restore-defaults">Restore Default Habits</button>
+        </div>
+      </form>
+    </details>
+    <details>
+      <summary>Cloud & Data</summary>
+      <div class="btn-row">
+        <button id="sync-from-cloud">Sync from Cloud</button>
+        <button id="push-to-cloud">Push to Cloud</button>
+        <button id="export-btn">Export Backup</button>
+        <input type="file" id="import-file" accept="application/json" />
+        <button id="reset-btn" class="danger">Reset (keep habits)</button>
+      </div>
+    </details>
+  </main>
+
+  <nav class="tabbar">
+    <button data-view="today" class="active">Today</button>
+    <button data-view="progress">Progress</button>
+    <button data-view="rewards">Rewards</button>
+    <button data-view="settings">Settings</button>
+  </nav>
+
+  <div class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
   <script src="app.js"></script>
 </body>
 </html>
