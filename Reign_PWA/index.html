@@ -53,6 +53,7 @@
         <button id="export-btn">Export Backup</button>
         <input type="file" id="import-file" accept="application/json" />
         <button id="reset-btn" class="danger">Reset (keep habits)</button>
+				<button id="clear-today" class="danger">Debug: Clear Today</button>
       </div>
     </details>
   </main>
@@ -66,5 +67,28 @@
 
   <div class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
   <script src="app.js"></script>
+	<script>
+(function(){
+  const b = document.createElement('button');
+  b.textContent = 'Clear Today';
+  b.style.position='fixed'; b.style.right='12px'; b.style.bottom='90px';
+  b.style.zIndex='9999'; b.style.padding='10px 12px';
+  b.style.border='1px solid #1f2937'; b.style.borderRadius='10px';
+  b.style.background='#2a0a0a'; b.style.color='#fca5a5'; b.style.fontWeight='700';
+  b.onclick = function(){
+    const today = (new Date()).toISOString().slice(0,10);
+    const removed = (state.completions||[]).filter(c => c.dateISO?.startsWith(today));
+    const xpBack   = removed.reduce((a,c)=>a+(c.xp||0),0);
+    const coinBack = removed.reduce((a,c)=>a+(c.coins||0),0);
+    state.completions = state.completions.filter(c => !c.dateISO?.startsWith(today));
+    if (state.history && state.history[today]) { state.history[today] = { xp:0, coins:0 }; }
+    state.xp = Math.max(0, (state.xp||0) - xpBack);
+    state.coins = Math.max(0, (state.coins||0) - coinBack);
+    saveLocal(); cloudSave(); render();
+    alert("Cleared today — you can redo your habits now.");
+  };
+  document.body.appendChild(b);
+})();
+</script>
 </body>
 </html>
