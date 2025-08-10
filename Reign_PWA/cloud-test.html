@@ -1,0 +1,45 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Reign Cloud Test</title>
+<style>
+  body{font-family:system-ui;max-width:720px;margin:20px auto;padding:0 12px}
+  input,button,textarea{font:inherit;margin:6px 0}
+  textarea{width:100%;height:200px}
+  .row{display:flex;gap:8px;flex-wrap:wrap}
+</style>
+<h1>Reign Cloud Test</h1>
+<div class="row">
+  <button id="gen">Generate creds</button>
+  <button id="reg">Register</button>
+  <button id="save">Save</button>
+  <button id="load">Load</button>
+</div>
+<label>UserId <input id="uid" size="40"></label><br>
+<label>Token <input id="tok" size="40"></label>
+<h3>State JSON</h3>
+<textarea id="state">{ "hello": "world", "xp": 42 }</textarea>
+<pre id="out"></pre>
+<script>
+const out = document.getElementById('out');
+function log(x){ out.textContent = String(x); }
+document.getElementById('gen').onclick = () => {
+  const uid = crypto.randomUUID();
+  const token = Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b=>b.toString(16).padStart(2,'0')).join('');
+  uidEl.value = uid; tokEl.value = token; log('Generated');
+};
+const uidEl = document.getElementById('uid');
+const tokEl = document.getElementById('tok');
+document.getElementById('reg').onclick = async () => {
+  const r = await fetch('/api/register', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({userId: uidEl.value, token: tokEl.value})});
+  log('Register: ' + r.status);
+};
+document.getElementById('save').onclick = async () => {
+  const state = JSON.parse(document.getElementById('state').value || 'null');
+  const r = await fetch('/api/save', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({userId: uidEl.value, token: tokEl.value, state})});
+  log('Save: ' + r.status);
+};
+document.getElementById('load').onclick = async () => {
+  const r = await fetch('/api/load', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({userId: uidEl.value, token: tokEl.value})});
+  log('Load: ' + r.status + '\n' + await r.text());
+};
+</script>

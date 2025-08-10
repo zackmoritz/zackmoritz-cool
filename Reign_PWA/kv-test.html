@@ -1,0 +1,22 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>KV Test</title>
+<style>body{font-family:system-ui;padding:16px}input,textarea{width:100%}button{padding:10px;margin:6px 0}</style>
+<h1>KV Test</h1>
+<label>User ID</label><input id="uid" value="zack">
+<label>Token</label><input id="tok" value="test-token-123">
+<label>State JSON</label>
+<textarea id="payload">{ "xp": 123, "coins": 7 }</textarea>
+<button id="save">/api/save</button>
+<button id="load">/api/load</button>
+<pre id="out"></pre>
+<script>
+const $ = s => document.querySelector(s);
+async function post(path, body){
+  const res = await fetch(path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const text = await res.text();
+  $('#out').textContent = res.status + ' ' + res.statusText + '\n' + text;
+}
+$('#save').onclick = ()=> post('/api/save', { userId: $('#uid').value, token: $('#tok').value, state: JSON.parse($('#payload').value) });
+$('#load').onclick = ()=> post('/api/load', { userId: $('#uid').value, token: $('#tok').value });
+</script>
