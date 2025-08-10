@@ -1,152 +1,69 @@
-<!doctype html><html lang="en"><head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<title>Reign — Stable</title><meta name="theme-color" content="#111827"/>
-<style>
-:root{--bg:#0b0f17;--fg:#e5e7eb;--muted:#94a3b8;--card:#111827;--accent:#7c3aed;--good:#10b981;--warn:#f59e0b;--border:#1f2937}
-*{box-sizing:border-box}html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Inter}
-.app-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border)}
-.brand{display:flex;gap:8px;align-items:center;font-weight:700}.crown{color:var(--accent)}
-.level-wrap{display:flex;gap:10px;font-size:12px;color:var(--muted)}
-.view{display:none;padding:16px;max-width:820px;margin:0 auto}.view.active{display:block}
-h2{margin:8px 0 12px;font-size:20px}.cards{display:grid;gap:10px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px}
-.card .title{font-weight:600;margin-bottom:6px}.card .meta{font-size:12px;color:var(--muted)}
-.btn{border:1px solid var(--border);background:#0f172a;color:var(--fg);padding:8px 10px;border-radius:10px;font-weight:600}
-.btn.good{border-color:#134e4a;background:#062e2a}.btn.warn{border-color:#4f3421;background:#2a1a09}
-.form-row,.form-col{display:flex;gap:8px;flex-wrap:wrap}.form-col{flex-direction:column;max-width:560px}
-input,select,button{border-radius:10px;border:1px solid var(--border);background:#0f172a;color:#fff;padding:10px 12px}button{cursor:pointer;font-weight:700}
-nav.tabbar{position:fixed;bottom:0;left:0;right:0;background:#0b0f17;border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(4,1fr)}
-nav.tabbar button{padding:12px 6px;border:0;background:transparent;color:var(--muted);font-weight:700}
-nav.tabbar button.active{color:#fff;border-top:2px solid var(--accent)}
-.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px}
-.stat .label{font-size:12px;color:var(--muted)}.stat .value{font-weight:800;font-size:20px}
-.badge-row{display:flex;gap:8px;flex-wrap:wrap}.badge{border:1px dashed var(--border);padding:8px;border-radius:999px;font-size:12px;color:var(--muted)}
-#weekly-chart{width:100%;max-width:720px;border:1px solid var(--border);border-radius:12px;background:#111827;padding:6px}
-.habit-controls{display:flex;gap:8px;align-items:center;margin-top:6px}input[type="number"]{max-width:160px}
-.toast{position:fixed;bottom:72px;left:50%;transform:translateX(-50%);background:#111827;color:#e5e7eb;border:1px solid #1f2937;padding:8px 12px;border-radius:10px;opacity:0;transition:.2s}
-.toast.show{opacity:1;transform:translate(-50%,-6px)}
-</style></head>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Reign</title>
+  <meta name="theme-color" content="#111827" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
 <body>
-<header class="app-header"><div class="brand"><span class="crown">♛</span><span>Reign</span></div>
-<div class="level-wrap"><span id="level">Lv 1</span><span id="xp">0 XP</span><span id="coins">0 ⦿</span></div></header>
+  <header class="app-header">
+    <div class="brand"><span class="crown">♛</span><span>Reign</span></div>
+    <div class="level-wrap"><span id="level">Lv 1</span><span id="xp">0 XP</span><span id="coins">0 ⦿</span></div>
+  </header>
 
-<main id="view-today" class="view active"><h2>Today</h2><div id="today-list" class="cards"></div></main>
-<main id="view-progress" class="view">
-  <h2>Progress</h2>
-  <div class="stats-grid">
-    <div class="stat"><div class="label">Streak (daily)</div><div id="daily-streak" class="value">0</div></div>
-    <div class="stat"><div class="label">This week XP</div><div id="week-xp" class="value">0</div></div>
-    <div class="stat"><div class="label">All-time XP</div><div id="alltime-xp" class="value">0</div></div>
-  </div>
-  <canvas id="weekly-chart" width="400" height="180" aria-label="Weekly XP chart"></canvas>
-  <div class="badges"><h3>Badges</h3><div id="badges" class="badge-row"></div></div>
-</main>
-<main id="view-rewards" class="view">
-  <h2>Rewards Shop</h2>
-  <div id="rewards-list" class="cards"></div>
-  <form id="reward-form" class="form-row">
-    <input id="reward-title" placeholder="Reward name (e.g., 1 hr YouTube)" required />
-    <input id="reward-cost" type="number" step="1" min="1" placeholder="Cost" required />
-    <button type="submit">Add</button>
-  </form>
-</main>
-<main id="view-settings" class="view">
-  <h2>Settings</h2>
-  <details open>
-    <summary>Cloud & Data</summary>
-    <div class="btn-row">
-      <button id="sync-from-cloud">Sync from Cloud</button>
-      <button id="push-to-cloud">Push to Cloud</button>
-      <button id="reset-btn" class="danger">Reset (keep habits)</button>
+  <main id="view-today" class="view active">
+    <h2>Today</h2>
+    <div id="today-list" class="cards"></div>
+    <div class="hint">v1.2.19 — recovered build • Cloud‑first</div>
+  </main>
+
+  <main id="view-progress" class="view">
+    <h2>Progress</h2>
+    <div class="stats-grid">
+      <div class="stat"><div class="label">Streak (daily)</div><div id="daily-streak" class="value">0</div></div>
+      <div class="stat"><div class="label">This week XP</div><div id="week-xp" class="value">0</div></div>
+      <div class="stat"><div class="label">All-time XP</div><div id="alltime-xp" class="value">0</div></div>
     </div>
-  </details>
-</main>
+    <canvas id="weekly-chart" width="400" height="180" aria-label="Weekly XP chart"></canvas>
+    <div class="badges"><h3>Badges</h3><div id="badges" class="badge-row"></div></div>
+  </main>
 
-<nav class="tabbar">
-  <button data-view="today" class="active">Today</button>
-  <button data-view="progress">Progress</button>
-  <button data-view="rewards">Rewards</button>
-  <button data-view="settings">Settings</button>
-</nav>
-<div class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+  <main id="view-rewards" class="view">
+    <h2>Rewards Shop</h2>
+    <div id="rewards-list" class="cards"></div>
+    <form id="reward-form" class="form-row">
+      <input id="reward-title" placeholder="Reward name (e.g., 1 hr YouTube)" required />
+      <input id="reward-cost" type="number" step="1" min="1" placeholder="Cost" required />
+      <button type="submit">Add</button>
+    </form>
+  </main>
 
-<script>
-// ---- Cloud + state helpers ----
-const APP_KEY='reign-data-v1';
-const CREDS={userId:'zack',token:'test-token-123'};
-async function api(p,b){const r=await fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});if(!r.ok)throw new Error(r.status);return r.json();}
-async function cloudLoad(){try{return await api('/api/load',CREDS);}catch{return null;}}
-async function cloudSave(){try{await api('/api/save',{...CREDS,state});}catch{}}
-function saveLocal(){localStorage.setItem(APP_KEY,JSON.stringify(state));}
-function loadLocal(){try{const raw=localStorage.getItem(APP_KEY);return raw?JSON.parse(raw):null;}catch{return null;}}
-function todayKey(d=new Date()){return d.toISOString().slice(0,10);}
-function weekKey(d=new Date()){const dt=new Date(d);const day=dt.getUTCDay();const diff=(day+6)%7;dt.setUTCDate(dt.getUTCDate()-diff);return dt.toISOString().slice(0,10);}
-function levelFromXP(xp){return Math.floor(Math.sqrt(xp/50))+1;}
-function calcXP({difficulty=1,proportion=1}){const base=10;const xp=Math.round((base+difficulty*5)*proportion);const coins=Math.max(1,Math.ceil(xp/10));return {xp,coins};}
-function toast(msg){const el=document.querySelector('.toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),1200);}
+  <main id="view-settings" class="view">
+    <h2>Settings</h2>
+    <details open>
+      <summary>Cloud & Data</summary>
+      <div class="btn-row">
+        <button id="sync-from-cloud">Sync from Cloud</button>
+        <button id="push-to-cloud">Push to Cloud</button>
+        <button id="export-btn">Export Backup</button>
+        <input type="file" id="import-file" accept="application/json" />
+        <button id="reset-btn" class="danger">Reset (keep habits)</button>
+      </div>
+    </details>
+  </main>
 
-// ---- Defaults (your habits) ----
-const requiredHabits=[{id:'h-read',title:'Read (100 min/day)',schedule:'daily',type:'minutes',target:100,difficulty:2,archived:false},
-{id:'h-audio',title:'Audiobook (60–120 min/day)',schedule:'daily',type:'minutes',target:60,difficulty:2,archived:false},
-{id:'h-kungfu',title:'Kung Fu footwork',schedule:'daily',type:'check',target:1,difficulty:2,archived:false},
-{id:'h-taichi',title:'Tai Chi (8 min/day)',schedule:'daily',type:'minutes',target:8,difficulty:2,archived:false},
-{id:'h-chastity',title:'Law of Chastity (daily)',schedule:'daily',type:'check',target:1,difficulty:3,archived:false},
-{id:'h-run',title:'Run 5k (weekly)',schedule:'weekly',type:'check',target:1,difficulty:3,archived:false},
-{id:'h-meditate',title:'Meditate (10 min/day)',schedule:'daily',type:'minutes',target:10,difficulty:2,archived:false},
-{id:'h-earthing',title:'Earthing (5 min/day)',schedule:'daily',type:'minutes',target:5,difficulty:1,archived:false},
-{id:'h-yoga',title:'Yoga: 3 poses (daily)',schedule:'daily',type:'check',target:1,difficulty:2,archived:false},
-{id:'h-workout',title:'Working out',schedule:'daily',type:'check',target:1,difficulty:2,archived:false},
-{id:'h-deepsquat',title:'Deep squat (5 min)',schedule:'daily',type:'minutes',target:5,difficulty:2,archived:false}];
-const defaultData={xp:0,coins:0,completions:[],history:{},habits:requiredHabits.map(h=>({...h})),rewards:[{id:'r-youtube',title:'1 hour YouTube',cost:50},{id:'r-treat',title:'Healthy treat',cost:40}],badges:[]};
-let state=loadLocal()||structuredClone(defaultData);
-function ensureRequired(){const have=new Set(state.habits.map(h=>h.id));requiredHabits.forEach(r=>{if(!have.has(r.id))state.habits.push({...r});});state.habits.forEach(h=>{if(requiredHabits.some(r=>r.id===h.id))h.archived=false;});}
+  <nav class="tabbar">
+    <button data-view="today" class="active">Today</button>
+    <button data-view="progress">Progress</button>
+    <button data-view="rewards">Rewards</button>
+    <button data-view="settings">Settings</button>
+  </nav>
 
-// ---- Boot cloud-first ----
-(async()=>{const remote=await cloudLoad();if(remote&&Array.isArray(remote.habits)&&remote.habits.length){state=remote;}ensureRequired();saveLocal();await cloudSave();render();})();
-
-// ---- Rendering & actions ----
-function isDue(h){const now=new Date();if(h.schedule==='daily')return !state.completions.some(c=>c.habitId===h.id&&c.dateISO.startsWith(todayKey(now)));if(h.schedule==='weekly'){const wk=weekKey(now);return !state.completions.some(c=>c.habitId===h.id&&weekKey(new Date(c.dateISO))===wk);}return true;}
-function addHistory(xp,coins){const k=todayKey();if(!state.history[k])state.history[k]={xp:0,coins:0};state.history[k].xp+=xp;state.history[k].coins=(state.history[k].coins||0)+coins;}
-function completeHabit(h,value,prop){const {xp,coins}=calcXP({difficulty:h.difficulty,proportion:prop});state.completions.push({id:crypto.randomUUID(),habitId:h.id,value,dateISO:new Date().toISOString(),xp,coins});state.xp+=xp;state.coins+=coins;addHistory(xp,coins);saveLocal();cloudSave();render();}
-
-function render(){
-  document.getElementById('level').textContent=`Lv ${levelFromXP(state.xp)}`;
-  document.getElementById('xp').textContent=`${state.xp} XP`;document.getElementById('coins').textContent=`${state.coins} ⦿`;
-  const list=document.getElementById('today-list');list.innerHTML='';
-  state.habits.filter(h=>!h.archived).forEach(h=>{
-    const due=isDue(h);const card=document.createElement('div');card.className='card';
-    card.innerHTML=`<div class="title">${h.title}</div><div class="meta">${h.schedule==='daily'?'Daily':'Weekly'} • Diff ${h.difficulty}</div>`;
-    const controls=document.createElement('div');controls.className='habit-controls';
-    if(h.type==='minutes'){const input=document.createElement('input');input.type='number';input.placeholder=`${h.target||30} min`;input.min='1';
-      const btn=document.createElement('button');btn.textContent=due?'Log minutes':'Done';btn.className='btn '+(due?'good':'warn');
-      btn.addEventListener('click',(ev)=>{ev.preventDefault();ev.stopPropagation();if(!isDue(h)){toast('Already completed');return;}const mins=parseInt(input.value||`${h.target||30}`,10);const prop=h.target?Math.min(1,mins/Number(h.target)):Math.min(1,mins/30);completeHabit(h,mins,prop);});
-      controls.append(input,btn);
-    } else { // CHECKLIST (Kung Fu etc.) — hardened click
-      const btn=document.createElement('button');btn.textContent=due?'Complete':'Done';btn.className='btn '+(due?'good':'warn');
-      btn.addEventListener('click',(ev)=>{ev.preventDefault();ev.stopPropagation();/*allow force complete for testing*/ if(!isDue(h)) {toast('Already completed'); return;} completeHabit(h,1,1);});
-      controls.append(btn);
-    }
-    card.append(controls);list.append(card);
-  });
-  renderProgress();renderBadges();wireTabs();
-}
-
-function renderProgress(){
-  const weekStart=weekKey(new Date());let weekXP=0,allXP=state.xp;Object.entries(state.history).forEach(([k,v])=>{if(weekKey(new Date(k))===weekStart)weekXP+=v.xp;});
-  document.getElementById('week-xp').textContent=weekXP;document.getElementById('alltime-xp').textContent=allXP;document.getElementById('daily-streak').textContent=calcDailyStreak();drawWeeklyChart();
-}
-function calcDailyStreak(){let s=0;const todayD=new Date(todayKey());for(let i=0;i<365;i++){const d=new Date(todayD);d.setUTCDate(todayD.getUTCDate()-i);const k=todayKey(d);const did=state.completions.some(c=>{const hd=state.habits.find(h=>h.id===c.habitId);return hd?.schedule==='daily'&&c.dateISO.startsWith(k);});if(did)s++;else break;}return s;}
-function drawWeeklyChart(){const cvs=document.getElementById('weekly-chart');const ctx=cvs.getContext('2d');ctx.clearRect(0,0,cvs.width,cvs.height);const labels=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];const start=new Date(weekKey(new Date()));const vals=[];for(let i=0;i<7;i++){const d=new Date(start);d.setUTCDate(start.getUTCDate()+i);const k=todayKey(d);vals.push(state.history[k]?.xp||0);}const max=Math.max(10,...vals),w=cvs.width,h=cvs.height,pad=24,barW=(w-pad*2)/(vals.length*1.5);labels.forEach((lab,i)=>{const x=pad+i*barW*1.5+barW/2;const v=vals[i];const bh=(h-pad*2)*(v/max);ctx.fillStyle='#7c3aed';ctx.fillRect(x,h-pad-bh,barW,bh);ctx.fillStyle='#94a3b8';ctx.font='12px system-ui';ctx.textAlign='center';ctx.fillText(lab,x+barW/2,h-6);if(v>0){ctx.fillStyle='#e5e7eb';ctx.fillText(String(v),x+barW/2,h-pad-bh-6);}});}
-function checkBadges(){const total=state.completions.length;const streak=calcDailyStreak();const grant=(code,name)=>{if(!state.badges.some(b=>b.code===code))state.badges.push({code,name,earnedAt:new Date().toISOString()});};if(total>=1)grant('first-blood','First Quest');if(streak>=7)grant('flame-7','7-day Streak');if(streak>=30)grant('flame-30','30-day Streak');}
-function renderBadges(){const row=document.getElementById('badges');row.innerHTML='';(state.badges||[]).forEach(b=>{const el=document.createElement('div');el.className='badge';el.textContent=b.name||b.code;row.append(el);});}
-function wireTabs(){document.querySelectorAll('nav.tabbar button').forEach(btn=>{btn.onclick=()=>{document.querySelectorAll('nav.tabbar button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');const view=btn.dataset.view;document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(`view-${view}`).classList.add('active');};});}
-
-// Buttons
-document.getElementById('reward-form').addEventListener('submit',(e)=>{e.preventDefault();const title=document.getElementById('reward-title').value.trim();const cost=parseInt(document.getElementById('reward-cost').value,10);if(!title||!cost)return;state.rewards.push({id:crypto.randomUUID(),title,cost});saveLocal();cloudSave();render();e.target.reset();});
-document.getElementById('sync-from-cloud').addEventListener('click',async()=>{const r=await cloudLoad();if(r){state=r;ensureRequired();saveLocal();render();toast('Synced from cloud');}else toast('No cloud data');});
-document.getElementById('push-to-cloud').addEventListener('click',()=>{saveLocal();cloudSave();toast('Pushed to cloud');});
-document.getElementById('reset-btn').addEventListener('click',()=>{if(confirm('Reset progress? Keeps habits.')){state.xp=0;state.coins=0;state.completions=[];state.history={};saveLocal();cloudSave();render();toast('Progress reset');}});
-
-</script>
-</body></html>
+  <div class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+  <script src="app.js"></script>
+</body>
+</html>
