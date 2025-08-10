@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Life Reign Pause Menu</title>
+<link rel="manifest" href="manifest.json?v=6.4-1754773221">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=6.4-1754773221">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png?v=6.4-1754773221">
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Life Reign Pause Menu" />
+<link rel="apple-touch-icon" href="icons/icon-192.png?v=6.4-1754773221" />
+<style>
+  :root{ --bg:#0f1115; --panel:#171a21; --border:#262b36; --text:#e7ecf1; --muted:#9aa6b2; --accent:#8cd867; --accent2:#9be77a; }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,system-ui,Inter,Segoe UI,Roboto,Arial,sans-serif}
+  .app{position:fixed; inset:0; display:flex; flex-direction:column; max-width:980px; margin:0 auto; border-left:1px solid var(--border); border-right:1px solid var(--border)}
+  .bar{display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:linear-gradient(180deg,#121a23,#0f141b); border-bottom:1px solid var(--border); box-shadow:0 6px 18px rgba(0,0,0,.25)}
+  .brand{display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.2px}
+  .emblem{width:28px; height:28px; display:inline-block}
+  .cta{padding:10px 14px; border-radius:10px; border:1px solid var(--border); background:#1a232f; text-decoration:none; color:var(--text); box-shadow:inset 0 0 0 1px rgba(255,255,255,.02)}
+  .tabs{display:flex; gap:6px; padding:8px 10px; border-bottom:1px solid var(--border); background:#141924; overflow:auto}
+  .tab{padding:8px 12px; border:1px solid var(--border); border-radius:10px; background:#12161e; color:var(--muted); white-space:nowrap}
+  .tab.active{background:#1a1f29; color:var(--text)}
+  .content{flex:1; background:#0f1218; padding:12px; overflow:auto; display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .card{background:#12161f; border:1px solid var(--border); border-radius:12px; padding:12px}
+  h3{margin:.2rem 0 .6rem 0; font-size:14px}
+  input,select,textarea,button{width:100%; padding:10px 12px; background:#0f131a; color:var(--text); border:1px solid var(--border); border-radius:10px}
+  button{cursor:pointer}
+  .row{display:flex; gap:8px; align-items:center; flex-wrap: wrap;}
+  .small{font-size:12px; color:var(--muted)}
+  .full{grid-column:1 / -1}
+  .stack{display:flex; flex-direction:column; gap:8px}
+  .big{font-size:32px; font-weight:800; line-height:1.1}
+  .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+  .horoscope{font-style:italic; opacity:.95; line-height:1.5}
+  .pill{padding:6px 10px; border-radius:999px; border:1px solid var(--border); background:#10141b}
+  .grid4{display:grid; grid-template-columns:repeat(2,1fr); gap:10px}
+  .tile{display:flex; align-items:center; justify-content:center; padding:16px; border:1px solid var(--border); background:#151b25; border-radius:12px; text-decoration:none; color:var(--text); min-height:74px}
+  .tile:active{transform:translateY(1px)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="bar">
+    <div class="brand">
+      <!-- Custom emblem (crown + play/pause marks) -->
+      <svg class="emblem" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="g" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="#8cd867"/>
+            <stop offset="100%" stop-color="#5fb243"/>
+          </linearGradient>
+        </defs>
+        <circle cx="32" cy="32" r="28" fill="none" stroke="#2b333f" stroke-width="4"/>
+        <path d="M16 28 L24 18 L32 28 L40 18 L48 28 L48 38 L16 38 Z" fill="url(#g)" stroke="#1f2a1f" stroke-width="2"/>
+        <!-- play/pause motif inside crown base -->
+        <rect x="22" y="32" width="6" height="10" rx="1.5" fill="#eaf3eb"/>
+        <polygon points="36,32 44,37 36,42" fill="#eaf3eb"/>
+      </svg>
+      <div>Life Reign Pause Menu</div>
+    </div>
+    <div class="row" style="width:auto">
+      <a id="openReignTop" class="cta" href="http://zackmoritz.cool/Reign_PWA" target="_self" rel="noopener">Open Reign ↗</a>
+    </div>
+  </div>
+  <div class="tabs" id="tabs"></div>
+  <div class="content" id="content"></div>
+</div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const LS = {
+    get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
+    set(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
+  };
+
+  const DEFAULT_REIGN = "http://zackmoritz.cool/Reign_PWA";
+  const PROXIED_ICS = "https://httphandler.zackmoritz.workers.dev/?url=webcal://p142-caldav.icloud.com/published/2/MTYzNTY2Mjg3NzE2MzU2NuFLk20q5hHprkoQ1BjnSDEUNr8fSqeWAPju97w4vZXSG0vIpbInUj-AunuqMxHm0bTuka0xtDZit8i-0uNBNA0";
+  const WORKER_ORIGIN = "https://httphandler.zackmoritz.workers.dev";
+
+  // --- Utilities ---
+  const fmtTime24 = (iso) => new Date(iso).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', hour12:false});
+  const fmtDate = (iso) => new Date(iso).toLocaleDateString([], {weekday:'short', month:'short', day:'numeric'});
+  const weatherCodeMap = {
+    0: 'Clear sky', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
+    45: 'Fog', 48: 'Depositing rime fog',
+    51: 'Light drizzle', 53: 'Moderate drizzle', 55: 'Dense drizzle',
+    56: 'Light freezing drizzle', 57: 'Dense freezing drizzle',
+    61: 'Slight rain', 63: 'Moderate rain', 65: 'Heavy rain',
+    66: 'Light freezing rain', 67: 'Heavy freezing rain',
+    71: 'Slight snow', 73: 'Moderate snow', 75: 'Heavy snow',
+    77: 'Snow grains',
+    80: 'Rain showers (slight)', 81: 'Rain showers (moderate)', 82: 'Rain showers (violent)',
+    85: 'Snow showers (slight)', 86: 'Snow showers (heavy)',
+    95: 'Thunderstorm', 96: 'T-storm slight hail', 97: 'T-storm heavy hail'
+  };
+  const weatherEmoji = (code) => {
+    if ([0,1].includes(code)) return '☀️';
+    if (code===2) return '🌤️';
+    if ([3,45,48].includes(code)) return '☁️';
+    if ([51,53,55,61,63,65,80,81,82].includes(code)) return '🌧️';
+    if ([71,73,75,77,85,86].includes(code)) return '❄️';
+    if ([95,96,97].includes(code)) return '⛈️';
+    return '🌡️';
+  };
+
+  function rememberCoords(lat, lon) { LS.set('pm_coords', {lat, lon, ts: Date.now()}); }
+  function getRememberedCoords() {
+    const c = LS.get('pm_coords', null);
+    if (!c) return null;
+    if (Date.now() - c.ts > 7*24*60*60*1000) return null;
+    return c;
+  }
+
+  async function getLocation() {
+    const remembered = getRememberedCoords();
+    if (remembered) return remembered;
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) return reject(new Error('Geolocation not supported'));
+      navigator.geolocation.getCurrentPosition(
+        (pos) => { const lat=pos.coords.latitude, lon=pos.coords.longitude; rememberCoords(lat,lon); resolve({lat,lon}); },
+        (err) => reject(err),
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 900000 }
+      );
+    });
+  }
+
+  async function geocodeCity(name) {
+    const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=1`;
+    const r = await fetch(url); if (!r.ok) throw new Error('Geocode failed');
+    const j = await r.json();
+    const hit = j?.results?.[0];
+    if (!hit) throw new Error('City not found');
+    return { lat: hit.latitude, lon: hit.longitude, label: `${hit.name}, ${hit.admin1||hit.country_code}` };
+  }
+
+  async function fetchDaily(lat, lon) {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&daily=sunrise,sunset&timezone=auto`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('Weather fetch failed');
+    return r.json();
+  }
+
+  async function fetchHoroscope() {
+    const endpoints = [
+      'https://horoscope-app-api.vercel.app/api/v1/get-horoscope/daily?sign=pisces&day=today',
+      'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://horoscope-app-api.vercel.app/api/v1/get-horoscope/daily?sign=pisces&day=today')
+    ];
+    for (const ep of endpoints) {
+      try {
+        const r = await fetch(ep);
+        if (!r.ok) continue;
+        const data = await r.json();
+        const text = data?.data?.horoscope_data || data?.horoscope || (typeof data === 'string' ? data : '');
+        if (text) return text;
+      } catch(e) { /* try next */ }
+    }
+    return "Today favors calm focus and steady steps. Keep commitments simple; your intuition does the heavy lifting.";
+  }
+
+  function parseICS(text) {
+    text = text.replace(/\r?\n[ \t]/g, '');
+    const lines = text.split(/\r?\n/);
+    const events = [];
+    let cur = null;
+    for (const line of lines) {
+      if (line === 'BEGIN:VEVENT') cur = {};
+      else if (line === 'END:VEVENT') { if (cur) events.push(cur); cur = null; }
+      else if (cur) {
+        const [k, ...rest] = line.split(':');
+        const val = rest.join(':');
+        const key = k.split(';')[0];
+        if (key === 'SUMMARY') cur.summary = val;
+        if (key === 'LOCATION') cur.location = val;
+        if (key === 'DTSTART') cur.dtstart = val;
+        if (key === 'DTEND') cur.dtend = val;
+        if (key === 'UID') cur.uid = val;
+      }
+    }
+    events.forEach(e => {
+      const parseDT = (dt) => {
+        if (!dt) return null;
+        if (/Z$/.test(dt)) return new Date(dt);
+        if (/^\d{8}T\d{6}$/.test(dt)) {
+          const y=dt.slice(0,4), m=dt.slice(4,6), d=dt.slice(6,8), hh=dt.slice(9,11), mm=dt.slice(11,13), ss=dt.slice(13,15);
+          return new Date(`${y}-${m}-${d}T${hh}:${mm}:${ss}`);
+        }
+        if (/^\d{8}$/.test(dt)) {
+          const y=dt.slice(0,4), m=dt.slice(4,6), d=dt.slice(6,8);
+          return new Date(`${y}-${m}-${d}T00:00:00`);
+        }
+        const d = new Date(dt);
+        return d.toString() === 'Invalid Date' ? null : d;
+      };
+      e.start = parseDT(e.dtstart);
+      e.end = parseDT(e.dtend);
+    });
+    return events.filter(e => e.start);
+  }
+
+  // --- Contacts helpers ---
+  function parseVCF(text){
+    text = text.replace(/\r?\n[ \t]/g, ''); // unfold
+    const cards = text.split(/END:VCARD/i).map(s=>s.trim()).filter(Boolean);
+    const out=[];
+    for (const c of cards){
+      const get = (prop) => {
+        const m = c.match(new RegExp(prop + '[:;](.+)', 'i'));
+        return m ? m[1].split(':').pop().split(';').filter(Boolean)[0] : '';
+      };
+      const fn = get('FN') || get('N').replace(/;/g,' ').trim();
+      const telm = c.match(/TEL[^:]*:([^\n]+)/i);
+      const em = c.match(/EMAIL[^:]*:([^\n]+)/i);
+      out.push({ name: fn || '(No name)', phone: telm ? telm[1].trim() : '', email: em ? em[1].trim() : '' });
+    }
+    return out.filter(p => p.name || p.phone || p.email);
+  }
+  function parseCSV(text){
+    const lines = text.split(/\r?\n/).filter(l=>l.trim().length);
+    const out=[];
+    for (const line of lines){
+      const parts = line.split(',').map(s=>s.trim());
+      if (parts.length>=1){
+        out.push({ name: parts[0]||'', phone: parts[1]||'', email: parts[2]||'' });
+      }
+    }
+    return out;
+  }
+
+  // Music shortcuts default
+  const MUSIC_DEFAULTS = [
+    { name: "Atreyu", url: "shortcuts://run-shortcut?name=Atreyu" },
+    { name: "Parkway Drive", url: "shortcuts://run-shortcut?name=Parkway%20Drive" },
+    { name: "Halsey", url: "shortcuts://run-shortcut?name=Halsey" },
+    { name: "Demi Lovato", url: "shortcuts://run-shortcut?name=Demi%20Lovato" }
+  ];
+
+  const Modules = [
+    {
+      id:"daily", title:"Daily", icon:"🗓️",
+      quick:[
+        {label:"Refresh Daily", run:()=>renderActive(true)},
+        {label:"Refresh Location", run:()=>{ LS.set('pm_coords', null); renderActive(true); }},
+      ],
+      async render(root, forceRefresh) {
+        const stateKey = 'pm_daily_cache';
+        const cached = LS.get(stateKey, null);
+        const now = Date.now();
+        if (!forceRefresh && cached && (now - cached.ts) < 15*60*1000) {
+          root.innerHTML = cached.html; return;
+        }
+        root.innerHTML = `<div class="card full"><div class="stack"><div class="small">Fetching location, weather, and horoscope…</div></div></div>`;
+        try {
+          const loc = await getLocation();
+          const lat = loc.lat, lon = loc.lon;
+          const [wx, horoscope] = await Promise.all([ fetchDaily(lat, lon), fetchHoroscope() ]);
+          const code = wx?.current?.weather_code;
+          const temp = Math.round(wx?.current?.temperature_2m);
+          const desc = weatherCodeMap[code] || 'Weather';
+          const emoji = weatherEmoji(code);
+          const sunrise = wx?.daily?.sunrise?.[0];
+          const sunset  = wx?.daily?.sunset?.[0];
+          const city = `Lat ${lat.toFixed(3)}, Lon ${lon.toFixed(3)}`;
+          const html = `
+            <div class="card">
+              <h3>Weather</h3>
+              <div class="stack">
+                <div class="big">${emoji} ${temp}° — ${desc}</div>
+                <div class="small mono">${city}</div>
+                <div class="row"><button class="pill" id="refreshDaily">Refresh</button><button class="pill" id="resetLoc">Reset Location</button></div>
+              </div>
+            </div>
+            <div class="card"><h3>Sun</h3>
+              <div class="stack">
+                <div>🌅 Sunrise — <span class="mono">${fmtTime24(sunrise)}</span></div>
+                <div>🌇 Sunset — <span class="mono">${fmtTime24(sunset)}</span></div>
+              </div>
+            </div>
+            <div class="card full"><h3>Pisces</h3>
+              <div class="horoscope" id="horotext"></div>
+              <div class="row" style="margin-top:8px; justify-content:flex-end">
+                <button class="pill" id="refreshHoro">Refresh Horoscope</button>
+              </div>
+            </div>`;
+          root.innerHTML = html;
+          // Set horoscope textContent after rendering to avoid [object Object]
+          const h = typeof horoscope === 'string' ? horoscope : (horoscope?.toString?.() || '');
+          document.getElementById('horotext').textContent = h || "Today favors calm focus and steady steps.";
+          $("#refreshDaily").onclick = () => renderActive(true);
+          $("#resetLoc").onclick = () => { LS.set('pm_coords', null); renderActive(true); };
+          $("#refreshHoro").onclick = async () => { const t = await fetchHoroscope(); document.getElementById('horotext').textContent = (typeof t === 'string') ? t : (t?.toString?.() || ''); };
+          LS.set(stateKey, { ts: now, html });
+        } catch (e) {
+          // Fallback to manual city
+          root.innerHTML = `<div class="card full">
+            <h3>Daily</h3>
+            <div class="stack">
+              <div class="small">Location failed (${e.message||e}). Enter a city to use as fallback:</div>
+              <div class="row"><input id="city" placeholder="City (e.g., Denver)"><button id="setCity" class="pill">Use City</button></div>
+            </div>
+          </div>`;
+          $("#setCity").onclick = async () => {
+            const name = $("#city").value.trim();
+            if (!name) return;
+            try{
+              const g = await geocodeCity(name);
+              rememberCoords(g.lat, g.lon);
+              alert("Saved location: " + g.label);
+              renderActive(true);
+            }catch(err){ alert("City not found."); }
+          };
+        }
+      }
+    },
+    {
+      id:"map", title:"Map", icon:"🗺️",
+      async render(root) {
+        root.innerHTML = `<div class="card full">
+          <h3>Calendar (iCloud)</h3>
+          <div class="row">
+            <input id="icsUrl" placeholder="Worker proxy URL" value="https://httphandler.zackmoritz.workers.dev/?url=webcal://p142-caldav.icloud.com/published/2/MTYzNTY2Mjg3NzE2MzU2NuFLk20q5hHprkoQ1BjnSDEUNr8fSqeWAPju97w4vZXSG0vIpbInUj-AunuqMxHm0bTuka0xtDZit8i-0uNBNA0" />
+            <button id="saveIcs">Save</button>
+            <button id="refreshCal">Refresh</button>
+          </div>
+          <div class="small" style="margin-top:6px">Using your Cloudflare Worker: <span class="mono">https://httphandler.zackmoritz.workers.dev</span></div>
+          <div id="calToday" class="stack" style="margin-top:12px"></div>
+          <div id="calWeek" class="stack" style="margin-top:12px"></div>
+        </div>`;
+        const key = 'pm_calendar_url';
+        const saved = LS.get(key, "https://httphandler.zackmoritz.workers.dev/?url=webcal://p142-caldav.icloud.com/published/2/MTYzNTY2Mjg3NzE2MzU2NuFLk20q5hHprkoQ1BjnSDEUNr8fSqeWAPju97w4vZXSG0vIpbInUj-AunuqMxHm0bTuka0xtDZit8i-0uNBNA0");
+        if (saved) $('#icsUrl').value = saved;
+        $('#saveIcs').onclick = () => { LS.set(key, $('#icsUrl').value.trim()); alert('Saved calendar URL'); };
+        $('#refreshCal').onclick = () => render(root);
+        const url = LS.get(key, "https://httphandler.zackmoritz.workers.dev/?url=webcal://p142-caldav.icloud.com/published/2/MTYzNTY2Mjg3NzE2MzU2NuFLk20q5hHprkoQ1BjnSDEUNr8fSqeWAPju97w4vZXSG0vIpbInUj-AunuqMxHm0bTuka0xtDZit8i-0uNBNA0");
+        try {
+          const r = await fetch(url);
+          if (!r.ok) throw new Error('Calendar fetch failed');
+          const text = await r.text();
+          const events = parseICS(text);
+          const now = new Date();
+          const endWindow = new Date(now.getTime() + 7*24*60*60*1000);
+          const inWindow = events.filter(e => e.start && e.start <= endWindow && e.end >= new Date(now.getFullYear(), now.getMonth(), now.getDate()));
+          inWindow.sort((a,b) => a.start - b.start);
+          const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate()+1);
+          const todays = inWindow.filter(e => e.start < todayEnd && e.end > todayStart);
+          const fmtEvent = (e) => {
+            const allDay = e.start.getHours()===0 && e.end && (e.end - e.start)%(24*60*60*1000)===0;
+            const when = allDay ? 'All day' : (fmtTime24(e.start) + (e.end ? '–' + fmtTime24(e.end) : ''));
+            const loc = e.location ? ` — <span class="small mono">${e.location}</span>` : '';
+            return `• <span class="mono">${when}</span> — ${e.summary||'(no title)'}${loc}`;
+          };
+          $('#calToday').innerHTML = `<h3>Today</h3>` + (todays.length ? todays.map(fmtEvent).join('<br>') : '<span class="small">No events today.</span>');
+          const days = [];
+          for (let i=0;i<7;i++) {
+            const d0 = new Date(now.getFullYear(), now.getMonth(), now.getDate()+i);
+            const d1 = new Date(now.getFullYear(), now.getMonth(), now.getDate()+i+1);
+            const dayEvents = inWindow.filter(e => e.start < d1 && e.end > d0);
+            const items = dayEvents.map(fmtEvent).join('<br>') || '<span class="small">—</span>';
+            days.push(`<div class="card"><div class="small mono">${fmtDate(d0.toISOString())}</div>${items}</div>`);
+          }
+          $('#calWeek').innerHTML = `<h3>Next 7 Days</h3>` + `<div class="row">` + days.join('') + `</div>`;
+        } catch (e) {
+          $('#calToday').innerHTML = `<span class="small">Calendar error: ${e.message||e}</span>`;
+        }
+      }
+    },
+    {
+      id:"music", title:"Music", icon:"🎵",
+      render(root){
+        const data = LS.get("pm_music_shortcuts", MUSIC_DEFAULTS);
+        root.innerHTML = `
+          <div class="card full">
+            <h3>Essential Music Playlists</h3>
+            <div class="grid4" id="grid"></div>
+            <div class="small" style="margin-top:8px">You can edit these links in Settings → Music. Uses iOS <span class="mono">shortcuts://</span> URLs.</div>
+          </div>
+        `;
+        const grid = document.getElementById('grid');
+        grid.innerHTML = data.map(d => `<a class="tile" href="${d.url}">${d.name}</a>`).join('');
+      }
+    },
+    {
+      id:"comms", title:"Comms", icon:"✉️",
+      render(root){
+        const contacts = LS.get("pm_comms_contacts", []);
+        const templates = LS.get("pm_comms_templates", [
+          {name:"Check-in", text:"Hey, thinking of you. How are you feeling today?"},
+          {name:"Logistics", text:"Quick timing check: are we still on for [TIME]?"},
+          {name:"Thank you", text:"Thank you for the help today—I appreciate you."},
+          {name:"Running late", text:"Running a bit late, ETA [TIME]. Sorry!"},
+          {name:"On my way", text:"On my way now—see you soon."},
+          {name:"Can't talk", text:"Can’t talk right now. I’ll call you back as soon as I can."},
+          {name:"Love you", text:"Love you. Thinking about you."},
+          {name:"Daily check‑in", text:"Quick check-in: how’s your energy and mood today?"}
+        ]);
+        root.innerHTML = `
+          <div class="card">
+            <h3>Quick Compose</h3>
+            <div class="row">
+              <select id="who">${contacts.map((c,i)=>`<option value="${i}">${c.name}</option>`).join("")}</select>
+              <select id="tmpl">${templates.map((t,i)=>`<option value="${i}">${t.name}</option>`).join("")}</select>
+            </div>
+            <textarea id="msg" rows="4" placeholder="Your message…">${templates[0]?.text||""}</textarea>
+            <div class="row" style="margin-top:8px">
+              <button id="sms">iMessage/SMS</button>
+              <button id="mail">Email</button>
+              <button id="copy">Copy Text</button>
+            </div>
+            <p class="small">On iOS Safari, device contact picker isn’t available. Import vCard/CSV below. SMS opens Messages with your text prefilled.</p>
+          </div>
+
+          <div class="card">
+            <h3>Contacts</h3>
+            <div class="row">
+              <input id="cName" placeholder="Name">
+              <input id="cPhone" placeholder="Phone">
+              <input id="cMail" placeholder="Email">
+              <button id="addC">Add</button>
+            </div>
+            <div class="row" style="margin-top:8px">
+              <label class="cta">Import vCard (.vcf) <input id="vcf" type="file" accept=".vcf,text/vcard" style="display:none"></label>
+              <label class="cta">Import CSV <input id="csv" type="file" accept=".csv,text/csv" style="display:none"></label>
+              <button id="pickDevice">Pick from device (if supported)</button>
+            </div>
+            <div id="clist" class="small" style="margin-top:8px"></div>
+          </div>
+
+          <div class="card">
+            <h3>Templates</h3>
+            <div class="row">
+              <input id="tName" placeholder="Template name">
+              <input id="tText" placeholder="Text">
+              <button id="addT">Add</button>
+            </div>
+            <div id="tlist" class="small" style="margin-top:8px"></div>
+          </div>
+        `;
+
+        const renderLists = () => {
+          $("#clist").innerHTML = contacts.length
+            ? contacts.map(c=>`• ${c.name} — ${c.phone||"—"} — ${c.email||"—"}`).join("<br>")
+            : "No contacts yet.";
+          $("#tlist").innerHTML = templates.length
+            ? templates.map(t=>`• ${t.name}: “${t.text}”`).join("<br>")
+            : "No templates yet.";
+          const who = $("#who"); who.innerHTML = contacts.map((c,i)=>`<option value="${i}">${c.name}</option>`).join("");
+          const tmpl = $("#tmpl"); tmpl.innerHTML = templates.map((t,i)=>`<option value="${i}">${t.name}</option>`).join("");
+        };
+        renderLists();
+
+        $("#tmpl").onchange = e => { const t = templates[+e.target.value]; $("#msg").value = t ? t.text : ""; };
+        $("#addC").onclick = () => {
+          const n=$("#cName").value.trim(), p=$("#cPhone").value.trim(), m=$("#cMail").value.trim();
+          if(!n) return; contacts.push({name:n, phone:p, email:m}); LS.set("pm_comms_contacts", contacts); renderLists();
+          $("#cName").value = $("#cPhone").value = $("#cMail").value = "";
+        };
+        $("#addT").onclick = () => {
+          const n=$("#tName").value.trim(), t=$("#tText").value.trim(); if(!n||!t) return;
+          templates.push({name:n, text:t}); LS.set("pm_comms_templates", templates); renderLists();
+          $("#tName").value = $("#tText").value = "";
+        };
+
+        // Importers
+        $("#vcf").onchange = e => {
+          const f = e.target.files?.[0]; if (!f) return;
+          const r = new FileReader();
+          r.onload = () => { try{
+            const arr = parseVCF(r.result);
+            arr.forEach(c=>contacts.push(c));
+            LS.set("pm_comms_contacts", contacts);
+            renderLists();
+            alert(`Imported ${arr.length} contact(s) from vCard.`);
+          }catch(err){ alert("Couldn't parse vCard."); } };
+          r.readAsText(f);
+        };
+        $("#csv").onchange = e => {
+          const f = e.target.files?.[0]; if (!f) return;
+          const r = new FileReader();
+          r.onload = () => { try{
+            const arr = parseCSV(r.result);
+            arr.forEach(c=>contacts.push(c));
+            LS.set("pm_comms_contacts", contacts);
+            renderLists();
+            alert(`Imported ${arr.length} contact(s) from CSV.`);
+          }catch(err){ alert("Couldn't parse CSV."); } };
+          r.readAsText(f);
+        };
+        $("#pickDevice").onclick = async () => {
+          try{
+            if (!('contacts' in navigator) || !('select' in navigator.contacts)) {
+              alert("This browser doesn't support the contact picker. On iPhone Safari, use vCard or CSV import.");
+              return;
+            }
+            const props = ['name','tel','email'];
+            const opts = { multiple: true };
+            const picked = await navigator.contacts.select(props, opts);
+            picked.forEach(p => {
+              const name = Array.isArray(p.name) ? p.name[0] : (p.name || '');
+              const phone = Array.isArray(p.tel) ? (p.tel[0]||'') : (p.tel||'');
+              const email = Array.isArray(p.email) ? (p.email[0]||'') : (p.email||'');
+              contacts.push({ name, phone, email });
+            });
+            LS.set("pm_comms_contacts", contacts);
+            renderLists();
+          }catch(err){
+            alert("Contact picker failed or was canceled.");
+          }
+        };
+
+        const isiOS = /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent);
+        const pick = () => { const idx = +($("#who")?.value ?? -1); return { c: contacts[idx], text: $("#msg").value }; };
+        $("#sms").onclick  = () => {
+          const {c,text}=pick();
+          const bodyParam = isiOS ? "&body=" : "?body=";
+          const to = c?.phone ? encodeURIComponent(c.phone) : "";
+          const url = `sms:${to}${bodyParam}${encodeURIComponent(text)}`;
+          window.location.href = url;
+        };
+        $("#mail").onclick = () => { const {c,text}=pick(); const to = c?.email ? encodeURIComponent(c.email) : ""; openURL(`mailto:${to}?subject=${encodeURIComponent("Hi")}&body=${encodeURIComponent(text)}`); };
+        $("#copy").onclick = () => { const {text}=pick(); navigator.clipboard?.writeText(text).then(()=>alert("Copied")).catch(()=>alert("Copy failed")); };
+      }
+    },
+    {
+      id:"settings", title:"Settings", icon:"⚙️",
+      render(root){
+        const music = LS.get("pm_music_shortcuts", MUSIC_DEFAULTS);
+        root.innerHTML = `
+          <div class="card">
+            <h3>Links</h3>
+            <div class="row">
+              <input id="reignURL" placeholder="Reign URL" value="${LS.get('reign_url','http://zackmoritz.cool/Reign_PWA')}">
+              <button id="saveReign">Save</button>
+              <a id="openReign" class="cta" href="${LS.get('reign_url','http://zackmoritz.cool/Reign_PWA')}">Open</a>
+            </div>
+            <p class="small">Top‑bar button uses this URL.</p>
+          </div>
+          <div class="card">
+            <h3>Location</h3>
+            <div class="row">
+              <button id="refreshLoc">Request Location Again</button>
+              <button id="forgetLoc">Forget Saved Location</button>
+            </div>
+            <p class="small">We remember your last coordinates for 7 days to avoid constant prompts. You can also set a city on the Daily tab if location is blocked.</p>
+          </div>
+          <div class="card">
+            <h3>Calendar</h3>
+            <div class="row">
+              <input id="icsUrlSet" placeholder="Worker proxy URL" value="${LS.get('pm_calendar_url','https://httphandler.zackmoritz.workers.dev/?url=webcal://p142-caldav.icloud.com/published/2/MTYzNTY2Mjg3NzE2MzU2NuFLk20q5hHprkoQ1BjnSDEUNr8fSqeWAPju97w4vZXSG0vIpbInUj-AunuqMxHm0bTuka0xtDZit8i-0uNBNA0')}">
+              <button id="saveIcsSet">Save</button>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Music Shortcuts</h3>
+            <div id="musicList" class="stack"></div>
+            <div class="row"><button id="saveMusic">Save Music Links</button></div>
+            <p class="small mono">Use iOS URLs like shortcuts://run-shortcut?name=Parkway%20Drive</p>
+          </div>
+          <div class="card">
+            <h3>App</h3>
+            <div class="row">
+              <button id="updateApp">Update App</button>
+              <button id="clearCaches">Clear Caches</button>
+            </div>
+            <p class="small">Force update the service worker and clear caches if you ever see stale UI.</p>
+          </div>
+        `;
+        $("#saveReign").onclick = () => { const v=$("#reignURL").value.trim(); if(!v) return; LS.set('reign_url', v); alert('Saved.'); document.getElementById("openReignTop").setAttribute("href", v); document.getElementById("openReign").setAttribute("href", v); };
+        $("#refreshLoc").onclick = async () => { LS.set('pm_coords', null); alert('Next Daily refresh will ask for location again.'); };
+        $("#forgetLoc").onclick = () => { LS.set('pm_coords', null); alert('Saved coordinates cleared.'); };
+        $("#saveIcsSet").onclick = () => { const v = $("#icsUrlSet").value.trim(); if(!v) return; LS.set('pm_calendar_url', v); alert('Saved calendar URL'); };
+
+        // Music editor
+        const list = document.getElementById('musicList');
+        list.innerHTML = music.map((m,i)=>`
+          <div class="row">
+            <input id="mname${i}" value="${m.name}">
+            <input id="murl${i}" value="${m.url}">
+          </div>
+        `).join('');
+        $("#saveMusic").onclick = () => {
+          const updated = music.map((m,i)=>({ name: document.getElementById('mname'+i).value.trim(), url: document.getElementById('murl'+i).value.trim() }));
+          LS.set("pm_music_shortcuts", updated);
+          alert('Saved music shortcuts.');
+        };
+
+        // App controls
+        $("#updateApp").onclick = async () => {
+          if ('serviceWorker' in navigator) {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(regs.map(r=>r.update()));
+            alert('Service worker updated. Reloading…'); location.reload();
+          }
+        };
+        $("#clearCaches").onclick = async () => {
+          if ('caches' in window) {
+            const keys = await caches.keys();
+            await Promise.all(keys.map(k => caches.delete(k)));
+          }
+          if ('serviceWorker' in navigator) {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(regs.map(r=>r.unregister()));
+          }
+          alert('Caches cleared. Reload the page.');
+        };
+      }
+    }
+  ];
+
+  const tabs = $("#tabs"), content = $("#content");
+  let active = Modules[0].id;
+  Modules.forEach(m=>{
+    const b=document.createElement("button");
+    b.className="tab"; b.textContent=`${m.icon||""} ${m.title}`;
+    b.onclick=()=>{ active=m.id; renderTabs(); renderActive(); };
+    tabs.appendChild(b);
+  });
+  function renderTabs(){ [...tabs.children].forEach((b,i)=>b.classList.toggle("active", Modules[i].id===active)); }
+  async function renderActive(force=false){
+    content.innerHTML=""; const root=document.createElement("div");
+    root.className="card full"; content.appendChild(root);
+    const mod=Modules.find(m=>m.id===active);
+    const out = mod?.render(root, force);
+    if (out instanceof Promise) await out;
+  }
+  renderTabs(); renderActive();
+
+  // Keep top link in sync
+  (function syncReign(){
+    const u = LS.get('reign_url','http://zackmoritz.cool/Reign_PWA');
+    document.getElementById("openReignTop").setAttribute("href", u);
+  })();
+
+  function openURL(u){ if(!u){ alert("No URL set."); return; } window.location.href=u; }
+
+  // Register SW with cache-busting
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('service-worker.js?v=6.4-1754773221').catch(console.error);
+    });
+  }
+})();
+</script>
+</body>
+</html>
