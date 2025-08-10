@@ -69,10 +69,23 @@
 (function(){
   const b = document.createElement('button');
   b.textContent = 'Clear Today';
-  b.style.position='fixed'; b.style.right='12px'; b.style.bottom='90px';
-  b.style.zIndex='9999'; b.style.padding='10px 12px';
-  b.style.border='1px solid #1f2937'; b.style.borderRadius='10px';
-  b.style.background='#2a0a0a'; b.style.color='#fca5a5'; b.style.fontWeight='700';
+  b.style.position = 'fixed';
+  b.style.right = '20px';
+  b.style.bottom = '20px';
+  b.style.zIndex = '9999';
+  b.style.padding = '10px 16px';
+  b.style.border = 'none';
+  b.style.borderRadius = '6px';
+  b.style.background = '#dc2626'; /* red-600 */
+  b.style.color = '#fff';
+  b.style.fontWeight = '600';
+  b.style.boxShadow = '0 4px 6px rgba(0,0,0,0.15)';
+  b.style.cursor = 'pointer';
+  b.style.transition = 'background 0.2s ease';
+
+  b.onmouseenter = () => b.style.background = '#b91c1c'; // darker red hover
+  b.onmouseleave = () => b.style.background = '#dc2626';
+
   b.onclick = function(){
     const today = (new Date()).toISOString().slice(0,10);
     const removed = (state.completions||[]).filter(c => c.dateISO?.startsWith(today));
@@ -87,6 +100,7 @@
   };
   document.body.appendChild(b);
 })();
+</script>
 </script>
 </body>
 </html>
