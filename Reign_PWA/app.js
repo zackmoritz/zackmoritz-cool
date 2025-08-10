@@ -1,4 +1,4 @@
-// Reign v1.2.30 — local-day bucketing (no midnight jumps) + cloud-first + full UI + Settings: Clear Today
+// Reign v1.2.31 — enforce habit order + local-day bucketing + cloud-first + Settings: Clear Today
 
 // ---- Cloud + storage --------------------------------------------------------
 const APP_KEY = 'reign-data-v1';
@@ -22,7 +22,7 @@ function loadLocal(){ try{ const raw=localStorage.getItem(APP_KEY); return raw?J
 const $ = s => document.querySelector(s);
 function toast(msg){ const el=$('.toast'); if(!el) return; el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),1200); }
 
-// ---- Required habits --------------------------------------------------------
+// ---- Required habits (your desired order) -----------------------------------
 const requiredHabits = [
   { id:'h-chastity',  title:'Law of Chastity (daily)',     schedule:'daily',  type:'check',   target:1,   difficulty:3, archived:false },
   { id:'h-read',      title:'Read (100 min/day)',          schedule:'daily',  type:'minutes', target:100, difficulty:2, archived:false },
@@ -31,7 +31,12 @@ const requiredHabits = [
   { id:'h-taichi',    title:'Tai Chi (8 min/day)',         schedule:'daily',  type:'minutes', target:8,   difficulty:2, archived:false },
   { id:'h-kungfu',    title:'Kung Fu footwork',            schedule:'daily',  type:'check',   target:1,   difficulty:2, archived:false },
   { id:'h-deepsquat', title:'Deep squat (5 min)',          schedule:'daily',  type:'minutes', target:5,   difficulty:2, archived:false },
-  { id:'h-earthing',  title:'Earthing (5 min/day)',        schedule:'daily',  type:'minutes', target:5,   difficulty:1, archived:false }
+  { id:'h-earthing',  title:'Earthing (5 min/day)',        schedule:'daily',  type:'minutes', target:5,   difficulty:1, archived:false },
+
+  // keep the rest (after your top 8)
+  { id:'h-run',       title:'Run 5k (weekly)',             schedule:'weekly', type:'check',   target:1,   difficulty:3, archived:false },
+  { id:'h-meditate',  title:'Meditate (10 min/day)',       schedule:'daily',  type:'minutes', target:10,  difficulty:2, archived:false },
+  { id:'h-workout',   title:'Working out',                 schedule:'daily',  type:'check',   target:1,   difficulty:2, archived:false }
 ];
 
 const defaultData = {
@@ -75,12 +80,20 @@ function calcXP({difficulty=1, proportion=1}){
   return { xp, coins };
 }
 
-// ---- Ensure required habits exist ------------------------------------------
+// ---- Ensure required habits exist + enforce order ---------------------------
 function ensureRequired(){
   if (!Array.isArray(state.habits)) state.habits = [];
   const have = new Set(state.habits.map(h=>h.id));
   requiredHabits.forEach(req=>{ if(!have.has(req.id)) state.habits.push({...req}); });
   state.habits.forEach(h=>{ if(requiredHabits.some(r=>r.id===h.id)) h.archived = false; });
+}
+function enforceHabitOrder(){
+  const order = new Map(requiredHabits.map((h,i)=>[h.id, i]));
+  state.habits.sort((a,b)=>{
+    const ai = order.has(a.id) ? order.get(a.id) : 9999;
+    const bi = order.has(b.id) ? order.get(b.id) : 9999;
+    return ai - bi;
+  });
 }
 
 // ---- Due checks (use stored dayKey) ----------------------------------------
@@ -201,37 +214,44 @@ function render(){
   $('#xp').textContent    = `${state.xp||0} XP`;
   $('#coins').textContent = `${state.coins||0} ⦿`;
 
+  // Enforce order before showing
+  enforceHabitOrder();
+
   // Today list
   const list = document.getElementById('today-list'); if(list){ list.innerHTML='';
-    state.habits.filter(h=>!h.archived).forEach(h=>{
-      const due = isDue(h);
-      const card=document.createElement('div'); card.className='card';
-      card.innerHTML = `<div class="title">${h.title}</div>
-        <div class="meta">${h.schedule==='daily'?'Daily':'Weekly'} • Diff ${h.difficulty}</div>`;
-      const controls=document.createElement('div'); controls.className='habit-controls';
+    const order = new Map(requiredHabits.map((h,i)=>[h.id,i]));
+    state.habits
+      .filter(h=>!h.archived)
+      .sort((a,b)=>(order.get(a.id) ?? 9999) - (order.get(b.id) ?? 9999))
+      .forEach(h=>{
+        const due = isDue(h);
+        const card=document.createElement('div'); card.className='card';
+        card.innerHTML = `<div class="title">${h.title}</div>
+          <div class="meta">${h.schedule==='daily'?'Daily':'Weekly'} • Diff ${h.difficulty}</div>`;
+        const controls=document.createElement('div'); controls.className='habit-controls';
 
-      if(h.type==='minutes'){
-        const input=document.createElement('input'); input.type='number'; input.placeholder=`${h.target||30} min`; input.min='1';
-        const btn=document.createElement('button'); btn.textContent=due?'Log minutes':'Done'; btn.className='btn '+(due?'good':'warn');
-        btn.addEventListener('click',(ev)=>{
-          ev.preventDefault(); ev.stopPropagation();
-          if(!isDue(h)) { toast('Already completed'); return; }
-          const mins = parseInt(input.value||`${h.target||30}`,10);
-          const prop = h.target ? Math.min(1, mins/Number(h.target)) : Math.min(1, mins/30);
-          completeHabit(h, mins, prop);
-        });
-        controls.append(input, btn);
-      } else {
-        const btn=document.createElement('button'); btn.textContent=due?'Complete':'Done'; btn.className='btn '+(due?'good':'warn');
-        btn.addEventListener('click',(ev)=>{
-          ev.preventDefault(); ev.stopPropagation();
-          if(!isDue(h)) { toast('Already completed'); return; }
-          completeHabit(h, 1, 1);
-        });
-        controls.append(btn);
-      }
-      card.append(controls); list.append(card);
-    });
+        if(h.type==='minutes'){
+          const input=document.createElement('input'); input.type='number'; input.placeholder=`${h.target||30} min`; input.min='1';
+          const btn=document.createElement('button'); btn.textContent=due?'Log minutes':'Done'; btn.className='btn '+(due?'good':'warn');
+          btn.addEventListener('click',(ev)=>{
+            ev.preventDefault(); ev.stopPropagation();
+            if(!isDue(h)) { toast('Already completed'); return; }
+            const mins = parseInt(input.value||`${h.target||30}`,10);
+            const prop = h.target ? Math.min(1, mins/Number(h.target)) : Math.min(1, mins/30);
+            completeHabit(h, mins, prop);
+          });
+          controls.append(input, btn);
+        } else {
+          const btn=document.createElement('button'); btn.textContent=due?'Complete':'Done'; btn.className='btn '+(due?'good':'warn');
+          btn.addEventListener('click',(ev)=>{
+            ev.preventDefault(); ev.stopPropagation();
+            if(!isDue(h)) { toast('Already completed'); return; }
+            completeHabit(h, 1, 1);
+          });
+          controls.append(btn);
+        }
+        card.append(controls); list.append(card);
+      });
   }
 
   // Progress numbers + chart
@@ -280,7 +300,7 @@ function wireForms(){
   const pushBtn=document.getElementById('push-to-cloud');
   const resetBtn=document.getElementById('reset-btn');
   if(syncBtn && !syncBtn._wired){ syncBtn._wired=true; syncBtn.onclick=async()=>{
-    const r=await cloudLoad(); if(r){ state=r; ensureRequired(); saveLocal(); render(); toast('Synced from cloud'); } else toast('No cloud data');
+    const r=await cloudLoad(); if(r){ state=r; ensureRequired(); enforceHabitOrder(); saveLocal(); render(); toast('Synced from cloud'); } else toast('No cloud data');
   }; }
   if(pushBtn && !pushBtn._wired){ pushBtn._wired=true; pushBtn.onclick=()=>{ saveLocal(); cloudSave(); toast('Pushed to cloud'); }; }
   if(resetBtn && !resetBtn._wired){ resetBtn._wired=true; resetBtn.onclick=()=>{
@@ -296,6 +316,7 @@ function wireForms(){
   const remote = await cloudLoad();
   if(remote && Array.isArray(remote.habits) && remote.habits.length){ state = remote; }
   ensureRequired();
+  enforceHabitOrder();
 
   // MIGRATION: add dayKey to old completions + rebuild history strictly by dayKey
   (function migrateAndRebuild(){
@@ -317,9 +338,7 @@ function wireForms(){
 // ---- Settings: Clear Today (safe, idempotent wiring) -----------------------
 (function setupClearToday(){
   function handler(){
-    const today = (typeof localDayKey==='function')
-      ? localDayKey(new Date())
-      : new Date().toISOString().slice(0,10);
+    const today = localDayKey(new Date());
 
     const removed = (state.completions||[]).filter(c =>
       (c.dayKey ? c.dayKey===today : (c.dateISO||'').slice(0,10)===today)
