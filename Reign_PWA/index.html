@@ -67,89 +67,78 @@
   <script src="app.js"></script>
 	<script>
 (function(){
-  const b = document.createElement('button');
-  b.textContent = 'Clear Today';
-  b.style.position = 'fixed';
-  b.style.right = '20px';
-  b.style.bottom = '20px';
-  b.style.zIndex = '9999';
-  b.style.padding = '10px 16px';
-  b.style.border = 'none';
-  b.style.borderRadius = '6px';
-  b.style.background = '#dc2626'; /* red-600 */
-  b.style.color = '#fff';
-  b.style.fontWeight = '600';
-  b.style.boxShadow = '0 4px 6px rgba(0,0,0,0.15)';
-  b.style.cursor = 'pointer';
-  b.style.transition = 'background 0.2s ease';
-
-  b.onmouseenter = () => b.style.background = '#b91c1c'; // darker red hover
-  b.onmouseleave = () => b.style.background = '#dc2626';
-
-  b.onclick = function(){
-    const today = (new Date()).toISOString().slice(0,10);
-    const removed = (state.completions||[]).filter(c => c.dateISO?.startsWith(today));
-    const xpBack   = removed.reduce((a,c)=>a+(c.xp||0),0);
+  // ---- Clear Today (uses local dayKey) ----
+  const clearBtn = document.createElement('button');
+  clearBtn.id = 'clear-today-fab';
+  clearBtn.textContent = 'Clear Today';
+  Object.assign(clearBtn.style, {
+    position:'fixed', right:'20px', bottom:'90px', zIndex:9999,
+    padding:'10px 16px', border:'none', borderRadius:'6px',
+    background:'#dc2626', color:'#fff', fontWeight:'600',
+    boxShadow:'0 4px 6px rgba(0,0,0,0.15)', cursor:'pointer',
+    transition:'background .2s'
+  });
+  clearBtn.onmouseenter = ()=> clearBtn.style.background = '#b91c1c';
+  clearBtn.onmouseleave = ()=> clearBtn.style.background = '#dc2626';
+  clearBtn.onclick = function(){
+    const today = (typeof localDayKey==='function') ? localDayKey(new Date()) : new Date().toISOString().slice(0,10);
+    const removed = (state.completions||[]).filter(c => c.dayKey ? c.dayKey===today : (c.dateISO||'').slice(0,10)===today);
+    const xpBack = removed.reduce((a,c)=>a+(c.xp||0),0);
     const coinBack = removed.reduce((a,c)=>a+(c.coins||0),0);
-    state.completions = state.completions.filter(c => !c.dateISO?.startsWith(today));
-    if (state.history && state.history[today]) { state.history[today] = { xp:0, coins:0 }; }
+
+    state.completions = (state.completions||[]).filter(c => (c.dayKey ? c.dayKey!==today : (c.dateISO||'').slice(0,10)!==today));
+    if (!state.history) state.history = {};
+    state.history[today] = { xp:0, coins:0 };
     state.xp = Math.max(0, (state.xp||0) - xpBack);
     state.coins = Math.max(0, (state.coins||0) - coinBack);
-    saveLocal(); cloudSave(); render();
-    alert("Cleared today — you can redo your habits now.");
+
+    if (!Array.isArray(state.badges)) state.badges = [];
+    if (typeof saveLocal==='function') saveLocal();
+    if (typeof cloudSave==='function') cloudSave();
+    if (typeof render==='function') render();
+    alert('Cleared today — you can redo your habits now.');
   };
-  document.body.appendChild(b);
-})();
-</script>
-</script>
-<script>
-<script>
-(function(){
-  const b = document.createElement('button');
-  b.textContent = 'Fix: Move Today → Yesterday';
-  Object.assign(b.style, {
-    position:'fixed', right:'20px', bottom:'76px', zIndex:9999,
+  document.body.appendChild(clearBtn);
+
+  // ---- Move Today → Yesterday (local dayKey) ----
+  const moveBtn = document.createElement('button');
+  moveBtn.id = 'move-fab';
+  moveBtn.textContent = 'Move Today → Yesterday';
+  Object.assign(moveBtn.style, {
+    position:'fixed', right:'20px', bottom:'140px', zIndex:9999,
     padding:'10px 12px', border:'none', borderRadius:'6px',
     background:'#374151', color:'#fff', fontWeight:'700',
     boxShadow:'0 4px 6px rgba(0,0,0,0.15)', cursor:'pointer'
   });
-  b.onclick = function(){
-    try {
-      const today = (typeof localDayKey==='function') ? localDayKey(new Date()) :
-        new Date().toISOString().slice(0,10);
-      const d = new Date(); d.setDate(d.getDate()-1);
-      const yesterday = (typeof localDayKey==='function') ? localDayKey(d) :
-        new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString().slice(0,10);
+  moveBtn.onclick = function(){
+    const today = (typeof localDayKey==='function') ? localDayKey(new Date()) : new Date().toISOString().slice(0,10);
+    const d = new Date(); d.setDate(d.getDate()-1);
+    const yesterday = (typeof localDayKey==='function') ? localDayKey(d) : new Date(d.getFullYear(),d.getMonth(),d.getDate()).toISOString().slice(0,10);
 
-      let moved = 0;
-      (state.completions||[]).forEach(c => {
-        if (c.dayKey === today) { c.dayKey = yesterday; moved++; }
-      });
+    let moved = 0;
+    (state.completions||[]).forEach(c => {
+      const k = c.dayKey || (c.dateISO||'').slice(0,10);
+      if (k === today) { c.dayKey = yesterday; moved++; }
+    });
 
-      const hist = {};
-      (state.completions||[]).forEach(c=>{
-        const k = c.dayKey;
-        if (!hist[k]) hist[k] = { xp:0, coins:0 };
-        hist[k].xp += c.xp||0;
-        hist[k].coins = (hist[k].coins||0) + (c.coins||0);
-      });
-      state.history = hist;
+    // Rebuild history strictly from dayKey
+    const hist = {};
+    (state.completions||[]).forEach(c=>{
+      const k = c.dayKey || (c.dateISO||'').slice(0,10);
+      if (!hist[k]) hist[k] = { xp:0, coins:0 };
+      hist[k].xp += c.xp||0;
+      hist[k].coins = (hist[k].coins||0) + (c.coins||0);
+    });
+    state.history = hist;
 
-      // Make sure badges exists so render() doesn't break
-      if (!Array.isArray(state.badges)) state.badges = [];
-
-      if (typeof saveLocal==='function') saveLocal();
-      if (typeof cloudSave==='function') cloudSave();
-      if (typeof render==='function') render();
-
-      alert(`Moved ${moved} completion(s) from today to yesterday.`);
-    } catch (e) {
-      alert('Could not move entries: ' + e.message);
-    }
+    if (!Array.isArray(state.badges)) state.badges = [];
+    if (typeof saveLocal==='function') saveLocal();
+    if (typeof cloudSave==='function') cloudSave();
+    if (typeof render==='function') render();
+    alert(`Moved ${moved} completion(s) to yesterday.`);
   };
-  document.body.appendChild(b);
+  document.body.appendChild(moveBtn);
 })();
-</script>
 </script>
 </body>
 </html>
