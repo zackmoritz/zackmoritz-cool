@@ -1,94 +1,127 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Reign</title>
-  <meta name="theme-color" content="#111827" />
-  <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <header class="app-header">
-    <div class="brand"><span class="crown">♛</span><span>Reign</span></div>
-    <div class="level-wrap"><span id="level">Lv 1</span><span id="xp">0 XP</span><span id="coins">0 ⦿</span></div>
-  </header>
+// Reign Safe Mode — minimal, cloud-first, KV save/load, habits playable
+const CREDS = { userId: 'zack', token: 'test-token-123' };
+const APP_KEY = 'reign-safe-state';
+const defaultHabits = [
+  { id:'h-read',      title:'Read (100 min/day)',  schedule:'daily',  type:'minutes', target:100, difficulty:2, archived:false },
+  { id:'h-meditate',  title:'Meditate (10 min)',   schedule:'daily',  type:'minutes', target:10,  difficulty:2, archived:false },
+  { id:'h-deepsquat', title:'Deep squat (5 min)',  schedule:'daily',  type:'minutes', target:5,   difficulty:2, archived:false }
+];
 
-  <main id="view-today" class="view active">
-    <h2>Today</h2>
-    <div id="today-list" class="cards"></div>
-    <div class="hint">v1.2.17 UI • Cloud‑first</div>
-  </main>
+const defaultState = {
+  xp: 0, coins: 0, completions: [], history: {},
+  habits: defaultHabits.map(h => ({...h}))
+};
 
-  <main id="view-progress" class="view">
-    <h2>Progress</h2>
-    <div class="stats-grid">
-      <div class="stat"><div class="label">Streak (daily)</div><div id="daily-streak" class="value">0</div></div>
-      <div class="stat"><div class="label">This week XP</div><div id="week-xp" class="value">0</div></div>
-      <div class="stat"><div class="label">All-time XP</div><div id="alltime-xp" class="value">0</div></div>
-    </div>
-    <canvas id="weekly-chart" width="400" height="180" aria-label="Weekly XP chart"></canvas>
-    <div class="badges"><h3>Badges</h3><div id="badges" class="badge-row"></div></div>
-  </main>
+let state = {...defaultState};
 
-  <main id="view-rewards" class="view">
-    <h2>Rewards Shop</h2>
-    <div id="rewards-list" class="cards"></div>
-    <form id="reward-form" class="form-row">
-      <input id="reward-title" placeholder="Reward name (e.g., 1 hr YouTube)" required />
-      <input id="reward-cost" type="number" step="1" min="1" placeholder="Cost" required />
-      <button type="submit">Add</button>
-    </form>
-  </main>
+const $ = s => document.querySelector(s);
+const toast = msg => {
+  let t = $('.toast'); if (!t) { t = document.createElement('div'); t.className='toast'; document.body.append(t); }
+  t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 1200);
+};
 
-  <main id="view-settings" class="view">
-    <h2>Settings</h2>
-    <details open>
-      <summary>Habits & Quests</summary>
-      <div id="habit-admin"></div>
-      <form id="habit-form" class="form-col">
-        <input id="habit-title" placeholder="Title" required />
-        <select id="habit-schedule">
-          <option value="daily">Daily</option>
-          <option value="weekly">Weekly</option>
-        </select>
-        <select id="habit-type">
-          <option value="check">Checklist</option>
-          <option value="minutes">Minutes</option>
-        </select>
-        <input id="habit-target" type="number" min="1" step="1" placeholder="Target (e.g., 100 min)" />
-        <select id="habit-difficulty">
-          <option value="1">Difficulty 1</option>
-          <option value="2" selected>Difficulty 2</option>
-          <option value="3">Difficulty 3</option>
-        </select>
-        <div class="btn-row">
-          <button type="submit">Add Habit</button>
-          <button type="button" id="restore-defaults">Restore Default Habits</button>
-        </div>
-      </form>
-    </details>
-    <details>
-      <summary>Cloud & Data</summary>
-      <div class="btn-row">
-        <button id="sync-from-cloud">Sync from Cloud</button>
-        <button id="push-to-cloud">Push to Cloud</button>
-        <button id="export-btn">Export Backup</button>
-        <input type="file" id="import-file" accept="application/json" />
-        <button id="reset-btn" class="danger">Reset (keep habits)</button>
-      </div>
-    </details>
-  </main>
+function levelFromXP(xp){ return Math.floor(Math.sqrt(xp/50))+1; }
+function todayKey(d=new Date()){ return d.toISOString().slice(0,10); }
+function isDue(h){
+  const k = todayKey();
+  return !state.completions.some(c => c.habitId===h.id && c.dateISO.startsWith(k));
+}
 
-  <nav class="tabbar">
-    <button data-view="today" class="active">Today</button>
-    <button data-view="progress">Progress</button>
-    <button data-view="rewards">Rewards</button>
-    <button data-view="settings">Settings</button>
-  </nav>
+async function api(path, body){
+  const res = await fetch(path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  return res.json();
+}
+async function cloudLoad(){ try{ return await api('/api/load', CREDS); }catch{ return null; } }
+async function cloudSave(){ try{ await api('/api/save', {...CREDS, state}); }catch(e){ console.warn('save failed', e); } }
 
-  <div class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
-  <script src="app.js"></script>
-</body>
-</html>
+function saveLocal(){ localStorage.setItem(APP_KEY, JSON.stringify(state)); }
+function loadLocal(){
+  try { const raw = localStorage.getItem(APP_KEY); return raw ? JSON.parse(raw) : null; } catch { return null; }
+}
+
+function mergeInRequiredHabits(){
+  const have = new Set(state.habits.map(h=>h.id));
+  defaultHabits.forEach(r => { if (!have.has(r.id)) state.habits.push({...r}); });
+  state.habits.forEach(h => { if (defaultHabits.some(r => r.id===h.id)) h.archived=false; });
+}
+
+function renderHeader(){
+  $('#level').textContent = `Lv ${levelFromXP(state.xp)}`;
+  $('#xp').textContent = `${state.xp} XP`;
+}
+
+function complete(h, minutes){
+  const target = h.target || minutes || 30;
+  const val = Math.max(1, minutes || target);
+  const proportion = Math.min(1, val / target);
+  const base = 10 + h.difficulty*5;
+  const xp = Math.round(base * proportion);
+  const coins = Math.max(1, Math.ceil(xp/10));
+  state.completions.push({ id: crypto.randomUUID(), habitId: h.id, value: val, dateISO: new Date().toISOString(), xp, coins });
+  state.xp += xp; state.coins = (state.coins||0) + coins;
+}
+
+function renderToday(){
+  const wrap = $('#today'); wrap.innerHTML = '';
+  state.habits.filter(h=>!h.archived).forEach(h=>{
+    const card = document.createElement('div'); card.className = 'card';
+    const due = isDue(h);
+    card.innerHTML = `
+      <div class="title">${h.title}</div>
+      <div class="meta">${h.schedule==='daily'?'Daily':'Weekly'} • Diff ${h.difficulty}</div>
+      <div class="controls"></div>`;
+    const ctr = card.querySelector('.controls');
+    if (h.type==='minutes'){
+      const input = document.createElement('input'); input.type='number'; input.placeholder=`${h.target} min`; input.min='1';
+      const btn = document.createElement('button'); btn.textContent = due ? 'Log minutes' : 'Done';
+      btn.onclick = async ()=>{
+        if (!due) { toast('Already completed today'); return; }
+        const mins = parseInt(input.value||`${h.target}`, 10);
+        complete(h, mins); saveLocal(); renderHeader(); renderToday(); await cloudSave(); toast(`+${mins}m ✅`);
+      };
+      ctr.append(input, btn);
+    } else {
+      const btn = document.createElement('button'); btn.textContent = due ? 'Complete' : 'Done';
+      btn.onclick = async ()=>{
+        if (!due) { toast('Already completed today'); return; }
+        complete(h, 1); saveLocal(); renderHeader(); renderToday(); await cloudSave(); toast('+XP ✅');
+      };
+      ctr.append(btn);
+    }
+    wrap.append(card);
+  });
+}
+
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// FIXED boot(): always shows defaults if cloud/local are empty
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+async function boot(){
+  let remote = null;
+  try { remote = await cloudLoad(); } catch(e) { console.warn('cloud load failed', e); }
+
+  if (remote && Array.isArray(remote.habits) && remote.habits.length) {
+    state = remote;                   // use cloud if it has habits
+  } else {
+    state = loadLocal();              // else try local
+    if (!state || !Array.isArray(state.habits) || !state.habits.length) {
+      state = {...defaultState};      // final fallback: defaults
+    }
+  }
+
+  mergeInRequiredHabits(); // ensure Read/Meditate/Deep Squat exist
+  saveLocal();             // keep a local copy
+  await cloudSave();       // push to KV too
+  renderHeader();
+  renderToday();
+}
+// <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+document.getElementById('sync-cloud').onclick = async()=>{
+  const remote = await cloudLoad();
+  if (remote){ state = remote; mergeInRequiredHabits(); saveLocal(); renderHeader(); renderToday(); toast('Synced'); }
+  else toast('No cloud data');
+};
+document.getElementById('push-cloud').onclick = async()=>{ saveLocal(); await cloudSave(); toast('Saved'); };
+
+boot();
