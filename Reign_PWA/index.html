@@ -103,8 +103,8 @@
 </script>
 </script>
 <script>
+<script>
 (function(){
-  // Small floating button: "Move Today → Yesterday"
   const b = document.createElement('button');
   b.textContent = 'Fix: Move Today → Yesterday';
   Object.assign(b.style, {
@@ -115,7 +115,6 @@
   });
   b.onclick = function(){
     try {
-      // use the app's local day helper
       const today = (typeof localDayKey==='function') ? localDayKey(new Date()) :
         new Date().toISOString().slice(0,10);
       const d = new Date(); d.setDate(d.getDate()-1);
@@ -127,7 +126,6 @@
         if (c.dayKey === today) { c.dayKey = yesterday; moved++; }
       });
 
-      // Rebuild history strictly from dayKey (matches your new app.js logic)
       const hist = {};
       (state.completions||[]).forEach(c=>{
         const k = c.dayKey;
@@ -137,7 +135,9 @@
       });
       state.history = hist;
 
-      // Save + sync + redraw
+      // Make sure badges exists so render() doesn't break
+      if (!Array.isArray(state.badges)) state.badges = [];
+
       if (typeof saveLocal==='function') saveLocal();
       if (typeof cloudSave==='function') cloudSave();
       if (typeof render==='function') render();
@@ -149,6 +149,7 @@
   };
   document.body.appendChild(b);
 })();
+</script>
 </script>
 </body>
 </html>
