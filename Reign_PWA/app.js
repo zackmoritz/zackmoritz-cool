@@ -76,28 +76,24 @@ function calcXP({difficulty=1, proportion=1}){
   const coins=Math.max(1, Math.ceil(xp/10));
   return { xp, coins };
 }
-
 // ---- Ensure required habits exist + enforce order ---------------------------
-function ensureRequired()function enforceHabitOrder(){
-  const order = new Map(requiredHabits.map((h,i)=>[h.id, i]));
-  state.habits.sort((a,b)=>{
-    const ai = order.has(a.id) ? order.get(a.id) : 9999;
-    const bi = order.has(b.id) ? order.get(b.id) : 9999;
-    return ai - bi;
-  });
-}{
+function ensureRequired(){
   if (!Array.isArray(state.habits)) state.habits = [];
   const have = new Set(state.habits.map(h=>h.id));
-  requiredHabits.forEach(req=>{ if(!have.has(req.id)) state.habits.push({...req}); });
-  state.habits.forEach(h=>{ if(requiredHabits.some(r=>r.id===h.id)) h.archived = false; });
-}
-function enforceHabitOrder(){
-  const order = new Map(requiredHabits.map((h,i)=>[h.id, i]));
-  state.habits.sort((a,b)=>{
-    const ai = order.has(a.id) ? order.get(a.id) : 9999;
-    const bi = order.has(b.id) ? order.get(b.id) : 9999;
-    return ai - bi;
+  requiredHabits.forEach(req => {
+    if (!have.has(req.id)) state.habits.push({ ...req });
   });
+  // keep required ones un-archived
+  state.habits.forEach(h => {
+    if (requiredHabits.some(r => r.id === h.id)) h.archived = false;
+  });
+}
+
+function enforceHabitOrder(){
+  const order = new Map(requiredHabits.map((h,i) => [h.id, i]));
+  state.habits.sort((a,b) =>
+    (order.get(a.id) ?? 9999) - (order.get(b.id) ?? 9999)
+  );
 }
 
 // ---- Due checks (use stored dayKey) ----------------------------------------
