@@ -207,11 +207,3 @@ function wireForms(){
   ensureRequired();
   saveLocal(); cloudSave(); render();
 })();
-function clearToday() {
-  const today = todayKey();
-  state.completions = state.completions.filter(c => !c.dateISO.startsWith(today));
-  state.xp = 0; // optional: reset XP too
-  save();
-  render();
-  toast("Cleared today's progress");
-}
