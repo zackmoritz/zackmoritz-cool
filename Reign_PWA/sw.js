@@ -1,5 +1,5 @@
 // Service Worker for Reign — v1.2.19
-const CACHE_NAME = 'reign-cache-v1-2-19';
+const CACHE_NAME = 'reign-cache-v1-2-22';
 const ASSETS = [
   './',
   './index.html',
