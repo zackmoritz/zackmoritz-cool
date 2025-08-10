@@ -82,7 +82,7 @@ function renderToday(){
       };
       ctr.append(input, btn);
     } else {
-      const btn = document.createElement('button'); btn.textContent = due ? 'Complete' : 'Done';
+      const btn = document.createElement('button'); } else {   const btn=document.createElement('button');   btn.textContent= due ? 'Complete' : 'Done';   btn.className='btn '+(due?'good':'warn');    // Force the click to register and avoid any event swallowing   btn.addEventListener('click', (ev)=>{     ev.preventDefault();     ev.stopPropagation();     // If you want to keep the “already completed” guard, uncomment the next 2 lines:     // if (!isDue(h)) { toast('Already completed'); return; }     completeHabit(h, 1, 1);   });    controls.append(btn); }
       btn.onclick = async ()=>{
         if (!due) { toast('Already completed today'); return; }
         complete(h, 1); saveLocal(); renderHeader(); renderToday(); await cloudSave(); toast('+XP ✅');
