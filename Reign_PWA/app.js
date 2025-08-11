@@ -161,32 +161,39 @@ function calcDailyStreak(){
 }
 
 function drawWeeklyChart(){
-  const cvs=document.getElementById('weekly-chart'); if(!cvs) return;
-  const ctx=cvs.getContext('2d'); ctx.clearRect(0,0,cvs.width,cvs.height);
+function drawWeeklyChart(){
+  const cvs = document.getElementById('weekly-chart'); if (!cvs) return;
+  const ctx = cvs.getContext('2d'); ctx.clearRect(0,0,cvs.width,cvs.height);
 
-  const labels=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const startK=localWeekKey(new Date());
+  // Build this week's XP straight from completions
+  const startK = localWeekKey(new Date());                    // Monday of this week
   const [y,m,d] = startK.split('-').map(n=>parseInt(n,10));
-  const start=new Date(y, m-1, d);
+  const start = new Date(y, m-1, d);
 
-  const vals=[];
-  for(let i=0;i<7;i++){
-    const dt=new Date(start); dt.setDate(start.getDate()+i);
-    const k=localDayKey(dt);
-    vals.push(state.history[k]?.xp || 0);
-  }
+  const dayKeys = Array.from({length:7}, (_,i)=> {
+    const dt = new Date(start); dt.setDate(start.getDate()+i);
+    return localDayKey(dt);
+  });
 
-  const max=Math.max(10, ...vals);
+  const vals = dayKeys.map(k =>
+    (state.completions||[])
+      .filter(c => localWeekKey(dateFromKey(c.dayKey)) === startK && c.dayKey === k)
+      .reduce((s,c)=> s + (c.xp||0), 0)
+  );
+
+  const labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const max = Math.max(10, ...vals);
   const w=cvs.width, h=cvs.height, pad=24;
-  const barW=(w - pad*2) / (vals.length * 1.5);
+  const barW = (w - pad*2) / (vals.length * 1.5);
 
   labels.forEach((lab,i)=>{
-    const x=pad + i*barW*1.5 + barW/2;
-    const v=vals[i];
-    const bh=(h - pad*2) * (v/max);
-    ctx.fillStyle='#7c3aed'; ctx.fillRect(x, h - pad - bh, barW, bh);
-    ctx.fillStyle='#94a3b8'; ctx.font='12px system-ui'; ctx.textAlign='center'; ctx.fillText(lab, x+barW/2, h-6);
-    if(v>0){ ctx.fillStyle='#e5e7eb'; ctx.fillText(String(v), x+barW/2, h - pad - bh - 6); }
+    const x = pad + i*barW*1.5 + barW/2;
+    const v = vals[i];
+    const bh = (h - pad*2) * (v/max);
+    ctx.fillStyle = '#7c3aed'; ctx.fillRect(x, h - pad - bh, barW, bh);
+    ctx.fillStyle = '#94a3b8'; ctx.font = '12px system-ui'; ctx.textAlign = 'center';
+    ctx.fillText(lab, x+barW/2, h-6);
+    if (v>0) { ctx.fillStyle = '#e5e7eb'; ctx.fillText(String(v), x+barW/2, h - pad - bh - 6); }
   });
 }
 
@@ -254,20 +261,20 @@ function render(){
       });
   }
 
-  // Progress numbers + chart
-  const weekStart=localWeekKey(new Date());
-  let weekXP=0; Object.entries(state.history||{}).forEach(([k,v])=>{
-    if(localWeekKey(dateFromKey(k))===weekStart) weekXP += v.xp||0;
-  });
-  const allXP = state.xp||0;
-  const dailyStreak = calcDailyStreak();
-  const sx=document.getElementById('week-xp'); if(sx) sx.textContent = weekXP;
-  const ax=document.getElementById('alltime-xp'); if(ax) ax.textContent = allXP;
-  const ds=document.getElementById('daily-streak'); if(ds) ds.textContent = dailyStreak;
-  drawWeeklyChart();
+// Progress numbers + chart
+const weekStart = localWeekKey(new Date());
+const weekXP = (state.completions || [])
+  .filter(c => localWeekKey(dateFromKey(c.dayKey)) === weekStart)
+  .reduce((s, c) => s + (c.xp || 0), 0);
 
-  checkBadges(); renderBadges(); wireTabs(); wireForms();
-}
+const allXP = state.xp || 0;
+const dailyStreak = calcDailyStreak();
+
+const sx = document.getElementById('week-xp'); if (sx) sx.textContent = weekXP;
+const ax = document.getElementById('alltime-xp'); if (ax) ax.textContent = allXP;
+const ds = document.getElementById('daily-streak'); if (ds) ds.textContent = dailyStreak;
+
+drawWeeklyChart();
 
 // ---- Tabs & forms -----------------------------------------------------------
 function wireTabs(){
