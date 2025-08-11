@@ -161,9 +161,49 @@ function calcDailyStreak(){
 }
 
 function drawWeeklyChart(){
-function drawWeeklyChart(){
   const cvs = document.getElementById('weekly-chart'); if (!cvs) return;
   const ctx = cvs.getContext('2d'); ctx.clearRect(0,0,cvs.width,cvs.height);
+
+  const startK = localWeekKey(new Date());                 // Monday this week
+  const [y,m,d] = startK.split('-').map(n => parseInt(n,10));
+  const start = new Date(y, m-1, d);
+
+  const dayKeys = Array.from({length:7}, (_,i) => {
+    const dt = new Date(start); dt.setDate(start.getDate()+i);
+    return localDayKey(dt);
+  });
+
+  // Sum XP per day; tolerate records without dayKey (fallback to dateISO)
+  const vals = dayKeys.map(k =>
+    (state.completions || [])
+      .map(c => c.dayKey || (c.dateISO ? localDayKey(new Date(c.dateISO)) : null))
+      .reduce((sum, ck, idx) => {
+        if (!ck) return sum;
+        const matchesWeek = localWeekKey(dateFromKey(ck)) === startK;
+        const isThatDay   = ck === k;
+        if (matchesWeek && isThatDay) {
+          const c = state.completions[idx];
+          return sum + (c.xp || 0);
+        }
+        return sum;
+      }, 0)
+  );
+
+  const labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const max = Math.max(10, ...vals);
+  const w=cvs.width, h=cvs.height, pad=24;
+  const barW = (w - pad*2) / (vals.length * 1.5);
+
+  labels.forEach((lab,i)=>{
+    const x = pad + i*barW*1.5 + barW/2;
+    const v = vals[i];
+    const bh = (h - pad*2) * (v/max);
+    ctx.fillStyle = '#7c3aed'; ctx.fillRect(x, h - pad - bh, barW, bh);
+    ctx.fillStyle = '#94a3b8'; ctx.font = '12px system-ui'; ctx.textAlign = 'center';
+    ctx.fillText(lab, x+barW/2, h-6);
+    if (v>0) { ctx.fillStyle = '#e5e7eb'; ctx.fillText(String(v), x+barW/2, h - pad - bh - 6); }
+  });
+}
 
   // Build this week's XP straight from completions
   const startK = localWeekKey(new Date());                    // Monday of this week
@@ -263,9 +303,14 @@ function render(){
 
 // Progress numbers + chart
 const weekStart = localWeekKey(new Date());
+
+// derive week XP directly from completions, tolerating missing dayKey
 const weekXP = (state.completions || [])
-  .filter(c => localWeekKey(dateFromKey(c.dayKey)) === weekStart)
-  .reduce((s, c) => s + (c.xp || 0), 0);
+  .map(c => {
+    const k = c.dayKey || (c.dateISO ? localDayKey(new Date(c.dateISO)) : null);
+    return k && localWeekKey(dateFromKey(k)) === weekStart ? (c.xp || 0) : 0;
+  })
+  .reduce((s, n) => s + n, 0);
 
 const allXP = state.xp || 0;
 const dailyStreak = calcDailyStreak();
