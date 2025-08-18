@@ -1,31 +1,55 @@
-const CACHE_NAME = 'lrpm-cache-6.4-1754773221';
+// service-worker.js  (updated)
+const CACHE_NAME = 'lrpm-cache-v643'; // bump version here
 const ASSETS = [
-  '/',
-  '/index.html?v=6.4-1754773221',
-  '/manifest.json?v=6.4-1754773221',
-  '/service-worker.js?v=6.4-1754773221',
-  '/icons/icon-192.png?v=6.4-1754773221',
-  '/icons/icon-512.png?v=6.4-1754773221'
+  '/', '/index.html', '/manifest.json',
+  '/icons/icon-192.png', '/icons/icon-512.png'
 ];
+
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)));
+  e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)));
   self.skipWaiting();
 });
+
 self.addEventListener('activate', (e) => {
   e.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.map(k => k !== CACHE_NAME ? caches.delete(k) : null)))
+    caches.keys().then(keys =>
+      Promise.all(keys.map(k => (k !== CACHE_NAME ? caches.delete(k) : null)))
+    )
   );
   self.clients.claim();
 });
-self.addEventListener('fetch', (e) => {
-  const url = new URL(e.request.url);
-  if (url.origin === location.origin) {
-    e.respondWith(
-      caches.match(e.request).then(res => res || fetch(e.request).then(r => {
-        const copy = r.clone();
-        caches.open(CACHE_NAME).then(c => c.put(e.request, copy));
-        return r;
-      }).catch(() => caches.match('/index.html')))
+
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  const url = new URL(req.url);
+  const sameOrigin = url.origin === location.origin;
+
+  // Only top-level navigations fall back to index.html
+  if (req.mode === 'navigate' && sameOrigin) {
+    event.respondWith(
+      caches.match('/index.html').then(r => r || fetch('/index.html'))
+    );
+    return;
+  }
+
+  // Don’t cache media (let the server/CDN handle it directly)
+  const isMedia = /\.(mov|mp4|m4v|webm|mp3|m4a|wav|ogg)$/i.test(url.pathname);
+  if (sameOrigin && isMedia) {
+    event.respondWith(fetch(req));
+    return;
+  }
+
+  // Cache-first for other static assets
+  if (sameOrigin) {
+    event.respondWith(
+      caches.match(req).then(cached => {
+        if (cached) return cached;
+        return fetch(req).then(net => {
+          const copy = net.clone();
+          caches.open(CACHE_NAME).then(c => c.put(req, copy));
+          return net;
+        });
+      })
     );
   }
 });
