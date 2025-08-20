@@ -1,0 +1,12 @@
+# Ignore large media so Cloudflare Pages deploys don't fail
+*.m4a
+*.mp4
+*.mov
+*.heic
+*.heif
+*.wav
+*.webm
+
+# (optional) if you keep uploads, ignore the whole folder:
+# /media/*
+# /uploads/*
