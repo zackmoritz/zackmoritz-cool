@@ -70,6 +70,42 @@
 </div>
 
 <script>
+// ---- SW Kill Switch + nosw mode ----
+(function() {
+  const qs = new URLSearchParams(location.search);
+  const NOSW = qs.has('nosw'); // e.g. https://zackmoritz.cool/?nosw=1
+  if ('serviceWorker' in navigator) {
+    // 1) If nosw: unregister everything and clear caches, then skip registration.
+    if (NOSW) {
+      navigator.serviceWorker.getRegistrations().then(regs => Promise.all(regs.map(r => r.unregister())))
+      .then(() => caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))))
+      .then(() => console.log('[nosw] all SWs unregistered & caches cleared'));
+      return; // do not register a SW
+    }
+
+    // 2) If we detect an older SW, offer a one-shot nuke path (?kill-sw=1)
+    if (qs.has('kill-sw')) {
+      navigator.serviceWorker.getRegistrations().then(regs => Promise.all(regs.map(r => r.unregister())))
+      .then(() => caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))))
+      .then(() => location.replace(location.origin + location.pathname + '?fresh=1'));
+      return;
+    }
+
+    // 3) Normal registration with a NEW filename + cache‑busting query
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw-lrpm-v646.js?b=' + Date.now())
+        .then(reg => {
+          // Force-update if there’s an old one around
+          if (reg.waiting) reg.waiting.postMessage({type:'SKIP_WAITING'});
+          if (reg.installing) reg.installing.postMessage({type:'SKIP_WAITING'});
+        })
+        .catch(console.error);
+    });
+  }
+})();
+</script>
+
+<script>
 (() => {
   const $ = s => document.querySelector(s);
   const LS = {
