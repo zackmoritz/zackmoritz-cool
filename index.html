@@ -680,6 +680,7 @@ const MUSIC_DEFAULTS = [
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('service-worker.js?v=6.4-1754773221').catch(console.error);
+			 
     });
   }
 })();
