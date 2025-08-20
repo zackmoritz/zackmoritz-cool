@@ -1,5 +1,5 @@
 // service-worker.js  (updated)
-const CACHE_NAME = 'lrpm-cache-v643'; // bump version here
+const CACHE_NAME = 'lrpm-cache-v645'; // bump version here
 const ASSETS = [
   '/', '/index.html', '/manifest.json',
   '/icons/icon-192.png', '/icons/icon-512.png'
