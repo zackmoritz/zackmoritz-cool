@@ -29,11 +29,11 @@
 <body>
 <div class="wrap">
   <h1>Digital Gratitude List</h1>
-<div class="small">
-  Files in <code>/Digital_Gratitude_List</code>.
-  <span id="fileCount"></span>
-  Sorted by <strong>Newest</strong> by default.
-</div>
+  <div class="small">
+    Files in <code>/Digital_Gratitude_List</code>
+    <span id="fileCount"></span>.
+    Sorted by <strong>Newest</strong> by default.
+  </div>
   <div class="controls">
     <label class="small" for="sortSel">Sort:</label>
     <select id="sortSel">
@@ -108,34 +108,6 @@ function cardHTML(f){
     </a>`;
 }
 
-// Commit-time cache in sessionStorage: key = path@sha → iso date
-function getCachedCommit(path, sha){
-  try{ return JSON.parse(sessionStorage.getItem(`ct:${path}@${sha}`)); }catch{return null;}
-}
-function setCachedCommit(path, sha, iso){
-  try{ sessionStorage.setItem(`ct:${path}@${sha}`, JSON.stringify(iso)); }catch{}
-}
-
-// Fetch last commit ISO for a file (limited concurrency & cached)
-async function fetchLastCommitISO(filePath, sha){
-  const cached = getCachedCommit(filePath, sha);
-  if (cached) return cached;
-
-  // Commits API: /repos/:owner/:repo/commits?path=...&per_page=1&sha=BRANCH
-  const url = `https://api.github.com/repos/${REPO}/commits?path=${encodeURIComponent(filePath)}&per_page=1&sha=${encodeURIComponent(BRANCH)}`;
-  // Small delay to be gentle on rate limits
-  await new Promise(r => setTimeout(r, 180));
-  const res = await fetch(url, { headers:{Accept:"application/vnd.github+json"} });
-  if (res.status === 403) { // rate limited
-    throw new Error("GitHub rate limit (unauthenticated). Try again in a minute.");
-  }
-  if (!res.ok) throw new Error(`Commits API ${res.status}`);
-  const arr = await res.json();
-  const iso = arr?.[0]?.commit?.committer?.date || arr?.[0]?.commit?.author?.date || null;
-  if (iso) setCachedCommit(filePath, sha, iso);
-  return iso;
-}
-
 function sortFiles(files, mode){
   switch(mode){
     case 'new': return files.slice().sort((a,b)=> (b._commitTime||0) - (a._commitTime||0));
@@ -148,6 +120,17 @@ function sortFiles(files, mode){
   }
 }
 
+// (Rollback keeps alphabetic default if commit times aren't available.)
+async function fetchLastCommitISO(filePath, sha){
+  const url = `https://api.github.com/repos/${REPO}/commits?path=${encodeURIComponent(filePath)}&per_page=1&sha=${encodeURIComponent(BRANCH)}`;
+  await new Promise(r => setTimeout(r, 180)); // be gentle re: rate limits
+  const res = await fetch(url, { headers:{Accept:"application/vnd.github+json"} });
+  if (res.status === 403) return null; // rate limited
+  if (!res.ok) return null;
+  const arr = await res.json();
+  return arr?.[0]?.commit?.committer?.date || arr?.[0]?.commit?.author?.date || null;
+}
+
 async function build(){
   try{
     statusEl.textContent = "";
@@ -156,11 +139,14 @@ async function build(){
     if(!r.ok) throw new Error(`GitHub API ${r.status}`);
     let items = await r.json();
     let files = (Array.isArray(items)?items:[]).filter(it => it.type==='file' && FILE_OK.test(it.name));
-		
-		// update file count at the top
-document.getElementById('fileCount').textContent = `(${files.length} items)`;
 
-    // get commit times (newest sort default)
+    // ---- NEW: show number of images at the top ----
+    const imageCount = files.filter(it => IMG_EXT.test(it.name)).length;
+    const fileCountEl = document.getElementById('fileCount');
+    if (fileCountEl) fileCountEl.textContent = `(${imageCount} images)`;
+    // ----------------------------------------------
+
+    // Try to fetch commit times (if limited, it will still render)
     statusEl.textContent = `Fetching commit times… (${files.length})`;
     let fetched = 0;
     for (const f of files){
@@ -168,8 +154,7 @@ document.getElementById('fileCount').textContent = `(${files.length} items)`;
         const iso = await fetchLastCommitISO(`${FOLDER}/${f.name}`, f.sha);
         f._commitISO = iso;
         f._commitTime = iso ? Date.parse(iso) : 0;
-      }catch(err){
-        // If rate-limited, keep going without times
+      }catch{
         f._commitISO = null; f._commitTime = 0;
       }finally{
         fetched++;
@@ -230,14 +215,8 @@ document.getElementById('fileCount').textContent = `(${files.length} items)`;
       });
     });
 
-    // re-sort on change
-    sortSel.onchange = () => {
-      const mode = sortSel.value;
-      const sorted = sortFiles(files, mode);
-      grid.innerHTML = sorted.map(cardHTML).join('');
-      // re-wire events & thumbs after re-render
-      build(); // quick & dirty: rebuild to keep code short
-    };
+    // re-sort on change (rebuild to keep thumbnails/clicks wired)
+    sortSel.onchange = () => build();
 
   }catch(err){
     statusEl.textContent = "";
