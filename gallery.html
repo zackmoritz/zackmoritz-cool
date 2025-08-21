@@ -10,13 +10,14 @@
   .wrap{max-width:1100px;margin:0 auto;padding:24px 14px}
   h1{margin:0 0 6px}
   .small{color:var(--muted);font-size:13px}
-  .controls{display:flex;gap:8px;align-items:center;margin-top:8px}
+  .controls{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
   select{background:#1a232f;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 8px}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-top:16px}
   .card{position:relative;display:block;border:1px solid var(--border);background:var(--panel);border-radius:12px;overflow:hidden;text-decoration:none;color:var(--text)}
   .thumb{display:block;width:100%;height:140px;object-fit:cover;background:#0b0e13}
   .label{padding:8px 10px;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-top:1px solid var(--border)}
   .badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.55);border:1px solid var(--border);padding:2px 6px;border-radius:999px;font-size:12px}
+  /* lightbox */
   .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:999}
   .lightbox.open{display:flex}
   .viewer{max-width:92vw;max-height:86vh;background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden}
@@ -24,31 +25,41 @@
   .viewer .head{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--border)}
   .viewer .name{font-size:14px}
   .btn{cursor:pointer;border:1px solid var(--border);background:#1a232f;color:var(--text);border-radius:8px;padding:6px 10px;font-size:13px}
+  /* pagination */
+  .pager{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:14px}
+  .pagebtn{border:1px solid var(--border);background:#12161f;color:var(--text);border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer}
+  .pagebtn[disabled]{opacity:.5;cursor:not-allowed}
+  .pagenum{border:1px solid var(--border);background:#12161f;color:var(--text);border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer}
+  .pagenum.active{background:#1a232f}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>Digital Gratitude List</h1>
   <div class="small">
-    Files in <code>/Digital_Gratitude_List</code>
-    <span id="fileCount"></span>.
+    Files in <code>/Digital_Gratitude_List</code> <span id="fileCount"></span>.
     Sorted by <strong>Newest</strong> by default.
   </div>
+
   <div class="controls">
     <label class="small" for="sortSel">Sort:</label>
     <select id="sortSel">
-      <option value="new">Newest</option>
+      <option value="new" selected>Newest</option>
       <option value="old">Oldest</option>
       <option value="az">A–Z</option>
       <option value="za">Z–A</option>
-      <option value="big">Size (largest)</option>
-      <option value="small">Size (smallest)</option>
     </select>
-    <span id="status" class="small" style="margin-left:auto"></span>
+
+    <div class="small" style="margin-left:auto">
+      Page <span id="pageInfo">1</span>
+    </div>
   </div>
+
   <div id="grid" class="grid"><div class="small">Loading…</div></div>
+  <div id="pager" class="pager" aria-label="Pagination"></div>
 </div>
 
+<!-- Lightbox -->
 <div id="lightbox" class="lightbox" aria-hidden="true">
   <div class="viewer">
     <div class="head">
@@ -66,15 +77,18 @@
 const REPO   = "zackmoritz/zackmoritz-cool";
 const BRANCH = "main";
 const FOLDER = "Digital_Gratitude_List";
+const PAGE_SIZE = 25;
 
 const IMG_EXT   = /\.(png|jpe?g|gif|webp|heic|heif)$/i;
 const VIDEO_EXT = /\.(mp4|mov|webm|m4v)$/i;
 const AUDIO_EXT = /\.(m4a|mp3|wav|ogg)$/i;
 const FILE_OK   = /\.(png|jpe?g|gif|webp|heic|heif|mp4|mov|webm|m4v|m4a|mp3|wav|ogg)$/i;
 
-const grid = document.getElementById('grid');
-const sortSel = document.getElementById('sortSel');
-const statusEl = document.getElementById('status');
+const grid     = document.getElementById('grid');
+const pager    = document.getElementById('pager');
+const pageInfo = document.getElementById('pageInfo');
+const sortSel  = document.getElementById('sortSel');
+const fileCountEl = document.getElementById('fileCount');
 
 const lb   = document.getElementById('lightbox');
 const lbBody = document.getElementById('lbBody');
@@ -84,6 +98,11 @@ const lbClose= document.getElementById('lbClose');
 
 lbClose.onclick = () => { lb.classList.remove('open'); lb.setAttribute('aria-hidden','true'); lbBody.innerHTML=''; };
 lb.addEventListener('click', e => { if (e.target === lb) lbClose.onclick(); });
+
+let ALL_FILES = [];   // list from GitHub
+let VIEW = [];        // sorted list used for paging
+let currentPage = 1;
+let totalPages  = 1;
 
 function siteHref(name){ return `/${FOLDER}/${encodeURIComponent(name)}`; }
 async function headType(url){
@@ -112,118 +131,158 @@ function sortFiles(files, mode){
   switch(mode){
     case 'new': return files.slice().sort((a,b)=> (b._commitTime||0) - (a._commitTime||0));
     case 'old': return files.slice().sort((a,b)=> (a._commitTime||0) - (b._commitTime||0));
-    case 'az' : return files.slice().sort((a,b)=> a.name.localeCompare(b.name, undefined, {numeric:true}));
     case 'za' : return files.slice().sort((a,b)=> b.name.localeCompare(a.name, undefined, {numeric:true}));
-    case 'big': return files.slice().sort((a,b)=> (b.size||0) - (a.size||0));
-    case 'small':return files.slice().sort((a,b)=> (a.size||0) - (b.size||0));
-    default: return files;
+    case 'az' : default: return files.slice().sort((a,b)=> a.name.localeCompare(b.name, undefined, {numeric:true}));
   }
 }
 
-// (Rollback keeps alphabetic default if commit times aren't available.)
-async function fetchLastCommitISO(filePath, sha){
-  const url = `https://api.github.com/repos/${REPO}/commits?path=${encodeURIComponent(filePath)}&per_page=1&sha=${encodeURIComponent(BRANCH)}`;
-  await new Promise(r => setTimeout(r, 180)); // be gentle re: rate limits
+function renderPage(){
+  totalPages = Math.max(1, Math.ceil(VIEW.length / PAGE_SIZE));
+  if (currentPage > totalPages) currentPage = totalPages;
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const slice = VIEW.slice(start, start + PAGE_SIZE);
+
+  grid.innerHTML = slice.map(cardHTML).join('');
+
+  // thumbs + lightbox
+  const thumbs = grid.querySelectorAll('img.thumb');
+  thumbs.forEach(async img => {
+    const site = img.dataset.site, raw = img.dataset.raw, kind = img.dataset.kind;
+    if (kind === 'Image') {
+      const t = await headType(site);
+      img.src = (!t.ok || (t.type||'').includes('text/html')) ? raw : site;
+    } else {
+      img.style.background = '#0b0e13'; img.style.height = '120px';
+      img.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300">
+           <rect width="100%" height="100%" fill="#0b0e13"/>
+           <text x="50%" y="50%" fill="#9aa6b2" font-family="system-ui" font-size="28" text-anchor="middle" dominant-baseline="middle">${img.dataset.kind}</text>
+         </svg>`
+      );
+    }
+  });
+
+  grid.querySelectorAll('a.card').forEach(a => {
+    a.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const name = decodeURIComponent(a.dataset.name);
+      const site = a.dataset.site;
+      const raw  = a.dataset.raw;
+      const kind = a.dataset.kind;
+      lbName.textContent = name;
+
+      const t = await headType(site);
+      const url = (!t.ok || (t.type||'').includes('text/html')) ? raw : site;
+      lbOpen.href = url;
+
+      if (kind === 'Image') {
+        lbBody.innerHTML = `<img src="${url}" alt="${name}" style="display:block;max-width:92vw;max-height:80vh">`;
+      } else if (kind === 'Video') {
+        const type = url.endsWith('.mov') ? 'video/quicktime' : 'video/mp4';
+        lbBody.innerHTML = `<video controls playsinline preload="metadata" style="max-width:92vw;max-height:80vh"><source src="${url}" type="${type}"></video>`;
+      } else {
+        lbBody.innerHTML = `<audio controls preload="metadata" style="width:92vw;max-width:800px"><source src="${url}" type="audio/mp4"></audio>`;
+      }
+      lb.classList.add('open'); lb.setAttribute('aria-hidden','false');
+    });
+  });
+
+  pageInfo.textContent = `${currentPage} / ${totalPages}`;
+  buildPager();
+}
+
+function buildPager(){
+  pager.innerHTML = "";
+  const prev = document.createElement('button');
+  prev.className = 'pagebtn';
+  prev.textContent = '‹ Prev';
+  prev.disabled = currentPage === 1;
+  prev.onclick = () => { currentPage--; renderPage(); };
+  pager.appendChild(prev);
+
+  const nums = [];
+  const maxBtns = 7;
+  if (totalPages <= maxBtns) {
+    for (let i=1;i<=totalPages;i++) nums.push(i);
+  } else {
+    const left = Math.max(1, currentPage - 2);
+    const right = Math.min(totalPages, currentPage + 2);
+    if (left > 1) nums.push(1, '…');
+    for (let i=left;i<=right;i++) nums.push(i);
+    if (right < totalPages) nums.push('…', totalPages);
+  }
+
+  nums.forEach(n => {
+    if (n === '…') {
+      const span = document.createElement('span');
+      span.className = 'small';
+      span.textContent = '…';
+      pager.appendChild(span);
+      return;
+    }
+    const b = document.createElement('button');
+    b.className = 'pagenum' + (n===currentPage ? ' active' : '');
+    b.textContent = n;
+    b.onclick = () => { currentPage = n; renderPage(); };
+    pager.appendChild(b);
+  });
+
+  const next = document.createElement('button');
+  next.className = 'pagebtn';
+  next.textContent = 'Next ›';
+  next.disabled = currentPage === totalPages;
+  next.onclick = () => { currentPage++; renderPage(); };
+  pager.appendChild(next);
+}
+
+// commit API
+async function fetchLastCommitISO(path, sha){
+  const url = `https://api.github.com/repos/${REPO}/commits?path=${encodeURIComponent(path)}&per_page=1&sha=${encodeURIComponent(BRANCH)}`;
+  await new Promise(r => setTimeout(r, 150));
   const res = await fetch(url, { headers:{Accept:"application/vnd.github+json"} });
-  if (res.status === 403) return null; // rate limited
   if (!res.ok) return null;
   const arr = await res.json();
   return arr?.[0]?.commit?.committer?.date || arr?.[0]?.commit?.author?.date || null;
 }
 
-async function build(){
+async function fetchList(){
+  const url = `https://api.github.com/repos/${REPO}/contents/${encodeURIComponent(FOLDER)}?ref=${encodeURIComponent(BRANCH)}`;
+  const r = await fetch(url, { headers:{Accept:"application/vnd.github+json"} });
+  if(!r.ok) throw new Error(`GitHub API ${r.status}`);
+  const items = await r.json();
+  return (Array.isArray(items)?items:[]).filter(it => it.type==='file' && FILE_OK.test(it.name));
+}
+
+async function init(){
+  grid.innerHTML = `<div class="small">Loading…</div>`;
   try{
-    statusEl.textContent = "";
-    const url = `https://api.github.com/repos/${REPO}/contents/${encodeURIComponent(FOLDER)}?ref=${encodeURIComponent(BRANCH)}`;
-    const r = await fetch(url, { headers:{Accept:"application/vnd.github+json"} });
-    if(!r.ok) throw new Error(`GitHub API ${r.status}`);
-    let items = await r.json();
-    let files = (Array.isArray(items)?items:[]).filter(it => it.type==='file' && FILE_OK.test(it.name));
+    ALL_FILES = await fetchList();
+    const imageCount = ALL_FILES.filter(it => IMG_EXT.test(it.name)).length;
+    if (fileCountEl) fileCountEl.textContent = `(${imageCount} images, ${ALL_FILES.length} items total)`;
 
-    // ---- NEW: show number of images at the top ----
-    const imageCount = files.filter(it => IMG_EXT.test(it.name)).length;
-    const fileCountEl = document.getElementById('fileCount');
-    if (fileCountEl) fileCountEl.textContent = `(${imageCount} images)`;
-    // ----------------------------------------------
-
-    // Try to fetch commit times (if limited, it will still render)
-    statusEl.textContent = `Fetching commit times… (${files.length})`;
-    let fetched = 0;
-    for (const f of files){
+    // fetch commit times
+    for (const f of ALL_FILES){
       try{
         const iso = await fetchLastCommitISO(`${FOLDER}/${f.name}`, f.sha);
-        f._commitISO = iso;
         f._commitTime = iso ? Date.parse(iso) : 0;
-      }catch{
-        f._commitISO = null; f._commitTime = 0;
-      }finally{
-        fetched++;
-        if (fetched % 5 === 0 || fetched === files.length) {
-          statusEl.textContent = `Fetched ${fetched}/${files.length} commit times…`;
-        }
-      }
+      }catch{ f._commitTime = 0; }
     }
-    statusEl.textContent = "";
 
-    const mode = sortSel.value || 'new';
-    files = sortFiles(files, mode);
+    VIEW = sortFiles(ALL_FILES, sortSel.value || 'new');
+    currentPage = 1;
+    renderPage();
 
-    // render
-    grid.innerHTML = files.map(cardHTML).join('');
-
-    // thumbnails (prefer site; fallback to raw)
-    const thumbs = grid.querySelectorAll('img.thumb');
-    thumbs.forEach(async img => {
-      const site = img.dataset.site, raw = img.dataset.raw, kind = img.dataset.kind;
-      if (kind === 'Image') {
-        const t = await headType(site);
-        img.src = (!t.ok || (t.type||'').includes('text/html')) ? raw : site;
-      } else {
-        img.style.background = '#0b0e13'; img.style.height = '120px';
-        img.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(
-          `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300">
-             <rect width="100%" height="100%" fill="#0b0e13"/>
-             <text x="50%" y="50%" fill="#9aa6b2" font-family="system-ui" font-size="28" text-anchor="middle" dominant-baseline="middle">${img.dataset.kind}</text>
-           </svg>`
-        );
-      }
-    });
-
-    // click → lightbox
-    grid.querySelectorAll('a.card').forEach(a => {
-      a.addEventListener('click', async (e) => {
-        e.preventDefault();
-        const name = decodeURIComponent(a.dataset.name);
-        const site = a.dataset.site;
-        const raw  = a.dataset.raw;
-        const kind = a.dataset.kind;
-        lbName.textContent = name;
-
-        const t = await headType(site);
-        const url = (!t.ok || (t.type||'').includes('text/html')) ? raw : site;
-        lbOpen.href = url;
-
-        if (kind === 'Image') {
-          lbBody.innerHTML = `<img src="${url}" alt="${name}" style="display:block;max-width:92vw;max-height:80vh">`;
-        } else if (kind === 'Video') {
-          const type = url.endsWith('.mov') ? 'video/quicktime' : 'video/mp4';
-          lbBody.innerHTML = `<video controls playsinline preload="metadata" style="max-width:92vw;max-height:80vh"><source src="${url}" type="${type}"></video>`;
-        } else {
-          lbBody.innerHTML = `<audio controls preload="metadata" style="width:92vw;max-width:800px"><source src="${url}" type="audio/mp4"></audio>`;
-        }
-        lb.classList.add('open'); lb.setAttribute('aria-hidden','false');
-      });
-    });
-
-    // re-sort on change (rebuild to keep thumbnails/clicks wired)
-    sortSel.onchange = () => build();
-
+    sortSel.onchange = () => {
+      VIEW = sortFiles(ALL_FILES, sortSel.value);
+      currentPage = 1;
+      renderPage();
+    };
   }catch(err){
-    statusEl.textContent = "";
     grid.innerHTML = `<div class="small">Error: ${err.message}</div>`;
   }
 }
-build();
+
+init();
 </script>
 </body>
 </html>
