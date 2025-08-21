@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Digital Gratitude List — ZackMoritz.cool</title>
+<style>
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#0f1115;color:#e7ecf1}
+  .wrap{max-width:900px;margin:0 auto;padding:32px 16px}
+  h1{margin:0 0 10px}
+  .small{color:#9aa6b2;font-size:13px}
+  ul{list-style:none;padding:0;margin:16px 0}
+  li{display:flex;align-items:center;gap:12px;padding:10px;border:1px solid #262b36;border-radius:10px;margin-bottom:10px;background:#12161f}
+  a{color:#e7ecf1;text-decoration:none}
+  .thumb{width:64px;height:48px;object-fit:cover;border:1px solid #262b36;border-radius:6px;background:#0f1115}
+  .meta{margin-left:auto;color:#9aa6b2;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Digital Gratitude List</h1>
+  <div class="small">Every file in <code>/Digital_Gratitude_List</code> will appear here automatically.</div>
+  <ul id="list"><li class="small">Loading…</li></ul>
+</div>
+
+<script>
+/* Configure these 3 lines */
+const REPO   = "zackmoritz/zackmoritz-cool"; // owner/repo
+const BRANCH = "main";                        // branch Pages builds from
+const FOLDER = "Digital_Gratitude_List";      // folder to list
+
+const IMG_EXT = /\.(png|jpe?g|gif|webp|heic|heif)$/i;
+const FILE_EXT_OK = /\.(png|jpe?g|gif|webp|heic|heif|mov|mp4|m4a|mp3)$/i;
+
+async function listFolder() {
+  try {
+    const url = `https://api.github.com/repos/${REPO}/contents/${encodeURIComponent(FOLDER)}?ref=${encodeURIComponent(BRANCH)}`;
+    const res = await fetch(url, { headers: { "Accept": "application/vnd.github+json" }});
+    if (!res.ok) throw new Error(`GitHub API ${res.status}`);
+    const items = await res.json();
+
+    const files = (Array.isArray(items) ? items : [])
+      .filter(it => it.type === "file" && FILE_EXT_OK.test(it.name))
+      .sort((a,b) => a.name.localeCompare(b.name, undefined, {numeric:true}));
+
+    const ul = document.getElementById('list');
+    if (!files.length) { ul.innerHTML = `<li class="small">No files found in /${FOLDER}.</li>`; return; }
+
+    ul.innerHTML = files.map(f => {
+      const siteHref = `/${FOLDER}/${encodeURIComponent(f.name)}`;
+      const isImg = IMG_EXT.test(f.name);
+      const sizeKB = Math.max(1, Math.round((f.size||0)/1024));
+      const thumb = isImg ? `<img class="thumb" src="${siteHref}" alt="">` : `<div class="thumb"></div>`;
+      return `<li>${thumb}<a href="${siteHref}">${f.name}</a><span class="meta">${sizeKB} KB</span></li>`;
+    }).join("");
+  } catch (e) {
+    document.getElementById('list').innerHTML = `<li class="small">Error: ${e.message}</li>`;
+  }
+}
+
+listFolder();
+</script>
+</body>
+</html>
