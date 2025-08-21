@@ -5,60 +5,155 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Digital Gratitude List — ZackMoritz.cool</title>
 <style>
-  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#0f1115;color:#e7ecf1}
-  .wrap{max-width:900px;margin:0 auto;padding:32px 16px}
-  h1{margin:0 0 10px}
-  .small{color:#9aa6b2;font-size:13px}
-  ul{list-style:none;padding:0;margin:16px 0}
-  li{display:flex;align-items:center;gap:12px;padding:10px;border:1px solid #262b36;border-radius:10px;margin-bottom:10px;background:#12161f}
-  a{color:#e7ecf1;text-decoration:none}
-  .thumb{width:64px;height:48px;object-fit:cover;border:1px solid #262b36;border-radius:6px;background:#0f1115}
-  .meta{margin-left:auto;color:#9aa6b2;font-size:12px}
+  :root { --bg:#0f1115; --panel:#12161f; --border:#262b36; --text:#e7ecf1; --muted:#9aa6b2; }
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+  .wrap{max-width:1100px;margin:0 auto;padding:24px 14px}
+  h1{margin:0 0 6px}
+  .small{color:var(--muted);font-size:13px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-top:16px}
+  .card{position:relative;display:block;border:1px solid var(--border);background:var(--panel);border-radius:12px;overflow:hidden;text-decoration:none;color:var(--text)}
+  .thumb{display:block;width:100%;height:140px;object-fit:cover;background:#0b0e13}
+  .label{padding:8px 10px;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-top:1px solid var(--border)}
+  .badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.55);border:1px solid var(--border);padding:2px 6px;border-radius:999px;font-size:12px}
+  /* lightbox */
+  .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:999}
+  .lightbox.open{display:flex}
+  .viewer{max-width:92vw;max-height:86vh;background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+  .viewer img,.viewer video,audio{display:block;max-width:92vw;max-height:80vh}
+  .viewer .head{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--border)}
+  .viewer .name{font-size:14px}
+  .btn{cursor:pointer;border:1px solid var(--border);background:#1a232f;color:var(--text);border-radius:8px;padding:6px 10px;font-size:13px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>Digital Gratitude List</h1>
-  <div class="small">Every file in <code>/Digital_Gratitude_List</code> will appear here automatically.</div>
-  <ul id="list"><li class="small">Loading…</li></ul>
+  <div class="small">Files in <code>/Digital_Gratitude_List</code> are listed with previews. Add a file → push → it appears here.</div>
+  <div id="grid" class="grid"><div class="small">Loading…</div></div>
+</div>
+
+<div id="lightbox" class="lightbox" aria-hidden="true">
+  <div class="viewer">
+    <div class="head">
+      <div class="name" id="lbName">File</div>
+      <div style="display:flex;gap:6px">
+        <a id="lbOpen" class="btn" href="#" target="_blank" rel="noopener">Open</a>
+        <button id="lbClose" class="btn">Close</button>
+      </div>
+    </div>
+    <div id="lbBody" style="padding:0"></div>
+  </div>
 </div>
 
 <script>
-/* Configure these 3 lines */
-const REPO   = "zackmoritz/zackmoritz-cool"; // owner/repo
-const BRANCH = "main";                        // branch Pages builds from
-const FOLDER = "Digital_Gratitude_List";      // folder to list
+const REPO   = "zackmoritz/zackmoritz-cool";
+const BRANCH = "main";
+const FOLDER = "Digital_Gratitude_List";
 
-const IMG_EXT = /\.(png|jpe?g|gif|webp|heic|heif)$/i;
-const FILE_EXT_OK = /\.(png|jpe?g|gif|webp|heic|heif|mov|mp4|m4a|mp3)$/i;
+const IMG_EXT   = /\.(png|jpe?g|gif|webp|heic|heif)$/i;
+const VIDEO_EXT = /\.(mp4|mov|webm|m4v)$/i;
+const AUDIO_EXT = /\.(m4a|mp3|wav|ogg)$/i;
+const FILE_OK   = /\.(png|jpe?g|gif|webp|heic|heif|mp4|mov|webm|m4v|m4a|mp3|wav|ogg)$/i;
 
-async function listFolder() {
+const grid = document.getElementById('grid');
+const lb   = document.getElementById('lightbox');
+const lbBody = document.getElementById('lbBody');
+const lbName = document.getElementById('lbName');
+const lbOpen = document.getElementById('lbOpen');
+const lbClose= document.getElementById('lbClose');
+
+lbClose.onclick = () => { lb.classList.remove('open'); lb.setAttribute('aria-hidden','true'); lbBody.innerHTML=''; };
+lb.addEventListener('click', e => { if (e.target === lb) lbClose.onclick(); });
+
+function siteHref(name){ return `/${FOLDER}/${encodeURIComponent(name)}`; }
+
+async function headType(url){
   try {
-    const url = `https://api.github.com/repos/${REPO}/contents/${encodeURIComponent(FOLDER)}?ref=${encodeURIComponent(BRANCH)}`;
-    const res = await fetch(url, { headers: { "Accept": "application/vnd.github+json" }});
-    if (!res.ok) throw new Error(`GitHub API ${res.status}`);
-    const items = await res.json();
-
-    const files = (Array.isArray(items) ? items : [])
-      .filter(it => it.type === "file" && FILE_EXT_OK.test(it.name))
-      .sort((a,b) => a.name.localeCompare(b.name, undefined, {numeric:true}));
-
-    const ul = document.getElementById('list');
-    if (!files.length) { ul.innerHTML = `<li class="small">No files found in /${FOLDER}.</li>`; return; }
-
-    ul.innerHTML = files.map(f => {
-      const siteHref = `/${FOLDER}/${encodeURIComponent(f.name)}`;
-      const isImg = IMG_EXT.test(f.name);
-      const sizeKB = Math.max(1, Math.round((f.size||0)/1024));
-      const thumb = isImg ? `<img class="thumb" src="${siteHref}" alt="">` : `<div class="thumb"></div>`;
-      return `<li>${thumb}<a href="${siteHref}">${f.name}</a><span class="meta">${sizeKB} KB</span></li>`;
-    }).join("");
-  } catch (e) {
-    document.getElementById('list').innerHTML = `<li class="small">Error: ${e.message}</li>`;
-  }
+    const r = await fetch(url, { method:'HEAD' });
+    return { ok:r.ok, type:r.headers.get('content-type')||'' };
+  } catch { return { ok:false, type:'' }; }
 }
 
-listFolder();
+function cardHTML(f){
+  const site = siteHref(f.name);
+  const raw  = f.download_url; // GitHub raw
+  const isImg   = IMG_EXT.test(f.name);
+  const isVideo = VIDEO_EXT.test(f.name);
+  const isAudio = AUDIO_EXT.test(f.name);
+  const badge = isVideo ? 'Video' : isAudio ? 'Audio' : 'Image';
+  const data = `data-site="${site}" data-raw="${raw}" data-name="${encodeURIComponent(f.name)}" data-kind="${badge}"`;
+  return `
+    <a href="${site}" class="card" ${data}>
+      <span class="badge">${badge}</span>
+      ${isImg ? `<img class="thumb" loading="lazy" alt="" ${data}>`
+              : `<img class="thumb" alt="" ${data} style="object-fit:contain" />`}
+      <div class="label" title="${f.name}">${f.name}</div>
+    </a>`;
+}
+
+async function build(){
+  try{
+    const url = `https://api.github.com/repos/${REPO}/contents/${encodeURIComponent(FOLDER)}?ref=${encodeURIComponent(BRANCH)}`;
+    const r = await fetch(url, { headers:{Accept:"application/vnd.github+json"} });
+    if(!r.ok) throw new Error(`GitHub API ${r.status}`);
+    let items = await r.json();
+    items = (Array.isArray(items)?items:[]).filter(it => it.type==='file' && FILE_OK.test(it.name))
+      .sort((a,b)=> a.name.localeCompare(b.name, undefined, {numeric:true}));
+    if(!items.length){ grid.innerHTML = `<div class="small">No files found in /${FOLDER}.</div>`; return; }
+    grid.innerHTML = items.map(cardHTML).join('');
+
+    // load thumbnails (prefer site; fallback to raw if site serves HTML)
+    const thumbs = grid.querySelectorAll('img.thumb');
+    thumbs.forEach(async img => {
+      const site = img.dataset.site, raw = img.dataset.raw, kind = img.dataset.kind;
+      if (kind === 'Image') {
+        const t = await headType(site);
+        img.src = (!t.ok || (t.type||'').includes('text/html')) ? raw : site;
+      } else {
+        // non-image: show a simple preview badge background
+        img.style.background = '#0b0e13';
+        img.style.height = '120px';
+        img.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+          `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300">
+             <rect width="100%" height="100%" fill="#0b0e13"/>
+             <text x="50%" y="50%" fill="#9aa6b2" font-family="system-ui" font-size="28" text-anchor="middle" dominant-baseline="middle">${img.dataset.kind}</text>
+           </svg>`
+        );
+      }
+    });
+
+    // click handler: open lightbox with proper element
+    grid.querySelectorAll('a.card').forEach(a => {
+      a.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const name = decodeURIComponent(a.dataset.name);
+        const site = a.dataset.site;
+        const raw  = a.dataset.raw;
+        const kind = a.dataset.kind;
+        lbName.textContent = name;
+
+        // choose playable URL (prefer site; fallback to raw if HTML)
+        const t = await headType(site);
+        const url = (!t.ok || (t.type||'').includes('text/html')) ? raw : site;
+        lbOpen.href = url;
+
+        if (kind === 'Image') {
+          lbBody.innerHTML = `<img src="${url}" alt="${name}" style="display:block;max-width:92vw;max-height:80vh">`;
+        } else if (kind === 'Video') {
+          const type = url.endsWith('.mov') ? 'video/quicktime' : 'video/mp4';
+          lbBody.innerHTML = `<video controls playsinline preload="metadata" style="max-width:92vw;max-height:80vh"><source src="${url}" type="${type}"></video>`;
+        } else { // Audio
+          lbBody.innerHTML = `<audio controls preload="metadata" style="width:92vw;max-width:800px"><source src="${url}" type="audio/mp4"></audio>`;
+        }
+        lb.classList.add('open'); lb.setAttribute('aria-hidden','false');
+      });
+    });
+
+  }catch(err){
+    grid.innerHTML = `<div class="small">Error: ${err.message}</div>`;
+  }
+}
+build();
 </script>
 </body>
 </html>
