@@ -10,12 +10,13 @@
   .wrap{max-width:1100px;margin:0 auto;padding:24px 14px}
   h1{margin:0 0 6px}
   .small{color:var(--muted);font-size:13px}
+  .controls{display:flex;gap:8px;align-items:center;margin-top:8px}
+  select{background:#1a232f;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 8px}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-top:16px}
   .card{position:relative;display:block;border:1px solid var(--border);background:var(--panel);border-radius:12px;overflow:hidden;text-decoration:none;color:var(--text)}
   .thumb{display:block;width:100%;height:140px;object-fit:cover;background:#0b0e13}
   .label{padding:8px 10px;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-top:1px solid var(--border)}
   .badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.55);border:1px solid var(--border);padding:2px 6px;border-radius:999px;font-size:12px}
-  /* lightbox */
   .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:999}
   .lightbox.open{display:flex}
   .viewer{max-width:92vw;max-height:86vh;background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden}
@@ -28,7 +29,19 @@
 <body>
 <div class="wrap">
   <h1>Digital Gratitude List</h1>
-  <div class="small">Files in <code>/Digital_Gratitude_List</code> are listed with previews. Add a file → push → it appears here.</div>
+  <div class="small">Files in <code>/Digital_Gratitude_List</code>. Sorted by <strong>Newest</strong> by default.</div>
+  <div class="controls">
+    <label class="small" for="sortSel">Sort:</label>
+    <select id="sortSel">
+      <option value="new">Newest</option>
+      <option value="old">Oldest</option>
+      <option value="az">A–Z</option>
+      <option value="za">Z–A</option>
+      <option value="big">Size (largest)</option>
+      <option value="small">Size (smallest)</option>
+    </select>
+    <span id="status" class="small" style="margin-left:auto"></span>
+  </div>
   <div id="grid" class="grid"><div class="small">Loading…</div></div>
 </div>
 
@@ -56,6 +69,9 @@ const AUDIO_EXT = /\.(m4a|mp3|wav|ogg)$/i;
 const FILE_OK   = /\.(png|jpe?g|gif|webp|heic|heif|mp4|mov|webm|m4v|m4a|mp3|wav|ogg)$/i;
 
 const grid = document.getElementById('grid');
+const sortSel = document.getElementById('sortSel');
+const statusEl = document.getElementById('status');
+
 const lb   = document.getElementById('lightbox');
 const lbBody = document.getElementById('lbBody');
 const lbName = document.getElementById('lbName');
@@ -66,17 +82,14 @@ lbClose.onclick = () => { lb.classList.remove('open'); lb.setAttribute('aria-hid
 lb.addEventListener('click', e => { if (e.target === lb) lbClose.onclick(); });
 
 function siteHref(name){ return `/${FOLDER}/${encodeURIComponent(name)}`; }
-
 async function headType(url){
-  try {
-    const r = await fetch(url, { method:'HEAD' });
-    return { ok:r.ok, type:r.headers.get('content-type')||'' };
-  } catch { return { ok:false, type:'' }; }
+  try { const r = await fetch(url, { method:'HEAD' }); return { ok:r.ok, type:r.headers.get('content-type')||'' }; }
+  catch { return { ok:false, type:'' }; }
 }
 
 function cardHTML(f){
   const site = siteHref(f.name);
-  const raw  = f.download_url; // GitHub raw
+  const raw  = f.download_url;
   const isImg   = IMG_EXT.test(f.name);
   const isVideo = VIDEO_EXT.test(f.name);
   const isAudio = AUDIO_EXT.test(f.name);
@@ -91,18 +104,82 @@ function cardHTML(f){
     </a>`;
 }
 
+// Commit-time cache in sessionStorage: key = path@sha → iso date
+function getCachedCommit(path, sha){
+  try{ return JSON.parse(sessionStorage.getItem(`ct:${path}@${sha}`)); }catch{return null;}
+}
+function setCachedCommit(path, sha, iso){
+  try{ sessionStorage.setItem(`ct:${path}@${sha}`, JSON.stringify(iso)); }catch{}
+}
+
+// Fetch last commit ISO for a file (limited concurrency & cached)
+async function fetchLastCommitISO(filePath, sha){
+  const cached = getCachedCommit(filePath, sha);
+  if (cached) return cached;
+
+  // Commits API: /repos/:owner/:repo/commits?path=...&per_page=1&sha=BRANCH
+  const url = `https://api.github.com/repos/${REPO}/commits?path=${encodeURIComponent(filePath)}&per_page=1&sha=${encodeURIComponent(BRANCH)}`;
+  // Small delay to be gentle on rate limits
+  await new Promise(r => setTimeout(r, 180));
+  const res = await fetch(url, { headers:{Accept:"application/vnd.github+json"} });
+  if (res.status === 403) { // rate limited
+    throw new Error("GitHub rate limit (unauthenticated). Try again in a minute.");
+  }
+  if (!res.ok) throw new Error(`Commits API ${res.status}`);
+  const arr = await res.json();
+  const iso = arr?.[0]?.commit?.committer?.date || arr?.[0]?.commit?.author?.date || null;
+  if (iso) setCachedCommit(filePath, sha, iso);
+  return iso;
+}
+
+function sortFiles(files, mode){
+  switch(mode){
+    case 'new': return files.slice().sort((a,b)=> (b._commitTime||0) - (a._commitTime||0));
+    case 'old': return files.slice().sort((a,b)=> (a._commitTime||0) - (b._commitTime||0));
+    case 'az' : return files.slice().sort((a,b)=> a.name.localeCompare(b.name, undefined, {numeric:true}));
+    case 'za' : return files.slice().sort((a,b)=> b.name.localeCompare(a.name, undefined, {numeric:true}));
+    case 'big': return files.slice().sort((a,b)=> (b.size||0) - (a.size||0));
+    case 'small':return files.slice().sort((a,b)=> (a.size||0) - (b.size||0));
+    default: return files;
+  }
+}
+
 async function build(){
   try{
+    statusEl.textContent = "";
     const url = `https://api.github.com/repos/${REPO}/contents/${encodeURIComponent(FOLDER)}?ref=${encodeURIComponent(BRANCH)}`;
     const r = await fetch(url, { headers:{Accept:"application/vnd.github+json"} });
     if(!r.ok) throw new Error(`GitHub API ${r.status}`);
     let items = await r.json();
-    items = (Array.isArray(items)?items:[]).filter(it => it.type==='file' && FILE_OK.test(it.name))
-      .sort((a,b)=> a.name.localeCompare(b.name, undefined, {numeric:true}));
-    if(!items.length){ grid.innerHTML = `<div class="small">No files found in /${FOLDER}.</div>`; return; }
-    grid.innerHTML = items.map(cardHTML).join('');
+    let files = (Array.isArray(items)?items:[]).filter(it => it.type==='file' && FILE_OK.test(it.name));
 
-    // load thumbnails (prefer site; fallback to raw if site serves HTML)
+    // get commit times (newest sort default)
+    statusEl.textContent = `Fetching commit times… (${files.length})`;
+    let fetched = 0;
+    for (const f of files){
+      try{
+        const iso = await fetchLastCommitISO(`${FOLDER}/${f.name}`, f.sha);
+        f._commitISO = iso;
+        f._commitTime = iso ? Date.parse(iso) : 0;
+      }catch(err){
+        // If rate-limited, keep going without times
+        f._commitISO = null; f._commitTime = 0;
+      }finally{
+        fetched++;
+        if (fetched % 5 === 0 || fetched === files.length) {
+          statusEl.textContent = `Fetched ${fetched}/${files.length} commit times…`;
+        }
+      }
+    }
+    statusEl.textContent = "";
+
+    const mode = sortSel.value || 'new';
+    files = sortFiles(files, mode);
+
+    // render
+    grid.innerHTML = files.map(cardHTML).join('');
+
+    // thumbnails (prefer site; fallback to raw)
     const thumbs = grid.querySelectorAll('img.thumb');
     thumbs.forEach(async img => {
       const site = img.dataset.site, raw = img.dataset.raw, kind = img.dataset.kind;
@@ -110,9 +187,7 @@ async function build(){
         const t = await headType(site);
         img.src = (!t.ok || (t.type||'').includes('text/html')) ? raw : site;
       } else {
-        // non-image: show a simple preview badge background
-        img.style.background = '#0b0e13';
-        img.style.height = '120px';
+        img.style.background = '#0b0e13'; img.style.height = '120px';
         img.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(
           `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300">
              <rect width="100%" height="100%" fill="#0b0e13"/>
@@ -122,7 +197,7 @@ async function build(){
       }
     });
 
-    // click handler: open lightbox with proper element
+    // click → lightbox
     grid.querySelectorAll('a.card').forEach(a => {
       a.addEventListener('click', async (e) => {
         e.preventDefault();
@@ -132,7 +207,6 @@ async function build(){
         const kind = a.dataset.kind;
         lbName.textContent = name;
 
-        // choose playable URL (prefer site; fallback to raw if HTML)
         const t = await headType(site);
         const url = (!t.ok || (t.type||'').includes('text/html')) ? raw : site;
         lbOpen.href = url;
@@ -142,14 +216,24 @@ async function build(){
         } else if (kind === 'Video') {
           const type = url.endsWith('.mov') ? 'video/quicktime' : 'video/mp4';
           lbBody.innerHTML = `<video controls playsinline preload="metadata" style="max-width:92vw;max-height:80vh"><source src="${url}" type="${type}"></video>`;
-        } else { // Audio
+        } else {
           lbBody.innerHTML = `<audio controls preload="metadata" style="width:92vw;max-width:800px"><source src="${url}" type="audio/mp4"></audio>`;
         }
         lb.classList.add('open'); lb.setAttribute('aria-hidden','false');
       });
     });
 
+    // re-sort on change
+    sortSel.onchange = () => {
+      const mode = sortSel.value;
+      const sorted = sortFiles(files, mode);
+      grid.innerHTML = sorted.map(cardHTML).join('');
+      // re-wire events & thumbs after re-render
+      build(); // quick & dirty: rebuild to keep code short
+    };
+
   }catch(err){
+    statusEl.textContent = "";
     grid.innerHTML = `<div class="small">Error: ${err.message}</div>`;
   }
 }
