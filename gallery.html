@@ -29,7 +29,11 @@
 <body>
 <div class="wrap">
   <h1>Digital Gratitude List</h1>
-  <div class="small">Files in <code>/Digital_Gratitude_List</code>. Sorted by <strong>Newest</strong> by default.</div>
+<div class="small">
+  Files in <code>/Digital_Gratitude_List</code>.
+  <span id="fileCount"></span>
+  Sorted by <strong>Newest</strong> by default.
+</div>
   <div class="controls">
     <label class="small" for="sortSel">Sort:</label>
     <select id="sortSel">
@@ -152,6 +156,9 @@ async function build(){
     if(!r.ok) throw new Error(`GitHub API ${r.status}`);
     let items = await r.json();
     let files = (Array.isArray(items)?items:[]).filter(it => it.type==='file' && FILE_OK.test(it.name));
+		
+		// update file count at the top
+document.getElementById('fileCount').textContent = `(${files.length} items)`;
 
     // get commit times (newest sort default)
     statusEl.textContent = `Fetching commit times… (${files.length})`;
