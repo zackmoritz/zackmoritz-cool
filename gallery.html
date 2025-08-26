@@ -91,14 +91,17 @@
 </div>
 
 <script>
+/* ====== CONFIG ====== */
 const API_BASE = "/gallery-api";           // Worker route
 const ROOT     = "Digital_Gratitude_List"; // repo folder
 const PAGE_SIZE = 25;
+/* ==================== */
 
-const IMG_EXT   = /\.(png|jpe?g|gif|webp|heic|heif)$/i;
+/* Previewable vs supported */
+const IMG_EXT   = /\.(png|jpe?g|gif|webp)$/i;               // will thumb directly
 const VIDEO_EXT = /\.(mp4|mov|webm|m4v)$/i;
 const AUDIO_EXT = /\.(m4a|mp3|wav|ogg)$/i;
-const FILE_OK   = /\.(png|jpe?g|gif|webp|heic|heif|mp4|mov|webm|m4v|m4a|mp3|wav|ogg)$/i;
+const FILE_OK   = /\.(png|jpe?g|gif|webp|mp4|mov|webm|m4v|m4a|mp3|wav|ogg|heic|heif)$/i; // can list; HEIC won’t thumb
 
 const grid     = document.getElementById('grid');
 const pager    = document.getElementById('pager');
@@ -121,7 +124,6 @@ lb.addEventListener('click', e => { if (e.target === lb) lbClose.onclick(); });
 let CURRENT_PATH = ""; // relative to ROOT
 let FILES = [];        // names
 let COMMITS = {};      // { name: iso }
-let VIEW  = [];        // array of { name, t } for sorting by time
 let currentPage = 1, totalPages = 1;
 
 /* URL helpers */
@@ -153,77 +155,61 @@ async function fetchList(pathRelToRoot, needCommits){
   return await r.json(); // { folders, files, commits? }
 }
 
-/* Renderers */
-function renderCrumbs(){
-  const segs = pathSegments();
-  crumbsEl.innerHTML = "";
-  const rootBtn = document.createElement('button');
-  rootBtn.className = 'crumb' + (segs.length===0 ? ' active':'');
-  rootBtn.textContent = ROOT;
-  rootBtn.onclick = () => { if (CURRENT_PATH!==""){ CURRENT_PATH=""; currentPage=1; loadPath(); } };
-  crumbsEl.appendChild(rootBtn);
-  let acc = [];
-  segs.forEach((seg, idx) => {
-    acc.push(seg);
-    const b = document.createElement('button');
-    b.className = 'crumb' + (idx===segs.length-1 ? ' active' : '');
-    b.textContent = seg.replace(/_/g,' ');
-    b.onclick = () => { CURRENT_PATH = acc.join('/'); currentPage=1; loadPath(); };
-    crumbsEl.appendChild(b);
-  });
+/* Placeholder SVG */
+function placeholderSVG(label){
+  return `data:image/svg+xml;utf8,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300">
+      <rect width="100%" height="100%" fill="#0b0e13"/>
+      <text x="50%" y="50%" fill="#9aa6b2" font-family="system-ui" font-size="28" text-anchor="middle" dominant-baseline="middle">${label}</text>
+    </svg>`
+  )}`;
 }
 
-function folderTileHTML(name){
-  return `
-    <div class="folder" data-sub="${encodeURIComponent(name)}" title="${name}">
-      <div class="icon" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" stroke="#9aa6b2"/>
-        </svg>
-      </div>
-      <div>
-        <div style="font-size:14px">${name.replace(/_/g,' ')}</div>
-        <div class="small">Open folder</div>
-      </div>
-    </div>`;
-}
-
+/* Card HTML — set src directly; fallback onerror */
 function cardHTML(name){
   const site = siteHref(name);
   const isImg   = IMG_EXT.test(name);
   const isVideo = VIDEO_EXT.test(name);
   const isAudio = AUDIO_EXT.test(name);
-  const badge = isVideo ? 'Video' : isAudio ? 'Audio' : 'Image';
+  const isHeic  = /\.(heic|heif)$/i.test(name);
+
+  const badge = isVideo ? 'Video' : isAudio ? 'Audio' : (isHeic ? 'HEIC' : 'Image');
   const data = `data-site="${site}" data-name="${encodeURIComponent(name)}" data-kind="${badge}"`;
+
+  const thumbTag = isImg
+    ? `<img class="thumb" alt="" ${data}
+         src="${site}"
+         loading="lazy"
+         onerror="this.onerror=null;this.src='${placeholderSVG('Image')}';">`
+    : `<img class="thumb" alt="" ${data}
+         src="${placeholderSVG(badge)}"
+         style="object-fit:contain">`;
+
   return `
     <a href="${site}" class="card" ${data}>
       <span class="badge">${badge}</span>
-      ${isImg ? `<img class="thumb" loading="lazy" alt="" ${data}>`
-              : `<img class="thumb" alt="" ${data} style="object-fit:contain" />`}
+      ${thumbTag}
       <div class="label" title="${name}">${name}</div>
     </a>`;
 }
 
-async function headType(url){
-  try { const r = await fetch(url, { method:'HEAD' }); return { ok:r.ok, type:r.headers.get('content-type')||'' }; }
-  catch { return { ok:false, type:'' }; }
-}
-
-function sortFiles(mode){
+/* Sorting */
+function sortNames(mode, files){
   if (mode === 'az' || mode === 'za') {
-    const sorted = FILES.slice().sort((a,b)=> a.localeCompare(b, undefined, {numeric:true}));
-    return mode==='az' ? sorted : sorted.reverse();
+    const s = files.slice().sort((a,b)=> a.localeCompare(b, undefined, {numeric:true}));
+    return mode === 'az' ? s : s.reverse();
   }
-  // time-based using COMMITS map
-  const items = FILES.map(n => ({ name:n, t: COMMITS[n] ? Date.parse(COMMITS[n]) : 0 }));
+  // time-based using COMMITS
+  const items = files.map(n => ({ n, t: COMMITS[n] ? Date.parse(COMMITS[n]) : 0 }));
   items.sort((a,b)=> (b.t||0) - (a.t||0)); // newest first
   if (mode === 'old') items.reverse();
-  return items.map(x => x.name);
+  return items.map(x => x.n);
 }
 
+/* Render page */
 function renderPage(){
   const mode = sortSel.value;
-  const names = sortFiles(mode);
+  const names = sortNames(mode, FILES);
 
   totalPages = Math.max(1, Math.ceil(names.length / PAGE_SIZE));
   if (currentPage > totalPages) currentPage = totalPages;
@@ -232,53 +218,35 @@ function renderPage(){
 
   grid.innerHTML = slice.map(cardHTML).join('');
 
-  const thumbs = grid.querySelectorAll('img.thumb');
-  thumbs.forEach(async img => {
-    const site = img.dataset.site, kind = img.dataset.kind;
-    if (kind === 'Image') {
-      const t = await headType(site);
-      img.src = (!t.ok || (t.type||'').includes('text/html')) ? site : site;
-    } else {
-      img.style.background = '#0b0e13'; img.style.height = '120px';
-      img.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(
-        `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300">
-           <rect width="100%" height="100%" fill="#0b0e13"/>
-           <text x="50%" y="50%" fill="#9aa6b2" font-family="system-ui" font-size="28" text-anchor="middle" dominant-baseline="middle">${img.dataset.kind}</text>
-         </svg>`
-      );
-    }
-  });
-
+  // Lightbox
   grid.querySelectorAll('a.card').forEach(a => {
-    a.addEventListener('click', async (e) => {
+    a.addEventListener('click', (e) => {
       e.preventDefault();
       const name = decodeURIComponent(a.dataset.name);
       const site = a.dataset.site;
       const kind = a.dataset.kind;
       lbName.textContent = name;
-
-      const t = await headType(site);
-      const url = (!t.ok || (t.type||'').includes('text/html')) ? site : site;
-      lbOpen.href = url;
+      lbOpen.href = site;
 
       if (kind === 'Image') {
-        lbBody.innerHTML = `<img src="${url}" alt="${name}" style="display:block;max-width:92vw;max-height:80vh">`;
+        lbBody.innerHTML = `<img src="${site}" alt="${name}" style="display:block;max-width:92vw;max-height:80vh">`;
       } else if (kind === 'Video') {
-        const type = url.endsWith('.mov') ? 'video/quicktime' : 'video/mp4';
-        lbBody.innerHTML = `<video controls playsinline preload="metadata" style="max-width:92vw;max-height:80vh"><source src="${url}" type="${type}"></video>`;
+        const type = site.endsWith('.mov') ? 'video/quicktime' : 'video/mp4';
+        lbBody.innerHTML = `<video controls playsinline preload="metadata" style="max-width:92vw;max-height:80vh"><source src="${site}" type="${type}"></video>`;
       } else {
-        lbBody.innerHTML = `<audio controls preload="metadata" style="width:92vw;max-width:800px"><source src="${url}" type="audio/mp4"></audio>`;
+        lbBody.innerHTML = `<audio controls preload="metadata" style="width:92vw;max-width:800px"><source src="${site}" type="audio/mp4"></audio>`;
       }
       lb.classList.add('open'); lb.setAttribute('aria-hidden','false');
     });
   });
 
   pageInfo.textContent = `${currentPage} / ${totalPages}`;
-  buildPager(names.length);
+  buildPager(totalPages);
   updateQS({ path: CURRENT_PATH, sort: mode, page: currentPage });
 }
 
-function buildPager(total){
+/* Pager */
+function buildPager(totalPagesLocal){
   pager.innerHTML = "";
   const prev = document.createElement('button');
   prev.className = 'pagebtn'; prev.textContent = '‹ Prev';
@@ -288,14 +256,14 @@ function buildPager(total){
 
   const maxBtns = 7;
   const nums = [];
-  if (totalPages <= maxBtns) {
-    for (let i=1;i<=totalPages;i++) nums.push(i);
+  if (totalPagesLocal <= maxBtns) {
+    for (let i=1;i<=totalPagesLocal;i++) nums.push(i);
   } else {
     const left = Math.max(1, currentPage - 2);
-    const right = Math.min(totalPages, currentPage + 2);
+    const right = Math.min(totalPagesLocal, currentPage + 2);
     if (left > 1) nums.push(1, '…');
     for (let i=left;i<=right;i++) nums.push(i);
-    if (right < totalPages) nums.push('…', totalPages);
+    if (right < totalPagesLocal) nums.push('…', totalPagesLocal);
   }
 
   nums.forEach(n => {
@@ -309,11 +277,12 @@ function buildPager(total){
 
   const next = document.createElement('button');
   next.className = 'pagebtn'; next.textContent = 'Next ›';
-  next.disabled = currentPage === totalPages;
+  next.disabled = currentPage === totalPagesLocal;
   next.onclick = () => { currentPage++; renderPage(); };
   pager.appendChild(next);
 }
 
+/* Folders */
 function renderFolders(subdirs){
   if (!subdirs.length){ foldersWrap.style.display='none'; return; }
   foldersWrap.style.display='';
@@ -342,21 +311,23 @@ function renderFolders(subdirs){
 
 /* Load directory */
 async function loadPath(){
+  // show crumbs immediately
   renderCrumbs();
   grid.innerHTML = `<div class="small">Loading ${humanLabel(CURRENT_PATH)}…</div>`;
   pager.innerHTML = ''; foldersEl.innerHTML = ''; counts.textContent = '';
 
   try {
-    const needCommits = (sortSel.value === 'new' || sortSel.value === 'old');
+    const mode = sortSel.value;
+    const needCommits = (mode === 'new' || mode === 'old');
+
     const data = await fetchList(CURRENT_PATH, needCommits);
     const folders = Array.isArray(data.folders) ? data.folders : [];
     const files   = Array.isArray(data.files)   ? data.files   : [];
-    COMMITS = data.commits || {};
+    COMMITS = (needCommits && data.commits) ? data.commits : {};
 
     renderFolders(folders);
 
     FILES = files.filter(n => FILE_OK.test(n));
-
     const imgCount = FILES.filter(n => IMG_EXT.test(n)).length;
     counts.textContent = `${humanLabel(CURRENT_PATH)} — ${imgCount} images, ${FILES.length} items`;
 
@@ -366,6 +337,26 @@ async function loadPath(){
   } catch (err) {
     grid.innerHTML = `<div class="small">Error: ${err.message}</div>`;
   }
+}
+
+/* Breadcrumbs */
+function renderCrumbs(){
+  const segs = pathSegments();
+  crumbsEl.innerHTML = "";
+  const rootBtn = document.createElement('button');
+  rootBtn.className = 'crumb' + (segs.length===0 ? ' active':'');
+  rootBtn.textContent = ROOT;
+  rootBtn.onclick = () => { if (CURRENT_PATH!==""){ CURRENT_PATH=""; currentPage=1; loadPath(); } };
+  crumbsEl.appendChild(rootBtn);
+  let acc = [];
+  segs.forEach((seg, idx) => {
+    acc.push(seg);
+    const b = document.createElement('button');
+    b.className = 'crumb' + (idx===segs.length-1 ? ' active' : '');
+    b.textContent = seg.replace(/_/g,' ');
+    b.onclick = () => { CURRENT_PATH = acc.join('/'); currentPage=1; loadPath(); };
+    crumbsEl.appendChild(b);
+  });
 }
 
 /* Init */
