@@ -149,7 +149,7 @@ async function fetchList(pathRelToRoot, needCommits){
   const url = new URL(API_BASE + "/list", location.origin);
   const repoPath = ["", ROOT, pathRelToRoot].filter(Boolean).join("/");
   url.searchParams.set("path", repoPath);
-  if (needCommits) url.searchParams.set("with", "commits");
+  url.searchParams.set("with", "commits"); // always fetch commit times
   const r = await fetch(url.toString(), { headers: { "accept": "application/json" }, cache: "no-store" });
   if (!r.ok) throw new Error(`API ${r.status}`);
   return await r.json(); // { folders, files, commits? }
