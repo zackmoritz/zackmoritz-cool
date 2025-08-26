@@ -327,7 +327,7 @@ async function loadPath(){
 
     renderFolders(folders);
 
-    FILES = files.filter(n => FILE_OK.test(n));
+    FILES = files   .filter(n => FILE_OK.test(n))   .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
     const imgCount = FILES.filter(n => IMG_EXT.test(n)).length;
     counts.textContent = `${humanLabel(CURRENT_PATH)} — ${imgCount} images, ${FILES.length} items`;
 
