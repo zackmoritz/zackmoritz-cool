@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Digital Gratitude List — Rooms</title>
+<title>Digital Gratitude List — Browser</title>
 <style>
   :root { --bg:#0f1115; --panel:#12161f; --border:#262b36; --text:#e7ecf1; --muted:#9aa6b2; --accent:#1a232f; }
   body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
@@ -11,15 +11,16 @@
   h1{margin:0 0 6px}
   .small{color:var(--muted);font-size:13px}
   .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  select, .btn, .chip{
-    background:var(--accent); color:var(--text); border:1px solid var(--border);
-    border-radius:10px; padding:6px 10px; font-size:13px
-  }
-  .chip{cursor:pointer}
-  .chip.active{background:#1e2a3a}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-top:16px}
-  .card{position:relative;display:block;border:1px solid var(--border);background:var(--panel);
-        border-radius:12px;overflow:hidden;text-decoration:none;color:var(--text)}
+  select,.btn{background:var(--accent);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:6px 10px;font-size:13px}
+  .crumbs{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+  .crumb{border:1px solid var(--border);padding:4px 8px;border-radius:999px;background:#141b24;cursor:pointer}
+  .crumb.active{background:#1e2a3a}
+  .section-title{margin-top:16px;margin-bottom:6px;font-weight:600}
+  .folders{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+  .folder{display:flex;align-items:center;gap:10px;border:1px solid var(--border);background:var(--panel);border-radius:12px;padding:10px;cursor:pointer}
+  .folder .icon{width:36px;height:36px;border-radius:8px;background:#0b0e13;display:flex;align-items:center;justify-content:center;border:1px solid var(--border)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-top:8px}
+  .card{position:relative;display:block;border:1px solid var(--border);background:var(--panel);border-radius:12px;overflow:hidden;text-decoration:none;color:var(--text)}
   .thumb{display:block;width:100%;height:140px;object-fit:cover;background:#0b0e13}
   .label{padding:8px 10px;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-top:1px solid var(--border)}
   .badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.55);border:1px solid var(--border);padding:2px 6px;border-radius:999px;font-size:12px}
@@ -41,12 +42,15 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>Digital Gratitude List — Rooms</h1>
+  <h1>Digital Gratitude List — Browser</h1>
 
-  <div class="row" style="margin:8px 0">
-    <div id="roomChips" class="row"></div>
+  <div class="row">
+    <div class="small">Root: <code>/Digital_Gratitude_List</code></div>
     <div class="small" id="counts" style="margin-left:auto"></div>
   </div>
+
+  <!-- Breadcrumbs -->
+  <div id="crumbs" class="crumbs"></div>
 
   <div class="row" style="margin:4px 0 8px">
     <label class="small" for="sortSel">Sort:</label>
@@ -61,6 +65,14 @@
     </div>
   </div>
 
+  <!-- Subfolders -->
+  <div id="foldersWrap">
+    <div class="section-title small">Folders</div>
+    <div id="folders" class="folders"></div>
+  </div>
+
+  <!-- Files -->
+  <div class="section-title small" style="margin-top:14px">Files</div>
   <div id="grid" class="grid"><div class="small">Loading…</div></div>
   <div id="pager" class="pager" aria-label="Pagination"></div>
 </div>
@@ -81,9 +93,9 @@
 
 <script>
 /* ====== CONFIG ====== */
-const REPO   = "zackmoritz/zackmoritz-cool";
-const BRANCH = "main";
-const ROOT   = "Digital_Gratitude_List";   // rooms live under this folder
+const REPO    = "zackmoritz/zackmoritz-cool";
+const BRANCH  = "main";
+const ROOT    = "Digital_Gratitude_List"; // fixed root
 const PAGE_SIZE = 25;
 /* ==================== */
 
@@ -97,6 +109,9 @@ const pager    = document.getElementById('pager');
 const pageInfo = document.getElementById('pageInfo');
 const sortSel  = document.getElementById('sortSel');
 const counts   = document.getElementById('counts');
+const crumbsEl = document.getElementById('crumbs');
+const foldersEl= document.getElementById('folders');
+const foldersWrap = document.getElementById('foldersWrap');
 
 const lb   = document.getElementById('lightbox');
 const lbBody = document.getElementById('lbBody');
@@ -107,32 +122,86 @@ const lbClose= document.getElementById('lbClose');
 lbClose.onclick = () => { lb.classList.remove('open'); lb.setAttribute('aria-hidden','true'); lbBody.innerHTML=''; };
 lb.addEventListener('click', e => { if (e.target === lb) lbClose.onclick(); });
 
-/* state */
-let ROOMS = [];           // discovered subfolders (e.g., ["Garage","Workshop"])
-let CURRENT_ROOM = "";    // "" = root of ROOT; else a subfolder name
-let ALL_FILES = [];       // files for current room
-let VIEW = [];            // sorted list for paging
+let CURRENT_PATH = ""; // relative to ROOT; e.g. "", "Workshop", "Workshop/Saw_Blades"
+let FILES = [];        // files in current path
+let VIEW  = [];        // sorted files for pagination
 let currentPage = 1, totalPages = 1;
 
-/* helpers */
-function qs(name, def){ const u = new URL(location.href); return u.searchParams.get(name) ?? def; }
+/* -------- URL helpers -------- */
+function qs(name, def){ const u=new URL(location.href); return u.searchParams.get(name) ?? def; }
 function updateQS(params){
   const u = new URL(location.href);
   Object.entries(params).forEach(([k,v]) => v==null? u.searchParams.delete(k) : u.searchParams.set(k,String(v)));
   history.replaceState(null,'',u.toString());
 }
-function siteHref(room, name){
-  const base = room ? `${ROOT}/${room}` : ROOT;
-  return `/${base}/${encodeURIComponent(name)}`;
+
+/* -------- API helpers -------- */
+async function fetchDir(path){
+  const url = `https://api.github.com/repos/${REPO}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(BRANCH)}`;
+  const r = await fetch(url, { headers:{Accept:"application/vnd.github+json"} });
+  if (!r.ok) throw new Error(`GitHub API ${r.status}`);
+  return await r.json();
 }
-async function headType(url){
-  try { const r = await fetch(url, { method:'HEAD' }); return { ok:r.ok, type:r.headers.get('content-type')||'' }; }
-  catch { return { ok:false, type:'' }; }
+async function fetchLastCommitISO(path){
+  // gentle delay to be nice to rate limits
+  await new Promise(r => setTimeout(r, 140));
+  const url = `https://api.github.com/repos/${REPO}/commits?path=${encodeURIComponent(path)}&per_page=1&sha=${encodeURIComponent(BRANCH)}`;
+  const r = await fetch(url, { headers:{Accept:"application/vnd.github+json"} });
+  if (!r.ok) return null;
+  const arr = await r.json();
+  return arr?.[0]?.commit?.committer?.date || arr?.[0]?.commit?.author?.date || null;
 }
 
-/* cards */
-function cardHTML(room, f){
-  const site = siteHref(room, f.name);
+/* -------- Path helpers -------- */
+function fullPath(){ return CURRENT_PATH ? `${ROOT}/${CURRENT_PATH}` : ROOT; }
+function pathSegments(){
+  if (!CURRENT_PATH) return [];
+  return CURRENT_PATH.split('/').filter(Boolean);
+}
+function siteHref(name){
+  return CURRENT_PATH
+    ? `/${ROOT}/${CURRENT_PATH.split('/').map(encodeURIComponent).join('/')}/${encodeURIComponent(name)}`
+    : `/${ROOT}/${encodeURIComponent(name)}`;
+}
+
+/* -------- Renderers -------- */
+function renderCrumbs(){
+  const segs = pathSegments();
+  crumbsEl.innerHTML = "";
+  const rootBtn = document.createElement('button');
+  rootBtn.className = 'crumb' + (segs.length===0 ? ' active':'');
+  rootBtn.textContent = ROOT;
+  rootBtn.onclick = () => { if (CURRENT_PATH!==""){ CURRENT_PATH=""; currentPage=1; loadPath(); } };
+  crumbsEl.appendChild(rootBtn);
+
+  let acc = [];
+  segs.forEach((seg, idx) => {
+    acc.push(seg);
+    const b = document.createElement('button');
+    b.className = 'crumb' + (idx===segs.length-1 ? ' active' : '');
+    b.textContent = seg.replace(/_/g,' ');
+    b.onclick = () => { CURRENT_PATH = acc.join('/'); currentPage=1; loadPath(); };
+    crumbsEl.appendChild(b);
+  });
+}
+
+function folderTileHTML(name){
+  return `
+    <div class="folder" data-sub="${encodeURIComponent(name)}" title="${name}">
+      <div class="icon" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" stroke="#9aa6b2"/>
+        </svg>
+      </div>
+      <div>
+        <div style="font-size:14px">${name.replace(/_/g,' ')}</div>
+        <div class="small">Open folder</div>
+      </div>
+    </div>`;
+}
+
+function cardHTML(f){
+  const site = siteHref(f.name);
   const raw  = f.download_url;
   const isImg   = IMG_EXT.test(f.name);
   const isVideo = VIDEO_EXT.test(f.name);
@@ -148,7 +217,6 @@ function cardHTML(room, f){
     </a>`;
 }
 
-/* sorting */
 function sortFiles(files, mode){
   switch(mode){
     case 'new': return files.slice().sort((a,b)=> (b._commitTime||0) - (a._commitTime||0));
@@ -159,14 +227,14 @@ function sortFiles(files, mode){
   }
 }
 
-/* pagination render */
 function renderPage(){
+  const PAGE_SIZE = 25; // change here if you want a different page size
   totalPages = Math.max(1, Math.ceil(VIEW.length / PAGE_SIZE));
   if (currentPage > totalPages) currentPage = totalPages;
   const start = (currentPage - 1) * PAGE_SIZE;
   const slice = VIEW.slice(start, start + PAGE_SIZE);
 
-  grid.innerHTML = slice.map(f => cardHTML(CURRENT_ROOM, f)).join('');
+  grid.innerHTML = slice.map(cardHTML).join('');
 
   // thumbs + lightbox
   const thumbs = grid.querySelectorAll('img.thumb');
@@ -213,7 +281,7 @@ function renderPage(){
 
   pageInfo.textContent = `${currentPage} / ${totalPages}`;
   buildPager();
-  updateQS({ folder: CURRENT_ROOM || '', page: currentPage, sort: sortSel.value });
+  updateQS({ path: CURRENT_PATH, sort: sortSel.value, page: currentPage });
 }
 
 function buildPager(){
@@ -237,7 +305,7 @@ function buildPager(){
   }
 
   nums.forEach(n => {
-    if (n === '…') { const span = document.createElement('span'); span.className='small'; span.textContent='…'; pager.appendChild(span); return; }
+    if (n === '…') { const span=document.createElement('span'); span.className='small'; span.textContent='…'; pager.appendChild(span); return; }
     const b = document.createElement('button');
     b.className = 'pagenum' + (n===currentPage ? ' active' : '');
     b.textContent = n;
@@ -252,113 +320,76 @@ function buildPager(){
   pager.appendChild(next);
 }
 
-/* GitHub fetchers */
-async function ghList(path){ // list files/dirs under path
-  const url = `https://api.github.com/repos/${REPO}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(BRANCH)}`;
-  const r = await fetch(url, { headers:{Accept:"application/vnd.github+json"} });
-  if(!r.ok) throw new Error(`GitHub API ${r.status}`);
-  return await r.json();
+/* -------- Fetch & build current directory -------- */
+async function headType(url){
+  try { const r = await fetch(url, { method:'HEAD' }); return { ok:r.ok, type:r.headers.get('content-type')||'' }; }
+  catch { return { ok:false, type:'' }; }
 }
 
-async function fetchRooms(){
-  const items = await ghList(ROOT);
-  const dirs  = (Array.isArray(items)?items:[]).filter(it => it.type === 'dir').map(d => d.name);
-  return dirs; // e.g., ["Garage","Workshop"]
-}
+function humanLabel(p){ return p ? p.split('/').slice(-1)[0].replace(/_/g,' ') : 'Main'; }
 
-async function fetchList(room){
-  const base = room ? `${ROOT}/${room}` : ROOT;
-  const items = await ghList(base);
-  return (Array.isArray(items)?items:[]).filter(it => it.type==='file' && FILE_OK.test(it.name));
-}
-
-async function fetchLastCommitISO(room, file){
-  // room "" = root
-  await new Promise(r => setTimeout(r, 140)); // gentle to avoid rate-limits
-  const base = room ? `${ROOT}/${room}` : ROOT;
-  const path = `${base}/${file.name}`;
-  const url  = `https://api.github.com/repos/${REPO}/commits?path=${encodeURIComponent(path)}&per_page=1&sha=${encodeURIComponent(BRANCH)}`;
-  const res = await fetch(url, { headers:{Accept:"application/vnd.github+json"} });
-  if (!res.ok) return null;
-  const arr = await res.json();
-  return arr?.[0]?.commit?.committer?.date || arr?.[0]?.commit?.author?.date || null;
-}
-
-/* Rooms UI */
-function renderRoomChips(){
-  const wrap = document.getElementById('roomChips');
-  wrap.innerHTML = '';
-  // First chip = Main (root of ROOT)
-  const main = document.createElement('button');
-  main.className = 'chip' + (CURRENT_ROOM==="" ? ' active' : '');
-  main.textContent = 'Main';
-  main.onclick = () => { if (CURRENT_ROOM!==""){ CURRENT_ROOM=""; loadRoom(); } };
-  wrap.appendChild(main);
-
-  // Subfolder chips
-  ROOMS.forEach(name => {
-    const c = document.createElement('button');
-    c.className = 'chip' + (name===CURRENT_ROOM ? ' active' : '');
-    c.textContent = name.replace(/_/g,' ');
-    c.onclick = () => { if (CURRENT_ROOM!==name){ CURRENT_ROOM=name; loadRoom(); } };
-    wrap.appendChild(c);
+function renderFolders(subdirs){
+  if (!subdirs.length){ foldersWrap.style.display='none'; return; }
+  foldersWrap.style.display='';
+  foldersEl.innerHTML = subdirs.map(n => folderTileHTML(n)).join('');
+  foldersEl.querySelectorAll('.folder').forEach(div => {
+    div.addEventListener('click', () => {
+      const name = decodeURIComponent(div.dataset.sub);
+      CURRENT_PATH = CURRENT_PATH ? `${CURRENT_PATH}/${name}` : name;
+      currentPage = 1;
+      loadPath();
+    });
   });
 }
 
-async function loadRoom(){
-  grid.innerHTML = `<div class="small">Loading ${CURRENT_ROOM || 'Main'}…</div>`;
+function sortList(files, mode){ return sortFiles(files, mode); }
+
+async function loadPath(){
+  // UI – breadcrumbs
+  renderCrumbs();
+
+  // Fetch directory listing
+  grid.innerHTML = `<div class="small">Loading ${humanLabel(CURRENT_PATH)}…</div>`;
   pager.innerHTML = '';
-  counts.textContent = '';
+  foldersEl.innerHTML = '';
+  try {
+    const dirItems = await fetchDir(fullPath());
+    const subdirs = (Array.isArray(dirItems)?dirItems:[]).filter(x => x.type==='dir').map(x => x.name);
+    renderFolders(subdirs);
 
-  try{
-    ALL_FILES = await fetchList(CURRENT_ROOM);
+    FILES = (Array.isArray(dirItems)?dirItems:[]).filter(x => x.type==='file' && FILE_OK.test(x.name));
 
-    const imageCount = ALL_FILES.filter(it => IMG_EXT.test(it.name)).length;
-    const label = CURRENT_ROOM || 'Main';
-    counts.textContent = `${label} — ${imageCount} images, ${ALL_FILES.length} items`;
+    // Counts
+    const imgCount = FILES.filter(f => IMG_EXT.test(f.name)).length;
+    counts.textContent = `${humanLabel(CURRENT_PATH)} — ${imgCount} images, ${FILES.length} items`;
 
-    // fetch commit times only when needed
-    const wantsCommit = (sortSel.value === 'new' || sortSel.value === 'old');
-    if (wantsCommit){
-      for (const f of ALL_FILES){
-        try {
-          const iso = await fetchLastCommitISO(CURRENT_ROOM, f);
+    // Commit times (only if sorting by time)
+    if (sortSel.value === 'new' || sortSel.value === 'old') {
+      for (const f of FILES){
+        try{
+          const iso = await fetchLastCommitISO(`${fullPath()}/${f.name}`);
           f._commitTime = iso ? Date.parse(iso) : 0;
-        } catch { f._commitTime = 0; }
+        }catch{ f._commitTime = 0; }
       }
     } else {
-      ALL_FILES.forEach(f => f._commitTime = f._commitTime || 0);
+      FILES.forEach(f => f._commitTime = f._commitTime || 0);
     }
 
-    VIEW = sortFiles(ALL_FILES, sortSel.value || 'new');
+    VIEW = sortList(FILES, sortSel.value || 'new');
     currentPage = Number(qs('page', 1)) || 1;
     renderPage();
-  }catch(err){
+
+  } catch (err) {
     grid.innerHTML = `<div class="small">Error: ${err.message}</div>`;
   }
 }
 
-/* Init */
-(async function init(){
-  // discover rooms (subfolders)
-  try {
-    ROOMS = await fetchRooms();
-  } catch (e) {
-    ROOMS = []; // still allow root to work
-  }
-
-  // pick initial room from URL ?folder=
-  const want = qs('folder','');
-  CURRENT_ROOM = (want && ROOMS.includes(want)) ? want : '';
-
-  // initial sort
+/* -------- Init -------- */
+(function init(){
+  CURRENT_PATH = (qs('path','') || '').replace(/^\/+|\/+$/g,''); // normalize
   sortSel.value = qs('sort','new');
-
-  renderRoomChips();
-
-  sortSel.onchange = () => { currentPage = 1; loadRoom(); };
-
-  await loadRoom();
+  sortSel.onchange = () => { currentPage = 1; loadPath(); };
+  loadPath();
 })();
 </script>
 </body>
