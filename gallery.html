@@ -24,7 +24,6 @@
   .thumb{display:block;width:100%;height:140px;object-fit:cover;background:#0b0e13}
   .label{padding:8px 10px;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-top:1px solid var(--border)}
   .badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.55);border:1px solid var(--border);padding:2px 6px;border-radius:999px;font-size:12px}
-  /* lightbox */
   .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:999}
   .lightbox.open{display:flex}
   .viewer{max-width:92vw;max-height:86vh;background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden}
@@ -32,12 +31,14 @@
   .viewer .head{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--border)}
   .viewer .name{font-size:14px}
   .btn{cursor:pointer}
-  /* pagination */
   .pager{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:14px}
   .pagebtn{border:1px solid var(--border);background:#12161f;color:var(--text);border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer}
   .pagebtn[disabled]{opacity:.5;cursor:not-allowed}
   .pagenum{border:1px solid var(--border);background:#12161f;color:var(--text);border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer}
   .pagenum.active{background:#1a232f}
+  .bar{display:flex;gap:8px;align-items:center;padding:10px;border:1px solid var(--border);border-radius:12px;background:#141b24;margin:8px 0}
+  input[type=text]{background:#0f141d;border:1px solid var(--border);border-radius:8px;color:var(--text);padding:6px 8px;min-width:260px}
+  .warn{color:#ffcc66}
 </style>
 </head>
 <body>
@@ -47,6 +48,14 @@
   <div class="row">
     <div class="small">Root: <code>/Digital_Gratitude_List</code></div>
     <div class="small" id="counts" style="margin-left:auto"></div>
+  </div>
+
+  <!-- Token / status bar -->
+  <div id="tokbar" class="bar" style="display:none">
+    <div class="small" id="tokmsg"></div>
+    <input id="tokinput" type="text" placeholder="Paste GitHub token (repo contents read)" />
+    <button id="toksave" class="btn">Use token</button>
+    <button id="tokclear" class="btn">Clear</button>
   </div>
 
   <!-- Breadcrumbs -->
@@ -65,7 +74,7 @@
     </div>
   </div>
 
-  <!-- Subfolders -->
+  <!-- Folders -->
   <div id="foldersWrap">
     <div class="section-title small">Folders</div>
     <div id="folders" class="folders"></div>
@@ -95,7 +104,7 @@
 /* ====== CONFIG ====== */
 const REPO    = "zackmoritz/zackmoritz-cool";
 const BRANCH  = "main";
-const ROOT    = "Digital_Gratitude_List"; // fixed root
+const ROOT    = "Digital_Gratitude_List";
 const PAGE_SIZE = 25;
 /* ==================== */
 
@@ -112,6 +121,11 @@ const counts   = document.getElementById('counts');
 const crumbsEl = document.getElementById('crumbs');
 const foldersEl= document.getElementById('folders');
 const foldersWrap = document.getElementById('foldersWrap');
+const tokbar = document.getElementById('tokbar');
+const tokmsg = document.getElementById('tokmsg');
+const tokinput = document.getElementById('tokinput');
+const toksave = document.getElementById('toksave');
+const tokclear = document.getElementById('tokclear');
 
 const lb   = document.getElementById('lightbox');
 const lbBody = document.getElementById('lbBody');
@@ -122,10 +136,29 @@ const lbClose= document.getElementById('lbClose');
 lbClose.onclick = () => { lb.classList.remove('open'); lb.setAttribute('aria-hidden','true'); lbBody.innerHTML=''; };
 lb.addEventListener('click', e => { if (e.target === lb) lbClose.onclick(); });
 
-let CURRENT_PATH = ""; // relative to ROOT; e.g. "", "Workshop", "Workshop/Saw_Blades"
-let FILES = [];        // files in current path
-let VIEW  = [];        // sorted files for pagination
+let CURRENT_PATH = ""; // relative to ROOT
+let FILES = [];
+let VIEW  = [];
 let currentPage = 1, totalPages = 1;
+let RATE_LIMITED = false;
+
+/* ---- Token handling (session only) ---- */
+function getToken(){ return sessionStorage.getItem('gh_token') || ""; }
+function setToken(tok){ if (tok) sessionStorage.setItem('gh_token', tok); }
+function clearToken(){ sessionStorage.removeItem('gh_token'); }
+function ghHeaders(){
+  const h = { "Accept":"application/vnd.github+json" };
+  const t = getToken();
+  if (t) h["Authorization"] = `Bearer ${t}`;
+  return h;
+}
+function showTokBar(msg, warn=false){
+  tokmsg.textContent = msg;
+  tokmsg.className = "small" + (warn ? " warn" : "");
+  tokbar.style.display = "";
+}
+toksave.onclick = ()=>{ setToken(tokinput.value.trim()); tokinput.value=""; RATE_LIMITED=false; loadPath(); };
+tokclear.onclick= ()=>{ clearToken(); RATE_LIMITED=false; loadPath(); };
 
 /* -------- URL helpers -------- */
 function qs(name, def){ const u=new URL(location.href); return u.searchParams.get(name) ?? def; }
@@ -138,15 +171,17 @@ function updateQS(params){
 /* -------- API helpers -------- */
 async function fetchDir(path){
   const url = `https://api.github.com/repos/${REPO}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(BRANCH)}`;
-  const r = await fetch(url, { headers:{Accept:"application/vnd.github+json"} });
+  const r = await fetch(url, { headers: ghHeaders() });
+  if (r.status === 403) { RATE_LIMITED = true; throw new Error("GitHub API 403"); }
   if (!r.ok) throw new Error(`GitHub API ${r.status}`);
+  RATE_LIMITED = false;
   return await r.json();
 }
 async function fetchLastCommitISO(path){
-  // gentle delay to be nice to rate limits
   await new Promise(r => setTimeout(r, 140));
   const url = `https://api.github.com/repos/${REPO}/commits?path=${encodeURIComponent(path)}&per_page=1&sha=${encodeURIComponent(BRANCH)}`;
-  const r = await fetch(url, { headers:{Accept:"application/vnd.github+json"} });
+  const r = await fetch(url, { headers: ghHeaders() });
+  if (r.status === 403) { RATE_LIMITED = true; return null; }
   if (!r.ok) return null;
   const arr = await r.json();
   return arr?.[0]?.commit?.committer?.date || arr?.[0]?.commit?.author?.date || null;
@@ -154,15 +189,13 @@ async function fetchLastCommitISO(path){
 
 /* -------- Path helpers -------- */
 function fullPath(){ return CURRENT_PATH ? `${ROOT}/${CURRENT_PATH}` : ROOT; }
-function pathSegments(){
-  if (!CURRENT_PATH) return [];
-  return CURRENT_PATH.split('/').filter(Boolean);
-}
+function pathSegments(){ return CURRENT_PATH ? CURRENT_PATH.split('/').filter(Boolean) : []; }
 function siteHref(name){
   return CURRENT_PATH
     ? `/${ROOT}/${CURRENT_PATH.split('/').map(encodeURIComponent).join('/')}/${encodeURIComponent(name)}`
     : `/${ROOT}/${encodeURIComponent(name)}`;
 }
+function humanLabel(p){ return p ? p.split('/').slice(-1)[0].replace(/_/g,' ') : 'Main'; }
 
 /* -------- Renderers -------- */
 function renderCrumbs(){
@@ -173,7 +206,6 @@ function renderCrumbs(){
   rootBtn.textContent = ROOT;
   rootBtn.onclick = () => { if (CURRENT_PATH!==""){ CURRENT_PATH=""; currentPage=1; loadPath(); } };
   crumbsEl.appendChild(rootBtn);
-
   let acc = [];
   segs.forEach((seg, idx) => {
     acc.push(seg);
@@ -227,8 +259,12 @@ function sortFiles(files, mode){
   }
 }
 
+async function headType(url){
+  try { const r = await fetch(url, { method:'HEAD' }); return { ok:r.ok, type:r.headers.get('content-type')||'' }; }
+  catch { return { ok:false, type:'' }; }
+}
+
 function renderPage(){
-  const PAGE_SIZE = 25; // change here if you want a different page size
   totalPages = Math.max(1, Math.ceil(VIEW.length / PAGE_SIZE));
   if (currentPage > totalPages) currentPage = totalPages;
   const start = (currentPage - 1) * PAGE_SIZE;
@@ -262,11 +298,9 @@ function renderPage(){
       const raw  = a.dataset.raw;
       const kind = a.dataset.kind;
       lbName.textContent = name;
-
       const t = await headType(site);
       const url = (!t.ok || (t.type||'').includes('text/html')) ? raw : site;
       lbOpen.href = url;
-
       if (kind === 'Image') {
         lbBody.innerHTML = `<img src="${url}" alt="${name}" style="display:block;max-width:92vw;max-height:80vh">`;
       } else if (kind === 'Video') {
@@ -320,14 +354,6 @@ function buildPager(){
   pager.appendChild(next);
 }
 
-/* -------- Fetch & build current directory -------- */
-async function headType(url){
-  try { const r = await fetch(url, { method:'HEAD' }); return { ok:r.ok, type:r.headers.get('content-type')||'' }; }
-  catch { return { ok:false, type:'' }; }
-}
-
-function humanLabel(p){ return p ? p.split('/').slice(-1)[0].replace(/_/g,' ') : 'Main'; }
-
 function renderFolders(subdirs){
   if (!subdirs.length){ foldersWrap.style.display='none'; return; }
   foldersWrap.style.display='';
@@ -342,32 +368,37 @@ function renderFolders(subdirs){
   });
 }
 
-function sortList(files, mode){ return sortFiles(files, mode); }
-
+/* -------- Load directory -------- */
 async function loadPath(){
   // UI – breadcrumbs
   renderCrumbs();
 
-  // Fetch directory listing
   grid.innerHTML = `<div class="small">Loading ${humanLabel(CURRENT_PATH)}…</div>`;
-  pager.innerHTML = '';
-  foldersEl.innerHTML = '';
+  pager.innerHTML = ''; foldersEl.innerHTML = ''; counts.textContent = '';
+  tokbar.style.display = "none";
+
   try {
-    const dirItems = await fetchDir(fullPath());
+    const dirItems = await fetchDir(CURRENT_PATH ? `${ROOT}/${CURRENT_PATH}` : ROOT);
     const subdirs = (Array.isArray(dirItems)?dirItems:[]).filter(x => x.type==='dir').map(x => x.name);
     renderFolders(subdirs);
 
     FILES = (Array.isArray(dirItems)?dirItems:[]).filter(x => x.type==='file' && FILE_OK.test(x.name));
 
-    // Counts
     const imgCount = FILES.filter(f => IMG_EXT.test(f.name)).length;
     counts.textContent = `${humanLabel(CURRENT_PATH)} — ${imgCount} images, ${FILES.length} items`;
 
-    // Commit times (only if sorting by time)
-    if (sortSel.value === 'new' || sortSel.value === 'old') {
+    // If rate-limited, disable commit sorts and show token bar
+    if (RATE_LIMITED) {
+      sortSel.value = (sortSel.value === 'new' || sortSel.value === 'old') ? 'az' : sortSel.value;
+      showTokBar("GitHub rate limit hit. Paste a personal access token to re-enable Newest/Oldest.", true);
+    }
+
+    // Commit times only if we're allowed and selected
+    if (!RATE_LIMITED && (sortSel.value === 'new' || sortSel.value === 'old')) {
       for (const f of FILES){
         try{
-          const iso = await fetchLastCommitISO(`${fullPath()}/${f.name}`);
+          const path = (CURRENT_PATH ? `${ROOT}/${CURRENT_PATH}` : ROOT) + `/${f.name}`;
+          const iso = await fetchLastCommitISO(path);
           f._commitTime = iso ? Date.parse(iso) : 0;
         }catch{ f._commitTime = 0; }
       }
@@ -375,20 +406,38 @@ async function loadPath(){
       FILES.forEach(f => f._commitTime = f._commitTime || 0);
     }
 
-    VIEW = sortList(FILES, sortSel.value || 'new');
+    VIEW = sortFiles(FILES, sortSel.value);
     currentPage = Number(qs('page', 1)) || 1;
     renderPage();
 
   } catch (err) {
-    grid.innerHTML = `<div class="small">Error: ${err.message}</div>`;
+    // If 403 and not already flagged, show token bar
+    if (err && String(err).includes("403")) {
+      showTokBar("GitHub API 403 (rate limit). You can still browse A–Z / Z–A, or paste a token to enable Newest/Oldest.", true);
+      sortSel.value = (sortSel.value === 'new' || sortSel.value === 'old') ? 'az' : sortSel.value;
+      RATE_LIMITED = true;
+      // try again quickly to at least render A–Z
+      try {
+        const dirItems = await fetchDir(CURRENT_PATH ? `${ROOT}/${CURRENT_PATH}` : ROOT); // will throw again if still 403
+      } catch {}
+      // fall back to raw list via last successful cache? (none) => show message
+      grid.innerHTML = `<div class="small">Rate limited. Switch sort to A–Z or provide a token above.</div>`;
+      return;
+    }
+    grid.innerHTML = `<div class="small">Error: ${err.message||err}</div>`;
   }
 }
 
 /* -------- Init -------- */
 (function init(){
+  // optional: token via URL ?gh_token=xxxxx
+  const qsTok = qs('gh_token','');
+  if (qsTok) setToken(qsTok);
+
   CURRENT_PATH = (qs('path','') || '').replace(/^\/+|\/+$/g,''); // normalize
   sortSel.value = qs('sort','new');
   sortSel.onchange = () => { currentPage = 1; loadPath(); };
+
   loadPath();
 })();
 </script>
