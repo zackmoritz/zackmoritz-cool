@@ -34,6 +34,7 @@
   .pagebtn[disabled]{opacity:.5;cursor:not-allowed}
   .pagenum{border:1px solid var(--border);background:#12161f;color:var(--text);border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer}
   .pagenum.active{background:#1a232f}
+  select{background:var(--accent);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:6px 10px;font-size:13px}
 </style>
 </head>
 <body>
@@ -42,13 +43,22 @@
 
   <div class="row">
     <div class="small">Root: <code>/Digital_Gratitude_List</code></div>
-    <div class="small" id="counts" style="margin-left:auto"></div>
+    <div class="row" style="margin-left:auto">
+      <label class="small" for="sortSel">Sort:</label>
+      <select id="sortSel">
+        <option value="new" selected>Newest</option>
+        <option value="old">Oldest</option>
+        <option value="az">A–Z</option>
+        <option value="za">Z–A</option>
+      </select>
+    </div>
   </div>
 
   <!-- Breadcrumbs -->
   <div id="crumbs" class="crumbs"></div>
 
   <div class="row" style="margin:4px 0 8px">
+    <div class="small" id="counts"></div>
     <div class="small" style="margin-left:auto">
       Page <span id="pageInfo">1</span>
     </div>
@@ -61,7 +71,7 @@
   </div>
 
   <!-- Files -->
-  <div class="section-title small" style="margin-top:14px">Files (A–Z)</div>
+  <div class="section-title small" style="margin-top:14px">Files</div>
   <div id="grid" class="grid"><div class="small">Loading…</div></div>
   <div id="pager" class="pager" aria-label="Pagination"></div>
 </div>
@@ -81,15 +91,12 @@
 </div>
 
 <script>
-/* ====== CONFIG ====== */
-const API_BASE = "/gallery-api";          // your Worker route base
-const ROOT     = "Digital_Gratitude_List";// fixed repo folder to browse
+const API_BASE = "/gallery-api";           // Worker route
+const ROOT     = "Digital_Gratitude_List"; // repo folder
 const PAGE_SIZE = 25;
-/* ==================== */
 
 const IMG_EXT   = /\.(png|jpe?g|gif|webp|heic|heif)$/i;
-the_VIDEO = /\.(mp4|mov|webm|m4v)$/i;
-const VIDEO_EXT = the_VIDEO; // keep name used below
+const VIDEO_EXT = /\.(mp4|mov|webm|m4v)$/i;
 const AUDIO_EXT = /\.(m4a|mp3|wav|ogg)$/i;
 const FILE_OK   = /\.(png|jpe?g|gif|webp|heic|heif|mp4|mov|webm|m4v|m4a|mp3|wav|ogg)$/i;
 
@@ -100,6 +107,7 @@ const counts   = document.getElementById('counts');
 const crumbsEl = document.getElementById('crumbs');
 const foldersEl= document.getElementById('folders');
 const foldersWrap = document.getElementById('foldersWrap');
+const sortSel  = document.getElementById('sortSel');
 
 const lb   = document.getElementById('lightbox');
 const lbBody = document.getElementById('lbBody');
@@ -110,12 +118,13 @@ const lbClose= document.getElementById('lbClose');
 lbClose.onclick = () => { lb.classList.remove('open'); lb.setAttribute('aria-hidden','true'); lbBody.innerHTML=''; };
 lb.addEventListener('click', e => { if (e.target === lb) lbClose.onclick(); });
 
-let CURRENT_PATH = ""; // relative to ROOT; e.g. "", "Workshop", "Workshop/Saw_Blades"
-let FILES = [];        // files in current path
-let VIEW  = [];        // A–Z sorted files for pagination
+let CURRENT_PATH = ""; // relative to ROOT
+let FILES = [];        // names
+let COMMITS = {};      // { name: iso }
+let VIEW  = [];        // array of { name, t } for sorting by time
 let currentPage = 1, totalPages = 1;
 
-/* -------- URL helpers -------- */
+/* URL helpers */
 function qs(name, def){ const u=new URL(location.href); return u.searchParams.get(name) ?? def; }
 function updateQS(params){
   const u = new URL(location.href);
@@ -123,7 +132,7 @@ function updateQS(params){
   history.replaceState(null,'',u.toString());
 }
 
-/* -------- Path helpers -------- */
+/* Paths */
 function fullPath(){ return CURRENT_PATH ? `${ROOT}/${CURRENT_PATH}` : ROOT; }
 function pathSegments(){ return CURRENT_PATH ? CURRENT_PATH.split('/').filter(Boolean) : []; }
 function siteHref(name){
@@ -133,17 +142,18 @@ function siteHref(name){
 }
 function humanLabel(p){ return p ? p.split('/').slice(-1)[0].replace(/_/g,' ') : 'Main'; }
 
-/* -------- API: call your Worker -------- */
-async function fetchList(pathRelToRoot){
+/* API */
+async function fetchList(pathRelToRoot, needCommits){
   const url = new URL(API_BASE + "/list", location.origin);
-  const repoPath = ["", ROOT, pathRelToRoot].filter(Boolean).join("/"); // ensure ROOT prefix
+  const repoPath = ["", ROOT, pathRelToRoot].filter(Boolean).join("/");
   url.searchParams.set("path", repoPath);
+  if (needCommits) url.searchParams.set("with", "commits");
   const r = await fetch(url.toString(), { headers: { "accept": "application/json" }, cache: "no-store" });
   if (!r.ok) throw new Error(`API ${r.status}`);
-  return await r.json(); // { folders:[], files:[] }
+  return await r.json(); // { folders, files, commits? }
 }
 
-/* -------- Renderers -------- */
+/* Renderers */
 function renderCrumbs(){
   const segs = pathSegments();
   crumbsEl.innerHTML = "";
@@ -199,15 +209,29 @@ async function headType(url){
   catch { return { ok:false, type:'' }; }
 }
 
+function sortFiles(mode){
+  if (mode === 'az' || mode === 'za') {
+    const sorted = FILES.slice().sort((a,b)=> a.localeCompare(b, undefined, {numeric:true}));
+    return mode==='az' ? sorted : sorted.reverse();
+  }
+  // time-based using COMMITS map
+  const items = FILES.map(n => ({ name:n, t: COMMITS[n] ? Date.parse(COMMITS[n]) : 0 }));
+  items.sort((a,b)=> (b.t||0) - (a.t||0)); // newest first
+  if (mode === 'old') items.reverse();
+  return items.map(x => x.name);
+}
+
 function renderPage(){
-  totalPages = Math.max(1, Math.ceil(VIEW.length / PAGE_SIZE));
+  const mode = sortSel.value;
+  const names = sortFiles(mode);
+
+  totalPages = Math.max(1, Math.ceil(names.length / PAGE_SIZE));
   if (currentPage > totalPages) currentPage = totalPages;
   const start = (currentPage - 1) * PAGE_SIZE;
-  const slice = VIEW.slice(start, start + PAGE_SIZE);
+  const slice = names.slice(start, start + PAGE_SIZE);
 
   grid.innerHTML = slice.map(cardHTML).join('');
 
-  // thumbs + lightbox
   const thumbs = grid.querySelectorAll('img.thumb');
   thumbs.forEach(async img => {
     const site = img.dataset.site, kind = img.dataset.kind;
@@ -250,11 +274,11 @@ function renderPage(){
   });
 
   pageInfo.textContent = `${currentPage} / ${totalPages}`;
-  buildPager();
-  updateQS({ path: CURRENT_PATH, page: currentPage });
+  buildPager(names.length);
+  updateQS({ path: CURRENT_PATH, sort: mode, page: currentPage });
 }
 
-function buildPager(){
+function buildPager(total){
   pager.innerHTML = "";
   const prev = document.createElement('button');
   prev.className = 'pagebtn'; prev.textContent = '‹ Prev';
@@ -262,8 +286,8 @@ function buildPager(){
   prev.onclick = () => { currentPage--; renderPage(); };
   pager.appendChild(prev);
 
-  const nums = [];
   const maxBtns = 7;
+  const nums = [];
   if (totalPages <= maxBtns) {
     for (let i=1;i<=totalPages;i++) nums.push(i);
   } else {
@@ -275,7 +299,7 @@ function buildPager(){
   }
 
   nums.forEach(n => {
-    if (n === '…') { const span=document.createElement('span'); span.className='small'; span.textContent='…'; pager.appendChild(span); return; }
+    if (n === '…') { const s=document.createElement('span'); s.className='small'; s.textContent='…'; pager.appendChild(s); return; }
     const b = document.createElement('button');
     b.className = 'pagenum' + (n===currentPage ? ' active' : '');
     b.textContent = n;
@@ -316,26 +340,26 @@ function renderFolders(subdirs){
   });
 }
 
-/* -------- Load directory -------- */
+/* Load directory */
 async function loadPath(){
   renderCrumbs();
   grid.innerHTML = `<div class="small">Loading ${humanLabel(CURRENT_PATH)}…</div>`;
   pager.innerHTML = ''; foldersEl.innerHTML = ''; counts.textContent = '';
 
   try {
-    const data = await fetchList(CURRENT_PATH);
+    const needCommits = (sortSel.value === 'new' || sortSel.value === 'old');
+    const data = await fetchList(CURRENT_PATH, needCommits);
     const folders = Array.isArray(data.folders) ? data.folders : [];
     const files   = Array.isArray(data.files)   ? data.files   : [];
+    COMMITS = data.commits || {};
 
     renderFolders(folders);
 
-    FILES = files.filter(n => FILE_OK.test(n))
-                 .sort((a,b)=> a.localeCompare(b, undefined, {numeric:true}));
+    FILES = files.filter(n => FILE_OK.test(n));
 
     const imgCount = FILES.filter(n => IMG_EXT.test(n)).length;
     counts.textContent = `${humanLabel(CURRENT_PATH)} — ${imgCount} images, ${FILES.length} items`;
 
-    VIEW = FILES;
     currentPage = Number(qs('page', 1)) || 1;
     renderPage();
 
@@ -344,9 +368,12 @@ async function loadPath(){
   }
 }
 
-/* -------- Init -------- */
+/* Init */
 (function init(){
   CURRENT_PATH = (qs('path','') || '').replace(/^\/+|\/+$/g,''); // normalize
+  const qsSort = qs('sort','new');
+  if (['new','old','az','za'].includes(qsSort)) sortSel.value = qsSort;
+  sortSel.onchange = () => { currentPage = 1; loadPath(); };
   loadPath();
 })();
 </script>
