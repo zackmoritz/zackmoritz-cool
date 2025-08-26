@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Digital Gratitude List — Browser (A–Z)</title>
+<title>Digital Gratitude List — Browser</title>
 <style>
   :root { --bg:#0f1115; --panel:#12161f; --border:#262b36; --text:#e7ecf1; --muted:#9aa6b2; --accent:#1a232f; }
   body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
@@ -38,7 +38,7 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>Digital Gratitude List — Browser (A–Z)</h1>
+  <h1>Digital Gratitude List — Browser</h1>
 
   <div class="row">
     <div class="small">Root: <code>/Digital_Gratitude_List</code></div>
@@ -82,14 +82,14 @@
 
 <script>
 /* ====== CONFIG ====== */
-const REPO    = "zackmoritz/zackmoritz-cool";
-const BRANCH  = "main";
-const ROOT    = "Digital_Gratitude_List"; // fixed root
+const API_BASE = "/gallery-api";          // your Worker route base
+const ROOT     = "Digital_Gratitude_List";// fixed repo folder to browse
 const PAGE_SIZE = 25;
 /* ==================== */
 
 const IMG_EXT   = /\.(png|jpe?g|gif|webp|heic|heif)$/i;
-const VIDEO_EXT = /\.(mp4|mov|webm|m4v)$/i;
+the_VIDEO = /\.(mp4|mov|webm|m4v)$/i;
+const VIDEO_EXT = the_VIDEO; // keep name used below
 const AUDIO_EXT = /\.(m4a|mp3|wav|ogg)$/i;
 const FILE_OK   = /\.(png|jpe?g|gif|webp|heic|heif|mp4|mov|webm|m4v|m4a|mp3|wav|ogg)$/i;
 
@@ -123,14 +123,6 @@ function updateQS(params){
   history.replaceState(null,'',u.toString());
 }
 
-/* -------- API helpers (no auth needed) -------- */
-async function fetchDir(path){
-  const url = `https://api.github.com/repos/${REPO}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(BRANCH)}`;
-  const r = await fetch(url, { headers:{Accept:"application/vnd.github+json"} });
-  if (!r.ok) throw new Error(`GitHub API ${r.status}`);
-  return await r.json();
-}
-
 /* -------- Path helpers -------- */
 function fullPath(){ return CURRENT_PATH ? `${ROOT}/${CURRENT_PATH}` : ROOT; }
 function pathSegments(){ return CURRENT_PATH ? CURRENT_PATH.split('/').filter(Boolean) : []; }
@@ -140,6 +132,16 @@ function siteHref(name){
     : `/${ROOT}/${encodeURIComponent(name)}`;
 }
 function humanLabel(p){ return p ? p.split('/').slice(-1)[0].replace(/_/g,' ') : 'Main'; }
+
+/* -------- API: call your Worker -------- */
+async function fetchList(pathRelToRoot){
+  const url = new URL(API_BASE + "/list", location.origin);
+  const repoPath = ["", ROOT, pathRelToRoot].filter(Boolean).join("/"); // ensure ROOT prefix
+  url.searchParams.set("path", repoPath);
+  const r = await fetch(url.toString(), { headers: { "accept": "application/json" }, cache: "no-store" });
+  if (!r.ok) throw new Error(`API ${r.status}`);
+  return await r.json(); // { folders:[], files:[] }
+}
 
 /* -------- Renderers -------- */
 function renderCrumbs(){
@@ -176,20 +178,19 @@ function folderTileHTML(name){
     </div>`;
 }
 
-function cardHTML(f){
-  const site = siteHref(f.name);
-  const raw  = f.download_url;
-  const isImg   = IMG_EXT.test(f.name);
-  const isVideo = VIDEO_EXT.test(f.name);
-  const isAudio = AUDIO_EXT.test(f.name);
+function cardHTML(name){
+  const site = siteHref(name);
+  const isImg   = IMG_EXT.test(name);
+  const isVideo = VIDEO_EXT.test(name);
+  const isAudio = AUDIO_EXT.test(name);
   const badge = isVideo ? 'Video' : isAudio ? 'Audio' : 'Image';
-  const data = `data-site="${site}" data-raw="${raw}" data-name="${encodeURIComponent(f.name)}" data-kind="${badge}"`;
+  const data = `data-site="${site}" data-name="${encodeURIComponent(name)}" data-kind="${badge}"`;
   return `
     <a href="${site}" class="card" ${data}>
       <span class="badge">${badge}</span>
       ${isImg ? `<img class="thumb" loading="lazy" alt="" ${data}>`
               : `<img class="thumb" alt="" ${data} style="object-fit:contain" />`}
-      <div class="label" title="${f.name}">${f.name}</div>
+      <div class="label" title="${name}">${name}</div>
     </a>`;
 }
 
@@ -199,21 +200,20 @@ async function headType(url){
 }
 
 function renderPage(){
-  const PAGE = PAGE_SIZE;
-  totalPages = Math.max(1, Math.ceil(VIEW.length / PAGE));
+  totalPages = Math.max(1, Math.ceil(VIEW.length / PAGE_SIZE));
   if (currentPage > totalPages) currentPage = totalPages;
-  const start = (currentPage - 1) * PAGE;
-  const slice = VIEW.slice(start, start + PAGE);
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const slice = VIEW.slice(start, start + PAGE_SIZE);
 
   grid.innerHTML = slice.map(cardHTML).join('');
 
-  // thumbnails + lightbox
+  // thumbs + lightbox
   const thumbs = grid.querySelectorAll('img.thumb');
   thumbs.forEach(async img => {
-    const site = img.dataset.site, raw = img.dataset.raw, kind = img.dataset.kind;
+    const site = img.dataset.site, kind = img.dataset.kind;
     if (kind === 'Image') {
       const t = await headType(site);
-      img.src = (!t.ok || (t.type||'').includes('text/html')) ? raw : site;
+      img.src = (!t.ok || (t.type||'').includes('text/html')) ? site : site;
     } else {
       img.style.background = '#0b0e13'; img.style.height = '120px';
       img.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(
@@ -230,12 +230,11 @@ function renderPage(){
       e.preventDefault();
       const name = decodeURIComponent(a.dataset.name);
       const site = a.dataset.site;
-      const raw  = a.dataset.raw;
       const kind = a.dataset.kind;
       lbName.textContent = name;
 
       const t = await headType(site);
-      const url = (!t.ok || (t.type||'').includes('text/html')) ? raw : site;
+      const url = (!t.ok || (t.type||'').includes('text/html')) ? site : site;
       lbOpen.href = url;
 
       if (kind === 'Image') {
@@ -294,7 +293,19 @@ function buildPager(){
 function renderFolders(subdirs){
   if (!subdirs.length){ foldersWrap.style.display='none'; return; }
   foldersWrap.style.display='';
-  foldersEl.innerHTML = subdirs.map(n => folderTileHTML(n)).join('');
+  subdirs.sort((a,b)=> a.localeCompare(b, undefined, {numeric:true}));
+  foldersEl.innerHTML = subdirs.map(n => `
+    <div class="folder" data-sub="${encodeURIComponent(n)}" title="${n}">
+      <div class="icon" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" stroke="#9aa6b2"/>
+        </svg>
+      </div>
+      <div>
+        <div style="font-size:14px">${n.replace(/_/g,' ')}</div>
+        <div class="small">Open folder</div>
+      </div>
+    </div>`).join('');
   foldersEl.querySelectorAll('.folder').forEach(div => {
     div.addEventListener('click', () => {
       const name = decodeURIComponent(div.dataset.sub);
@@ -305,31 +316,26 @@ function renderFolders(subdirs){
   });
 }
 
-/* -------- Load directory (A–Z only) -------- */
+/* -------- Load directory -------- */
 async function loadPath(){
   renderCrumbs();
-
   grid.innerHTML = `<div class="small">Loading ${humanLabel(CURRENT_PATH)}…</div>`;
   pager.innerHTML = ''; foldersEl.innerHTML = ''; counts.textContent = '';
 
   try {
-    const dirPath = CURRENT_PATH ? `${ROOT}/${CURRENT_PATH}` : ROOT;
-    const dirItems = await fetchDir(dirPath);
+    const data = await fetchList(CURRENT_PATH);
+    const folders = Array.isArray(data.folders) ? data.folders : [];
+    const files   = Array.isArray(data.files)   ? data.files   : [];
 
-    const subdirs = (Array.isArray(dirItems)?dirItems:[])
-      .filter(x => x.type==='dir')
-      .map(x => x.name)
-      .sort((a,b)=> a.localeCompare(b, undefined, {numeric:true}));
-    renderFolders(subdirs);
+    renderFolders(folders);
 
-    FILES = (Array.isArray(dirItems)?dirItems:[])
-      .filter(x => x.type==='file' && FILE_OK.test(x.name))
-      .sort((a,b)=> a.name.localeCompare(b.name, undefined, {numeric:true}));
+    FILES = files.filter(n => FILE_OK.test(n))
+                 .sort((a,b)=> a.localeCompare(b, undefined, {numeric:true}));
 
-    const imgCount = FILES.filter(f => IMG_EXT.test(f.name)).length;
-    counts.textContent = `${humanLabel(CURRENT_PATH)} — ${imgCount} images, ${FILES.length} items (A–Z)`;
+    const imgCount = FILES.filter(n => IMG_EXT.test(n)).length;
+    counts.textContent = `${humanLabel(CURRENT_PATH)} — ${imgCount} images, ${FILES.length} items`;
 
-    VIEW = FILES; // already A–Z
+    VIEW = FILES;
     currentPage = Number(qs('page', 1)) || 1;
     renderPage();
 
