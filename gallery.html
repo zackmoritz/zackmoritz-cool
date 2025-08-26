@@ -3,17 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Digital Gratitude List — ZackMoritz.cool</title>
+<title>Digital Gratitude List — Rooms</title>
 <style>
-  :root { --bg:#0f1115; --panel:#12161f; --border:#262b36; --text:#e7ecf1; --muted:#9aa6b2; }
+  :root { --bg:#0f1115; --panel:#12161f; --border:#262b36; --text:#e7ecf1; --muted:#9aa6b2; --accent:#1a232f; }
   body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
   .wrap{max-width:1100px;margin:0 auto;padding:24px 14px}
   h1{margin:0 0 6px}
   .small{color:var(--muted);font-size:13px}
-  .controls{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
-  select{background:#1a232f;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 8px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  select, .btn, .chip{
+    background:var(--accent); color:var(--text); border:1px solid var(--border);
+    border-radius:10px; padding:6px 10px; font-size:13px
+  }
+  .chip{cursor:pointer}
+  .chip.active{background:#1e2a3a}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-top:16px}
-  .card{position:relative;display:block;border:1px solid var(--border);background:var(--panel);border-radius:12px;overflow:hidden;text-decoration:none;color:var(--text)}
+  .card{position:relative;display:block;border:1px solid var(--border);background:var(--panel);
+        border-radius:12px;overflow:hidden;text-decoration:none;color:var(--text)}
   .thumb{display:block;width:100%;height:140px;object-fit:cover;background:#0b0e13}
   .label{padding:8px 10px;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-top:1px solid var(--border)}
   .badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.55);border:1px solid var(--border);padding:2px 6px;border-radius:999px;font-size:12px}
@@ -24,7 +30,7 @@
   .viewer img,.viewer video,audio{display:block;max-width:92vw;max-height:80vh}
   .viewer .head{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--border)}
   .viewer .name{font-size:14px}
-  .btn{cursor:pointer;border:1px solid var(--border);background:#1a232f;color:var(--text);border-radius:8px;padding:6px 10px;font-size:13px}
+  .btn{cursor:pointer}
   /* pagination */
   .pager{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:14px}
   .pagebtn{border:1px solid var(--border);background:#12161f;color:var(--text);border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer}
@@ -35,13 +41,14 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>Digital Gratitude List</h1>
-  <div class="small">
-    Files in <code>/Digital_Gratitude_List</code> <span id="fileCount"></span>.
-    Sorted by <strong>Newest</strong> by default.
+  <h1>Digital Gratitude List — Rooms</h1>
+
+  <div class="row" style="margin:8px 0">
+    <div id="roomChips" class="row"></div>
+    <div class="small" id="counts" style="margin-left:auto"></div>
   </div>
 
-  <div class="controls">
+  <div class="row" style="margin:4px 0 8px">
     <label class="small" for="sortSel">Sort:</label>
     <select id="sortSel">
       <option value="new" selected>Newest</option>
@@ -49,7 +56,6 @@
       <option value="az">A–Z</option>
       <option value="za">Z–A</option>
     </select>
-
     <div class="small" style="margin-left:auto">
       Page <span id="pageInfo">1</span>
     </div>
@@ -74,10 +80,12 @@
 </div>
 
 <script>
+/* ====== CONFIG ====== */
 const REPO   = "zackmoritz/zackmoritz-cool";
 const BRANCH = "main";
-const FOLDER = "Digital_Gratitude_List";
+const ROOT   = "Digital_Gratitude_List";   // rooms live under this folder
 const PAGE_SIZE = 25;
+/* ==================== */
 
 const IMG_EXT   = /\.(png|jpe?g|gif|webp|heic|heif)$/i;
 const VIDEO_EXT = /\.(mp4|mov|webm|m4v)$/i;
@@ -88,7 +96,7 @@ const grid     = document.getElementById('grid');
 const pager    = document.getElementById('pager');
 const pageInfo = document.getElementById('pageInfo');
 const sortSel  = document.getElementById('sortSel');
-const fileCountEl = document.getElementById('fileCount');
+const counts   = document.getElementById('counts');
 
 const lb   = document.getElementById('lightbox');
 const lbBody = document.getElementById('lbBody');
@@ -99,19 +107,32 @@ const lbClose= document.getElementById('lbClose');
 lbClose.onclick = () => { lb.classList.remove('open'); lb.setAttribute('aria-hidden','true'); lbBody.innerHTML=''; };
 lb.addEventListener('click', e => { if (e.target === lb) lbClose.onclick(); });
 
-let ALL_FILES = [];   // list from GitHub
-let VIEW = [];        // sorted list used for paging
-let currentPage = 1;
-let totalPages  = 1;
+/* state */
+let ROOMS = [];           // discovered subfolders (e.g., ["Garage","Workshop"])
+let CURRENT_ROOM = "";    // "" = root of ROOT; else a subfolder name
+let ALL_FILES = [];       // files for current room
+let VIEW = [];            // sorted list for paging
+let currentPage = 1, totalPages = 1;
 
-function siteHref(name){ return `/${FOLDER}/${encodeURIComponent(name)}`; }
+/* helpers */
+function qs(name, def){ const u = new URL(location.href); return u.searchParams.get(name) ?? def; }
+function updateQS(params){
+  const u = new URL(location.href);
+  Object.entries(params).forEach(([k,v]) => v==null? u.searchParams.delete(k) : u.searchParams.set(k,String(v)));
+  history.replaceState(null,'',u.toString());
+}
+function siteHref(room, name){
+  const base = room ? `${ROOT}/${room}` : ROOT;
+  return `/${base}/${encodeURIComponent(name)}`;
+}
 async function headType(url){
   try { const r = await fetch(url, { method:'HEAD' }); return { ok:r.ok, type:r.headers.get('content-type')||'' }; }
   catch { return { ok:false, type:'' }; }
 }
 
-function cardHTML(f){
-  const site = siteHref(f.name);
+/* cards */
+function cardHTML(room, f){
+  const site = siteHref(room, f.name);
   const raw  = f.download_url;
   const isImg   = IMG_EXT.test(f.name);
   const isVideo = VIDEO_EXT.test(f.name);
@@ -127,22 +148,25 @@ function cardHTML(f){
     </a>`;
 }
 
+/* sorting */
 function sortFiles(files, mode){
   switch(mode){
     case 'new': return files.slice().sort((a,b)=> (b._commitTime||0) - (a._commitTime||0));
     case 'old': return files.slice().sort((a,b)=> (a._commitTime||0) - (b._commitTime||0));
     case 'za' : return files.slice().sort((a,b)=> b.name.localeCompare(a.name, undefined, {numeric:true}));
-    case 'az' : default: return files.slice().sort((a,b)=> a.name.localeCompare(b.name, undefined, {numeric:true}));
+    case 'az' :
+    default:    return files.slice().sort((a,b)=> a.name.localeCompare(b.name, undefined, {numeric:true}));
   }
 }
 
+/* pagination render */
 function renderPage(){
   totalPages = Math.max(1, Math.ceil(VIEW.length / PAGE_SIZE));
   if (currentPage > totalPages) currentPage = totalPages;
   const start = (currentPage - 1) * PAGE_SIZE;
   const slice = VIEW.slice(start, start + PAGE_SIZE);
 
-  grid.innerHTML = slice.map(cardHTML).join('');
+  grid.innerHTML = slice.map(f => cardHTML(CURRENT_ROOM, f)).join('');
 
   // thumbs + lightbox
   const thumbs = grid.querySelectorAll('img.thumb');
@@ -189,13 +213,13 @@ function renderPage(){
 
   pageInfo.textContent = `${currentPage} / ${totalPages}`;
   buildPager();
+  updateQS({ folder: CURRENT_ROOM || '', page: currentPage, sort: sortSel.value });
 }
 
 function buildPager(){
   pager.innerHTML = "";
   const prev = document.createElement('button');
-  prev.className = 'pagebtn';
-  prev.textContent = '‹ Prev';
+  prev.className = 'pagebtn'; prev.textContent = '‹ Prev';
   prev.disabled = currentPage === 1;
   prev.onclick = () => { currentPage--; renderPage(); };
   pager.appendChild(prev);
@@ -213,13 +237,7 @@ function buildPager(){
   }
 
   nums.forEach(n => {
-    if (n === '…') {
-      const span = document.createElement('span');
-      span.className = 'small';
-      span.textContent = '…';
-      pager.appendChild(span);
-      return;
-    }
+    if (n === '…') { const span = document.createElement('span'); span.className='small'; span.textContent='…'; pager.appendChild(span); return; }
     const b = document.createElement('button');
     b.className = 'pagenum' + (n===currentPage ? ' active' : '');
     b.textContent = n;
@@ -228,61 +246,120 @@ function buildPager(){
   });
 
   const next = document.createElement('button');
-  next.className = 'pagebtn';
-  next.textContent = 'Next ›';
+  next.className = 'pagebtn'; next.textContent = 'Next ›';
   next.disabled = currentPage === totalPages;
   next.onclick = () => { currentPage++; renderPage(); };
   pager.appendChild(next);
 }
 
-// commit API
-async function fetchLastCommitISO(path, sha){
-  const url = `https://api.github.com/repos/${REPO}/commits?path=${encodeURIComponent(path)}&per_page=1&sha=${encodeURIComponent(BRANCH)}`;
-  await new Promise(r => setTimeout(r, 150));
+/* GitHub fetchers */
+async function ghList(path){ // list files/dirs under path
+  const url = `https://api.github.com/repos/${REPO}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(BRANCH)}`;
+  const r = await fetch(url, { headers:{Accept:"application/vnd.github+json"} });
+  if(!r.ok) throw new Error(`GitHub API ${r.status}`);
+  return await r.json();
+}
+
+async function fetchRooms(){
+  const items = await ghList(ROOT);
+  const dirs  = (Array.isArray(items)?items:[]).filter(it => it.type === 'dir').map(d => d.name);
+  return dirs; // e.g., ["Garage","Workshop"]
+}
+
+async function fetchList(room){
+  const base = room ? `${ROOT}/${room}` : ROOT;
+  const items = await ghList(base);
+  return (Array.isArray(items)?items:[]).filter(it => it.type==='file' && FILE_OK.test(it.name));
+}
+
+async function fetchLastCommitISO(room, file){
+  // room "" = root
+  await new Promise(r => setTimeout(r, 140)); // gentle to avoid rate-limits
+  const base = room ? `${ROOT}/${room}` : ROOT;
+  const path = `${base}/${file.name}`;
+  const url  = `https://api.github.com/repos/${REPO}/commits?path=${encodeURIComponent(path)}&per_page=1&sha=${encodeURIComponent(BRANCH)}`;
   const res = await fetch(url, { headers:{Accept:"application/vnd.github+json"} });
   if (!res.ok) return null;
   const arr = await res.json();
   return arr?.[0]?.commit?.committer?.date || arr?.[0]?.commit?.author?.date || null;
 }
 
-async function fetchList(){
-  const url = `https://api.github.com/repos/${REPO}/contents/${encodeURIComponent(FOLDER)}?ref=${encodeURIComponent(BRANCH)}`;
-  const r = await fetch(url, { headers:{Accept:"application/vnd.github+json"} });
-  if(!r.ok) throw new Error(`GitHub API ${r.status}`);
-  const items = await r.json();
-  return (Array.isArray(items)?items:[]).filter(it => it.type==='file' && FILE_OK.test(it.name));
+/* Rooms UI */
+function renderRoomChips(){
+  const wrap = document.getElementById('roomChips');
+  wrap.innerHTML = '';
+  // First chip = Main (root of ROOT)
+  const main = document.createElement('button');
+  main.className = 'chip' + (CURRENT_ROOM==="" ? ' active' : '');
+  main.textContent = 'Main';
+  main.onclick = () => { if (CURRENT_ROOM!==""){ CURRENT_ROOM=""; loadRoom(); } };
+  wrap.appendChild(main);
+
+  // Subfolder chips
+  ROOMS.forEach(name => {
+    const c = document.createElement('button');
+    c.className = 'chip' + (name===CURRENT_ROOM ? ' active' : '');
+    c.textContent = name.replace(/_/g,' ');
+    c.onclick = () => { if (CURRENT_ROOM!==name){ CURRENT_ROOM=name; loadRoom(); } };
+    wrap.appendChild(c);
+  });
 }
 
-async function init(){
-  grid.innerHTML = `<div class="small">Loading…</div>`;
-  try{
-    ALL_FILES = await fetchList();
-    const imageCount = ALL_FILES.filter(it => IMG_EXT.test(it.name)).length;
-    if (fileCountEl) fileCountEl.textContent = `(${imageCount} images, ${ALL_FILES.length} items total)`;
+async function loadRoom(){
+  grid.innerHTML = `<div class="small">Loading ${CURRENT_ROOM || 'Main'}…</div>`;
+  pager.innerHTML = '';
+  counts.textContent = '';
 
-    // fetch commit times
-    for (const f of ALL_FILES){
-      try{
-        const iso = await fetchLastCommitISO(`${FOLDER}/${f.name}`, f.sha);
-        f._commitTime = iso ? Date.parse(iso) : 0;
-      }catch{ f._commitTime = 0; }
+  try{
+    ALL_FILES = await fetchList(CURRENT_ROOM);
+
+    const imageCount = ALL_FILES.filter(it => IMG_EXT.test(it.name)).length;
+    const label = CURRENT_ROOM || 'Main';
+    counts.textContent = `${label} — ${imageCount} images, ${ALL_FILES.length} items`;
+
+    // fetch commit times only when needed
+    const wantsCommit = (sortSel.value === 'new' || sortSel.value === 'old');
+    if (wantsCommit){
+      for (const f of ALL_FILES){
+        try {
+          const iso = await fetchLastCommitISO(CURRENT_ROOM, f);
+          f._commitTime = iso ? Date.parse(iso) : 0;
+        } catch { f._commitTime = 0; }
+      }
+    } else {
+      ALL_FILES.forEach(f => f._commitTime = f._commitTime || 0);
     }
 
     VIEW = sortFiles(ALL_FILES, sortSel.value || 'new');
-    currentPage = 1;
+    currentPage = Number(qs('page', 1)) || 1;
     renderPage();
-
-    sortSel.onchange = () => {
-      VIEW = sortFiles(ALL_FILES, sortSel.value);
-      currentPage = 1;
-      renderPage();
-    };
   }catch(err){
     grid.innerHTML = `<div class="small">Error: ${err.message}</div>`;
   }
 }
 
-init();
+/* Init */
+(async function init(){
+  // discover rooms (subfolders)
+  try {
+    ROOMS = await fetchRooms();
+  } catch (e) {
+    ROOMS = []; // still allow root to work
+  }
+
+  // pick initial room from URL ?folder=
+  const want = qs('folder','');
+  CURRENT_ROOM = (want && ROOMS.includes(want)) ? want : '';
+
+  // initial sort
+  sortSel.value = qs('sort','new');
+
+  renderRoomChips();
+
+  sortSel.onchange = () => { currentPage = 1; loadRoom(); };
+
+  await loadRoom();
+})();
 </script>
 </body>
 </html>
