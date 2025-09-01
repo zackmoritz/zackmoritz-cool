@@ -339,6 +339,7 @@ counts.textContent = `${humanLabel(CURRENT_PATH)} — ${imgCount} images, ${FILE
 // If we're at the root, compute total photos across all subfolders
 const totalEl = document.getElementById('totalPhotos');
 if (!CURRENT_PATH) {
+  if (!CURRENT_PATH) {
   totalEl.textContent = 'All photos: scanning…';
   try {
     const total = await countImagesRecursive('');
