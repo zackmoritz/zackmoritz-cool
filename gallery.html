@@ -57,12 +57,13 @@
   <!-- Breadcrumbs -->
   <div id="crumbs" class="crumbs"></div>
 
-  <div class="row" style="margin:4px 0 8px">
-    <div class="small" id="counts"></div>
-    <div class="small" style="margin-left:auto">
-      Page <span id="pageInfo">1</span>
-    </div>
+<div class="row" style="margin:4px 0 8px">
+  <div class="small" id="counts"></div>
+  <div class="small" id="totalPhotos" style="margin-left:12px"></div>
+  <div class="small" style="margin-left:auto">
+    Page <span id="pageInfo">1</span>
   </div>
+</div>
 
   <!-- Folders -->
   <div id="foldersWrap">
@@ -309,7 +310,11 @@ function renderFolders(subdirs){
   });
 }
 
+// Recursively count previewable images (jpg/png/gif/webp) across all subfolders
+async function countImagesRecursive(pathRelToRoot){   const data = await fetchList(pathRelToRoot, false);   const files = Array.isArray(data.files) ? data.files : [];   const folders = Array.isArray(data.folders) ? data.folders : [];    let count = files.filter(n => IMG_EXT.test(n)).length;    for (const sub of folders){     const subPath = pathRelToRoot ? `${pathRelToRoot}/${sub}` : sub;     count += await countImagesRecursive(subPath);   }   return count; }
+
 /* Load directory */
+
 async function loadPath(){
   // show crumbs immediately
   renderCrumbs();
@@ -329,7 +334,21 @@ async function loadPath(){
 
     FILES = files.filter(n => FILE_OK.test(n)); // leave unsorted
     const imgCount = FILES.filter(n => IMG_EXT.test(n)).length;
-    counts.textContent = `${humanLabel(CURRENT_PATH)} — ${imgCount} images, ${FILES.length} items`;
+counts.textContent = `${humanLabel(CURRENT_PATH)} — ${imgCount} images, ${FILES.length} items`;
+
+// If we're at the root, compute total photos across all subfolders
+const totalEl = document.getElementById('totalPhotos');
+if (!CURRENT_PATH) {
+  totalEl.textContent = 'All photos: scanning…';
+  try {
+    const total = await countImagesRecursive('');
+    totalEl.textContent = `All photos: ${total.toLocaleString()}`;
+  } catch(e){
+    totalEl.textContent = 'All photos: (error)';
+  }
+} else {
+  totalEl.textContent = '';
+}
 
     currentPage = Number(qs('page', 1)) || 1;
     renderPage();
