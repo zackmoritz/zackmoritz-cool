@@ -16,7 +16,7 @@
       --accent-soft: rgba(102, 217, 255, 0.14);
       --border: rgba(102, 217, 255, 0.15);
       font-family: "Inter", system-ui, -apple-system, Segoe UI, sans-serif;
-    }
+  }
 
     * {
       box-sizing: border-box;
@@ -25,8 +25,8 @@
     body {
       margin: 0;
       min-height: 100vh;
-      background: var(--bg);
-      color: var(--text);
+        background: var(--bg);
+    color: var(--text);
       display: flex;
       flex-direction: column;
     }
@@ -35,19 +35,19 @@
       padding: 32px 18px 12px;
     }
 
-    .wrap {
+      .wrap {
       width: min(1200px, 100%);
-      margin: 0 auto;
+    margin: 0 auto;
     }
 
     h1 {
       margin: 0;
-      font-size: clamp(2rem, 3vw, 3rem);
-      letter-spacing: -0.02em;
+        font-size: clamp(2rem, 3vw, 3rem);
+    letter-spacing: -0.02em;
     }
 
     .intro {
-      margin-top: 12px;
+        margin-top: 12px;
       color: var(--muted);
       font-size: 0.95rem;
       max-width: 70ch;
@@ -65,32 +65,36 @@
       border: 1px solid rgba(255, 255, 255, 0.04);
       border-radius: 20px;
       padding: 16px;
-      display: grid;
+    display: grid;
       gap: 12px;
     }
 
-    @media (min-width: 680px) {
+      @media (min-width: 680px) {
       .controls {
         grid-template-columns: auto 220px;
-        align-items: center;
+      align-items: center;
       }
     }
 
-    .chip-row {
-      display: flex;
+<<    .chips {
+>>>>>>> codex/delete-ga
+=====
+      .chip-row {
+>>>>>>>+main
+    display: flex;
       flex-wrap: wrap;
       gap: 8px;
     }
 
-    .chip {
+      .chip {
       border: 1px solid var(--border);
       background: rgba(17, 23, 34, 0.65);
-      color: inherit;
+    color: inherit;
       padding: 8px 14px;
       border-radius: 999px;
       font-size: 0.85rem;
       cursor: pointer;
-      transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+        transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
     }
 
     .chip:hover,
@@ -104,7 +108,7 @@
       background: var(--accent-soft);
       border-color: rgba(102, 217, 255, 0.6);
       color: #eaf8ff;
-    }
+  }
 
     .search {
       position: relative;
@@ -112,7 +116,7 @@
 
     .search input {
       width: 100%;
-      border-radius: 14px;
+        border-radius: 14px;
       border: 1px solid rgba(255, 255, 255, 0.08);
       padding: 10px 12px 10px 38px;
       font-size: 0.95rem;
@@ -137,11 +141,11 @@
       height: 18px;
       left: 12px;
       top: 50%;
-      transform: translateY(-50%);
+    transform: translateY(-50%);
       color: var(--muted);
     }
 
-    .summary {
+      .summary {
       margin: 0 0 18px;
       color: var(--muted);
       font-size: 0.9rem;
@@ -355,21 +359,21 @@
       text-align: center;
       color: rgba(154, 165, 186, 0.65);
       font-size: 0.8rem;
-    }
+  }
   </style>
 </head>
 <body>
   <header>
     <div class="wrap">
       <h1>Digital Gratitude List</h1>
-      <p class="intro">Browse every documented find from the garage and workshop. Use the filters to zero in on a specific collection or search by name, then pop open a detailed view for a closer look.</p>
+        <p class="intro">Browse every documented find from the garage and workshop. Use the filters to zero in on a specific collection or search by name, then pop open a detailed view for a closer look.</p>
       </div>
-  </header>
+</header>
 
   <main>
     <div class="wrap">
       <section class="controls" aria-label="Gallery filters">
-        <div class="chip-row" id="chipRow" role="listbox" aria-label="Collections"></div>
+        <div c        <div class="chip-row" id="chipRow" role="listbox" aria-label="Collections"></div>
         <label class="search" aria-label="Search items">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16a6.471 6.471 0 0 0 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg>
           <input id="search" type="search" placeholder="Search by name or description" autocomplete="off">
@@ -757,9 +761,493 @@ div>
       }
       const collectionText = state.collection === 'all' ? 'all collections' : COLLECTIONS.find(group => group.folder === state.collection)?.label ?? '';
       summary.textContent = `Showing ${filteredItems.length} item${filteredItems.length === 1 ? '' : 's'} from ${collectionText} (total catalogue: ${totalItems}).`;
+ for quick browsing — all images load directly from the repository.
+  </footer>
+
+  <script>
+    const ROOT = "Digital_Gratitude_List";
+    const COLLECTIONS = [
+      {
+        "folder": "Workshop",
+        "label": "Workshop",
+        "items": [
+          "Black Plastic Trough Bin.jpg",
+          "Blue Plastic Bucket.jpg",
+          "Brick Trowel.jpg",
+          "Carpet Seam Roller with Wooden Handle.jpg",
+          "Caulking Gun.jpg",
+          "Chicago Electric 18V Cordless Drill With Case And Charger.jpg",
+          "Chicago Electric Rotary Tool Kit With Accessories.jpg",
+          "Coca-Cola Bottle Crate.jpg",
+          "Concrete Finishing Trowel 2.jpg",
+          "Concrete Finishing Trowel.jpg",
+          "Concrete Float Wooden Handle.jpg",
+          "Concrete Float.jpg",
+          "Concrete Hand Float with Wooden Handle 2.jpg",
+          "Concrete Hand Float with Wooden Handle.jpg",
+          "Curved Pruning Saw Blade.jpg",
+          "Dayton Motor Run Capacitor.jpg",
+          "Drive Belt Large.jpg",
+          "Drive Belt.jpg",
+          "Fluorescent Light Fixture Housing.jpg",
+          "Foam Pipe Insulation.jpg",
+          "Generac XG8000E portable generator.jpg",
+          "Hacksaw Blade 12 Inch Metal Cutting.jpg",
+          "Hand Saw Blade.jpg",
+          "Leather Tool Belt Pouch.jpg",
+          "Marshalltown Brick Jointer No. 505.jpg",
+          "Masonry Float.jpg",
+          "MassAir 120V 150PSI AirCompressor Box.jpg",
+          "Metal Shims Stack (10).jpg",
+          "Plastic Funnel.jpg",
+          "Plastic Push Stick.jpg",
+          "Pointing Trowel 2.jpg",
+          "Pointing Trowel.jpg",
+          "Portable Halogen Work Light 2.jpg",
+          "Portable Halogen Work Light.jpg",
+          "Porter Cable Brad Nailer In Case.jpg",
+          "Propane Tank with Heater Attachment.jpg",
+          "Propane Tank-Top Heater Head.jpg",
+          "Ridgid 18V 2.5Ah Battery.jpg",
+          "Ridgid 18V Battery.jpg",
+          "Ridgid Grinding Wheel 7 Inch Metal Disc.jpg",
+          "Ridgid Rapid Max Battery Charger.jpg",
+          "Roofing Felt Roll.jpg",
+          "Rubber Grout Float.jpg",
+          "Rusted Metal Hand Float with Wooden Handle.jpg",
+          "Ryobi Corner Cat Sander With Case.jpg",
+          "Ryobi Miter Saw.jpg",
+          "Shut-Line Paint Pail.jpg",
+          "Small Rusted Hand Float with Wooden Handle.jpg",
+          "Stanley Coping Saw Blades 15-106A Pack.jpg",
+          "Stanley Electric Staple Gun.jpg",
+          "Table Saw Accessories Parts Kit.JPEG",
+          "Thermo Lite Winter Boots.jpg",
+          "Tile Cutter 13 Inch.jpg",
+          "Toastmaster Vintage Space Heater.jpg",
+          "american_flag_in_plastic_package.jpg",
+          "black_and_decker_finishing_sander.jpg",
+          "black_cargo_storage_nets.jpg",
+          "blue_finishing_sander.jpg",
+          "blue_safety_helmet_petzl.jpg",
+          "campbell_hausfeld_air_hammer.jpg",
+          "carrera_yellow_red_ski_goggles.jpg",
+          "chainsaw_safety_helmet_mesh_faceshield.jpg",
+          "ice_scraper_snow_brush.jpg",
+          "leather_tool_belt.jpg",
+          "metal_frame_hacksaw.jpg",
+          "oakley_goggles.jpg",
+          "propane_camping_stove.jpg",
+          "shower_curtain_and_bed_skirt_in_storage_bag.jpg",
+          "smith_orange_lens_goggles.jpg",
+          "thermogrip_hot_glue_gun.jpg",
+          "wire_brush_wood_handle.jpg",
+          "work_light_tripod_halogen.jpg",
+          "work_light_tripod_stand.jpg"
+        ]
+      },
+      {
+        "folder": "Workshop/Saw_Blades",
+        "label": "Workshop • Saw Blades",
+        "items": [
+          "12 Inch Circular Saw Blade Yellow Tip Teeth Clean.jpg",
+          "12 Inch Circular Saw Blade Yellow Tip Teeth Rusted.jpg",
+          "Avanti Pro 10 Inch Fine Finish 60T Circular Saw Blade Blue Rim.jpg",
+          "Black And Decker 10 Inch Chrome Crosscut Saw Blade.jpg",
+          "Carbide Circular Saw Blade Rusted.jpg",
+          "Circular Saw Blade 6.5 Inch Yellow.jpg",
+          "Circular Saw Blade Crosscut.jpg",
+          "Circular Saw Blade Rusted.jpg",
+          "DeWalt Construction 12 Inch Fine Finish 60T Circular Saw Blade Yellow Rim.jpg",
+          "Diamond Masonry Tile Blade 10 Inch Blue Center.jpg",
+          "Diamond Masonry Tile Blade 10 Inch Blue Label.jpg",
+          "Kromedge Hollow Ground Planer Blade Chrome Nickel Steel.jpg",
+          "Los Angeles Diamond Tools Masonry Blade 10 Inch.jpg",
+          "Oldham 10 Inch Steel Saw Blade.jpg",
+          "Oldham Circular Saw Blade 7.25 Inch 16 Tooth.jpg",
+          "Oldham Steel Circular Saw Blade Made in USA.jpg",
+          "Oldham Steel Saw Blade 10 Inch.jpg",
+          "Sears Craftsman 10 Inch Circular Saw Blade Steel.jpg",
+          "Sears Craftsman Kromedge Thin Rim Saw Blade Molybdenum Steel.jpg",
+          "circular_saw_blade_rusted.jpg",
+          "freud 10” Fine Cut-Off Saw Blade.jpg"
+        ]
+      },
+      {
+        "folder": "Workshop/PVC Pipe Parts",
+        "label": "Workshop • PVC Pipe Parts",
+        "items": [
+          "PVC Pipe Cap Open.jpg",
+          "PVC Pipe Cap Side.jpg",
+          "PVC Pipe Cap Small.jpg",
+          "PVC Pipe Cap.jpg",
+          "pvc_90_degree_elbow_fitting.jpg",
+          "pvc_electrical_junction_box_cover.jpg"
+        ]
+      },
+      {
+        "folder": "Garage",
+        "label": "Garage",
+        "items": [
+          "1:2_Inch_Drive_Ratchet.jpg",
+          "1:2“_Drive_Chrome_Vanadium_Evercraft_Ratchet.jpg",
+          "4_Foot_Level.jpg",
+          "4_Foot_Level_2.jpg",
+          "Allway_Tools_Shingle_Remover.jpg",
+          "Bench Plane.jpg",
+          "Bent_Hay_Hook.jpg",
+          "Block Plane.jpg",
+          "Blue_Flat_Head_Screwdriver_.jpg",
+          "Chalk_Line_Reel.jpg",
+          "Corkscrew_Combo.jpg",
+          "Drywall_Knife.jpg",
+          "Extension_Cord.jpg",
+          "Extension_Cord_2.jpg",
+          "Groove_Joint_Pliers.jpg",
+          "Hacksaw.jpg",
+          "Hacksaw_2.jpg",
+          "Hacksaw_3.jpg",
+          "Hacksaw_4.jpg",
+          "Hammer.jpg",
+          "Hay_Hook.jpg",
+          "Husky_Paint_Scraper.jpg",
+          "Johnson Level.jpg",
+          "Johnson_Level_&_Tool_Level.jpg",
+          "Lufkin_25’_Tape_Measure.jpg",
+          "Metal_File.jpg",
+          "Nicholson Metal File 2.jpg",
+          "Nicholson Metal File.jpg",
+          "Performance_Tool_W1075_Hammer.jpg",
+          "Stanley 42-294 Level 2.jpg",
+          "Stanley 42-294 Level.jpg",
+          "Stanley_Flathead_Screwdriver.jpg",
+          "Steel Wire Brush.jpg",
+          "Surform Plane 2.jpg",
+          "Surform Plane.jpg",
+          "Voltage Tester.jpg",
+          "Wood_Chisel.jpg",
+          "⅜″_Drive_Metrinch_Ratchet.jpg"
+        ]
+      }
+    ];
+
+    const chipRow = document.getElementById('chipRow');
+    const searchInput = document.getElementById('search');
+    const gallery = document.getElementById('gallery');
+    const summary = document.getElementById('summary');
+    const pagination = document.getElementById('pagination');
+
+    const lightbox = document.getElementById('lightbox');
+    const viewerTitle = document.getElementById('viewerTitle');
+    const viewerMeta = document.getElementById('viewerMeta');
+    const viewerImage = document.getElementById('viewerImage');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const closeBtn = document.getElementById('closeBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const openOriginalBtn = document.getElementById('openOriginal');
+
+    const totalItems = COLLECTIONS.reduce((sum, group) => sum + group.items.length, 0);
+    const PER_PAGE = 25;
+
+    const state = {
+      collection: 'all',
+      query: '',
+      page: 1
+    };
+
+    let filteredItems = [];
+    let visibleItems = [];
+    let currentIndex = -1;
+
+    function encodeSegments(folder, file) {
+      const parts = [ROOT];
+      if (folder) {
+        folder.split('/').forEach(part => parts.push(part));
+      }
+      parts.push(file);
+      return parts.map(encodeURIComponent).join('/');
+    }
+
+    function formatTitle(file) {
+      const base = file.replace(/\.[^.]+$/, '');
+      return base.replace(/[\-_]+/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+
+    function buildItems() {
+      const results = [];
+      COLLECTIONS.forEach(group => {
+        group.items.forEach(file => {
+          results.push({
+            folder: group.folder,
+            collectionLabel: group.label,
+            file,
+            label: formatTitle(file),
+            src: encodeSegments(group.folder, file)
+          });
+        });
+      });
+      return results;
+    }
+
+    const allItems = buildItems();
+
+    function renderChips() {
+      const frag = document.createDocumentFragment();
+
+      const allButton = document.createElement('button');
+      allButton.type = 'button';
+      allButton.className = 'chip' + (state.collection === 'all' ? ' active' : '');
+      allButton.dataset.value = 'all';
+      allButton.textContent = `All items (${totalItems})`;
+      frag.appendChild(allButton);
+
+      COLLECTIONS.forEach(group => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'chip' + (state.collection === group.folder ? ' active' : '');
+        btn.dataset.value = group.folder;
+        btn.textContent = `${group.label} (${group.items.length})`;
+        frag.appendChild(btn);
+      });
+
+      chipRow.replaceChildren(frag);
+    }
+
+    function applyFilters() {
+      const query = state.query.trim().toLowerCase();
+      filteredItems = allItems.filter(item => {
+        const matchesCollection = state.collection === 'all' || item.folder === state.collection;
+        if (!matchesCollection) return false;
+        if (!query) return true;
+        const haystack = `${item.label} ${item.collectionLabel}`.toLowerCase();
+        return haystack.includes(query);
+      });
+
+      if (state.collection === 'all') {
+        filteredItems.sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
+      }
+
+      state.page = 1;
+      renderGallery();
+      updateSummary();
+      updatePagination();
+    }
+
+    function renderGallery() {
+      if (!filteredItems.length) {
+        gallery.innerHTML = '<div class="empty-state">No items match your filters yet. Try a different search or switch collections.</div>';
+        visibleItems = [];
+        pagination.hidden = true;
+        return;
+      }
+
+      const totalPages = Math.max(1, Math.ceil(filteredItems.length / PER_PAGE));
+      if (state.page > totalPages) {
+        state.page = totalPages;
+      }
+
+      const start = (state.page - 1) * PER_PAGE;
+      const end = Math.min(start + PER_PAGE, filteredItems.length);
+      visibleItems = filteredItems.slice(start, end);
+
+      const frag = document.createDocumentFragment();
+      visibleItems.forEach((item, index) => {
+        const tile = document.createElement('button');
+        tile.type = 'button';
+        tile.className = 'tile';
+        tile.dataset.index = (start + index).toString();
+        tile.setAttribute('aria-label', `View ${item.label}`);
+
+        const media = document.createElement('div');
+        media.className = 'tile__media';
+        const img = document.createElement('img');
+        img.src = item.src;
+        img.alt = item.label;
+        img.loading = 'lazy';
+        media.appendChild(img);
+
+        const title = document.createElement('div');
+        title.className = 'tile__title';
+        title.textContent = item.label;
+
+        const folder = document.createElement('div');
+        folder.className = 'tile__folder';
+        folder.textContent = item.collectionLabel;
+
+        tile.append(media, title, folder);
+        frag.appendChild(tile);
+      });
+
+      gallery.replaceChildren(frag);
+    }
+
+    function updateSummary() {
+      if (!filteredItems.length) {
+        summary.textContent = 'Showing 0 results.';
+        return;
+      }
+      const collectionText = state.collection === 'all' ? 'all collections' : COLLECTIONS.find(group => group.folder === state.collection)?.label ?? '';
+      const totalPages = Math.max(1, Math.ceil(filteredItems.length / PER_PAGE));
+      const start = (state.page - 1) * PER_PAGE + 1;
+      const end = (state.page - 1) * PER_PAGE + visibleItems.length;
+      summary.textContent = `Showing ${start}–${end} of ${filteredItems.length} item${filteredItems.length === 1 ? '' : 's'} from ${collectionText} (page ${state.page} of ${totalPages}, total catalogue: ${totalItems}).`;
+    }
+
+    function updatePagination() {
+      if (!filteredItems.length || filteredItems.length <= PER_PAGE) {
+        pagination.innerHTML = '';
+        pagination.hidden = true;
+        return;
+      }
+
+      const totalPages = Math.max(1, Math.ceil(filteredItems.length / PER_PAGE));
+      pagination.hidden = false;
+
+      const frag = document.createDocumentFragment();
+
+      const prevButton = document.createElement('button');
+      prevButton.type = 'button';
+      prevButton.textContent = 'Previous';
+      prevButton.dataset.page = (state.page - 1).toString();
+      prevButton.disabled = state.page === 1;
+      frag.appendChild(prevButton);
+
+      const status = document.createElement('span');
+      status.textContent = `Page ${state.page} of ${totalPages}`;
+      frag.appendChild(status);
+
+      const nextButton = document.createElement('button');
+      nextButton.type = 'button';
+      nextButton.textContent = 'Next';
+      nextButton.dataset.page = (state.page + 1).toString();
+      nextButton.disabled = state.page === totalPages;
+      frag.appendChild(nextButton);
+
+      pagination.replaceChildren(frag);
+>>>>>>>+origin/codex/de
+    const item = filteredItems[index];
+      if (!item) return;
+      currentIndex = index;
+      viewerTitle.textContent = item.label;
+      viewerMeta.textContent = item.collectionLabel;
+      viewerImage.src = item.src;
+      viewerImage.alt = item.label;
+      downloadBtn.href = item.src;
+      downloadBtn.download = item.file;
+      openOriginalBtn.href = item.src;
+      prevBtn.disabled = index === 0;
+      nextBtn.disabled = index === filteredItems.length - 1;
+      lightbox.classList.add('open');
+      lightbox.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      closeBtn.focus();
+    }
+
+    function closeLightbox() {
+      lightbox.classList.remove('open');
+      lightbox.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      currentIndex = -1;
+    }
+
+    function stepLightbox(delta) {
+      if (currentIndex === -1) return;
+      const nextIndex = currentIndex + delta;
+      if (nextIndex < 0 || nextIndex >= filteredItems.length) return;
+      openLightbox(nextIndex);
+    }
+
+    chipRow.addEventListener('click', event => {
+      const target = event.target.closest('button[data-value]');
+      if (!target) return;
+      const value = target.dataset.value ?? 'all';
+      if (state.collection === value) return;
+      state.collection = value;
+      renderChips();
+      applyFilters();
+    });
+
+    pagination.addEventListener('click', eve    pagination.addEventListener('click', event => {
+      const button = event.target.closest('button[data-page]');
+      if (!button || button.disabled) return;
+      const targetPage = Number.parseInt(button.dataset.page ?? '', 10);
+      if (Number.isNaN(targetPage)) return;
+      const totalPages = Math.max(1, Math.ceil(filteredItems.length / PER_PAGE));
+      if (targetPage < 1 || targetPage > totalPages) return;
+      state.page = targetPage;
+      renderGallery();
+      updateSummary();
+      updatePagination();
+      gallery.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+ => {
+      state.query = searchInput.value;
+      applyFilters();
+    });
+
+    gallery.addEventListener('click', event => {
+      const tile = event.target.closest('.tile');
+      if (!tile) return;
+      const index = Number.parseInt(tile.dataset.index || '-1', 10);
+      if (!Number.isNaN(index)) {
+        openLightbox(index);
+      }
+    });
+
+    lightbox.addEventL    });
+
+    lightbox.addEventListener('click', event => {
+      if (event.target === lightbox) {
+        closeLightbox();
+      }
+    });
+
 >>>>>>>+main
-lt with   <footer>
-    Built with care for quick browsing — all images load directly from the repository.
+er('clic    });
+
+    lightbox.addEventListener('click', event => {
+      if (event.target === lightbox) {
+        closeLightbox();
+      }
+    });
+
+>>>>>>>-origin/codex/de
+Lightbox);
+    prevBtn.addEventListener('click', () => stepLightbox(-1));
+    nextBtn.addEventListener('click', () => stepLightbox(1));
+
+    document.addEventListener('keydown', event => {
+      if (lightbox.classList.contains('open')) {
+        if (event.key === 'Escape') {
+          closeLightbox();
+        } else if (event.key === 'ArrowLeft') {
+          stepLightbox(-1);
+        } else if (event.key === 'ArrowRight') {
+          stepLightbox(1);
+        }
+      }
+    });
+
+    renderChips();
+    applyFilters();
+  </script>
+</body>
+</html>
+ => {
+      state.query = searchInput.value;
+      applyFilters();
+    });
+
+    gallery.addEventListener('click', event => {
+      const tile = event.target.closest('.tile');
+      if (!tile) return;
+      const index = Number.parseInt(tile.dataset.index || '-1', 10);
+      if (!Number.isNaN(index)) {
+        openLightbox(index);
+      }
+ for quick browsing — all images load directly from the repository.
   </footer>
 
   <script>
@@ -1284,6 +1772,7 @@ Lightbox);
 
     renderChips();
     applyFilters();
+>>>>>>> main
   </script>
 </body>
 </html>
