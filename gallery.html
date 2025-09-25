@@ -67,6 +67,7 @@
         border-right: none !important;
         border-bottom: 1px solid rgba(255, 255, 255, 0.06);
       }
+
     }
 
     aside {
@@ -164,6 +165,7 @@
 
     section.gallery-view {
       background: var(--panel-alt);
+
       display: flex;
       flex-direction: column;
       min-height: 0;
@@ -209,6 +211,47 @@
       gap: 20px;
       overflow: auto;
       flex: 1;
+    }
+
+    .pagination {
+      padding: 0 clamp(18px, 5vw, 36px) 32px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      color: var(--muted);
+    }
+
+    .breadcrumbs span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pagination button {
+      background: rgba(95, 212, 255, 0.12);
+      border: 1px solid rgba(95, 212, 255, 0.35);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+    }
+
+    .pagination button:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+
+    .pagination button:not(:disabled):hover,
+    .pagination button:not(:disabled):focus-visible {
+      background: rgba(95, 212, 255, 0.2);
+      outline: none;
+    }
+
+    .pagination-info {
+      font-size: 0.85rem;
     }
 
     .card {
@@ -369,6 +412,7 @@
         <div class="gallery-summary" id="gallerySummary"></div>
       </div>
       <div class="gallery-grid" id="galleryGrid"></div>
+      <div class="pagination" id="pagination" hidden></div>
     </section>
   </main>
 
@@ -559,6 +603,7 @@
     const breadcrumbs = document.getElementById('breadcrumbs');
     const galleryGrid = document.getElementById('galleryGrid');
     const gallerySummary = document.getElementById('gallerySummary');
+    const pagination = document.getElementById('pagination');
     const collapseAllBtn = document.getElementById('collapseAll');
 
     const lightbox = document.getElementById('lightbox');
@@ -568,8 +613,11 @@
 
     const state = {
       currentPath: ['ALL'],
-      expanded: new Set()
+      expanded: new Set(),
+      page: 1
     };
+
+    const PAGE_SIZE = 25;
 
     function encodePath(parts) {
       return parts.map(part => encodeURIComponent(part)).join('/');
@@ -643,6 +691,8 @@
 
     function renderGallery() {
       galleryGrid.innerHTML = '';
+      pagination.innerHTML = '';
+      pagination.hidden = true;
       let files = [];
       let node;
       if (state.currentPath[0] === 'ALL') {
@@ -666,13 +716,28 @@
         }
       }
 
-      if (state.currentPath[0] !== 'ALL' && !folderItems.length && !files.length) {
+      const folderCount = folderItems.length;
+      const locationLabel = state.currentPath[0] === 'ALL'
+        ? 'All folders'
+        : (state.currentPath.length ? state.currentPath.join(' › ') : DATA.name);
+
+      if (state.currentPath[0] !== 'ALL' && !folderCount && !files.length) {
         const empty = document.createElement('div');
         empty.className = 'empty';
         empty.textContent = 'This folder does not contain any photos.';
         galleryGrid.appendChild(empty);
+        gallerySummary.textContent = `${locationLabel}: 0 photos`;
         return;
       }
+
+      const totalFiles = files.length;
+      const totalPages = totalFiles ? Math.ceil(totalFiles / PAGE_SIZE) : 1;
+      if (state.page > totalPages) {
+        state.page = totalPages;
+      }
+      const startIndex = totalFiles ? (state.page - 1) * PAGE_SIZE : 0;
+      const endIndex = totalFiles ? Math.min(startIndex + PAGE_SIZE, totalFiles) : 0;
+      const pagedFiles = files.slice(startIndex, endIndex);
 
       for (const folder of folderItems) {
         const card = document.createElement('article');
@@ -696,7 +761,8 @@
         galleryGrid.appendChild(card);
       }
 
-      for (const item of files) {
+      for (const item of pagedFiles) {
+
         const card = document.createElement('article');
         card.className = 'card';
         const button = document.createElement('button');
@@ -726,12 +792,52 @@
         galleryGrid.appendChild(card);
       }
 
-      const fileCount = files.length;
-      const folderCount = folderItems.length;
-      const locationLabel = state.currentPath[0] === 'ALL'
-        ? 'All folders'
-        : (state.currentPath.length ? state.currentPath.join(' › ') : DATA.name);
-      gallerySummary.textContent = `${locationLabel}: ${formatCount(fileCount)} photo${fileCount === 1 ? '' : 's'}${folderCount ? `, ${formatCount(folderCount)} folder${folderCount === 1 ? '' : 's'}` : ''}`;
+      const fileCount = totalFiles;
+      const displayStart = totalFiles ? startIndex + 1 : 0;
+      const displayEnd = totalFiles ? startIndex + pagedFiles.length : 0;
+      const rangeText = totalFiles
+        ? ` — Showing ${formatCount(displayStart)}–${formatCount(displayEnd)}`
+        : '';
+      gallerySummary.textContent = `${locationLabel}: ${formatCount(fileCount)} photo${fileCount === 1 ? '' : 's'}${folderCount ? `, ${formatCount(folderCount)} folder${folderCount === 1 ? '' : 's'}` : ''}${rangeText}`;
+
+      renderPagination(totalFiles, totalPages);
+    }
+
+    function renderPagination(totalFiles, totalPages) {
+      if (totalFiles <= PAGE_SIZE) {
+        pagination.hidden = true;
+        return;
+      }
+
+      pagination.hidden = false;
+
+      const prevButton = document.createElement('button');
+      prevButton.type = 'button';
+      prevButton.textContent = 'Previous';
+      prevButton.disabled = state.page === 1;
+      prevButton.addEventListener('click', () => {
+        if (state.page > 1) {
+          state.page -= 1;
+          renderGallery();
+        }
+      });
+
+      const info = document.createElement('span');
+      info.className = 'pagination-info';
+      info.textContent = `Page ${state.page} of ${totalPages}`;
+
+      const nextButton = document.createElement('button');
+      nextButton.type = 'button';
+      nextButton.textContent = 'Next';
+      nextButton.disabled = state.page === totalPages;
+      nextButton.addEventListener('click', () => {
+        if (state.page < totalPages) {
+          state.page += 1;
+          renderGallery();
+        }
+      });
+
+      pagination.append(prevButton, info, nextButton);
     }
 
     function openLightbox(item) {
@@ -831,6 +937,7 @@
 
     function selectFolder(path) {
       state.currentPath = path.length && path[0] === 'ALL' ? ['ALL'] : path;
+      state.page = 1;
       highlightSelection();
       renderBreadcrumbs();
       renderGallery();
