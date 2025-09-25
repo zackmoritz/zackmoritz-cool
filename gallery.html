@@ -3,20 +3,19 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Digital Gratitude List — Image Gallery</title>
+  <title>Digital Gratitude List — Photo Explorer</title>
   <style>
     :root {
       color-scheme: dark;
-      --bg: radial-gradient(circle at top, #1e2433, #0d1016 55%);
-      --card-bg: rgba(20, 26, 38, 0.9);
-      --card-hover: rgba(34, 43, 61, 0.95);
-      --text: #f3f6fb;
-      --muted: #9aa5ba;
-      --accent: #66d9ff;
-      --accent-soft: rgba(102, 217, 255, 0.14);
-      --border: rgba(102, 217, 255, 0.15);
-      font-family: "Inter", system-ui, -apple-system, Segoe UI, sans-serif;
-  }
+      --bg: #10121a;
+      --panel: #171b27;
+      --panel-alt: #1f2433;
+      --border: #262c3d;
+      --text: #f2f5ff;
+      --muted: #9ba4bc;
+      --accent: #5fd4ff;
+      font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+    }
 
     * {
       box-sizing: border-box;
@@ -25,1754 +24,843 @@
     body {
       margin: 0;
       min-height: 100vh;
-        background: var(--bg);
-    color: var(--text);
+      background: radial-gradient(circle at 0% -40%, rgba(95, 212, 255, 0.22), transparent 55%), var(--bg);
+      color: var(--text);
       display: flex;
       flex-direction: column;
     }
 
     header {
-      padding: 32px 18px 12px;
-    }
-
-      .wrap {
-      width: min(1200px, 100%);
-    margin: 0 auto;
+      padding: clamp(24px, 6vw, 48px) clamp(18px, 6vw, 48px) 16px;
     }
 
     h1 {
       margin: 0;
-        font-size: clamp(2rem, 3vw, 3rem);
-    letter-spacing: -0.02em;
+      font-size: clamp(2rem, 4vw, 3rem);
+      letter-spacing: -0.02em;
     }
 
     .intro {
-        margin-top: 12px;
+      margin: 12px 0 0;
       color: var(--muted);
-      font-size: 0.95rem;
-      max-width: 70ch;
+      max-width: 72ch;
       line-height: 1.6;
     }
 
     main {
-      padding: 0 18px 64px;
       flex: 1;
+      display: grid;
+      grid-template-columns: minmax(240px, 320px) 1fr;
+      gap: 0;
+      min-height: 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
     }
 
-    .controls {
-      margin: 12px auto 24px;
-      background: rgba(12, 16, 24, 0.6);
-      border: 1px solid rgba(255, 255, 255, 0.04);
-      border-radius: 20px;
-      padding: 16px;
-    display: grid;
-      gap: 12px;
-    }
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+      }
 
-      @media (min-width: 680px) {
-      .controls {
-        grid-template-columns: auto 220px;
-      align-items: center;
+      aside {
+        border-right: none !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
       }
     }
 
-<<    .chips {
->>>>>>> codex/delete-ga
-=====
-      .chip-row {
->>>>>>>+main
-    display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
+    aside {
+      background: var(--panel);
+      border-right: 1px solid rgba(255, 255, 255, 0.06);
+      overflow: hidden auto;
+      padding: 20px clamp(16px, 5vw, 24px) 24px;
     }
 
-      .chip {
-      border: 1px solid var(--border);
-      background: rgba(17, 23, 34, 0.65);
-    color: inherit;
-      padding: 8px 14px;
-      border-radius: 999px;
-      font-size: 0.85rem;
-      cursor: pointer;
-        transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
-    }
-
-    .chip:hover,
-    .chip:focus-visible {
-      outline: none;
-      transform: translateY(-1px);
-      border-color: rgba(102, 217, 255, 0.35);
-    }
-
-    .chip.active {
-      background: var(--accent-soft);
-      border-color: rgba(102, 217, 255, 0.6);
-      color: #eaf8ff;
-  }
-
-    .search {
-      position: relative;
-    }
-
-    .search input {
-      width: 100%;
-        border-radius: 14px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 10px 12px 10px 38px;
-      font-size: 0.95rem;
-      background: rgba(14, 18, 26, 0.85);
-      color: inherit;
-      transition: border-color 160ms ease, box-shadow 160ms ease;
-    }
-
-    .search input::placeholder {
-      color: rgba(154, 165, 186, 0.85);
-    }
-
-    .search input:focus-visible {
-      outline: none;
-      border-color: rgba(102, 217, 255, 0.45);
-      box-shadow: 0 0 0 4px rgba(102, 217, 255, 0.12);
-    }
-
-    .search svg {
-      position: absolute;
-      width: 18px;
-      height: 18px;
-      left: 12px;
-      top: 50%;
-    transform: translateY(-50%);
-      color: var(--muted);
-    }
-
-      .summary {
-      margin: 0 0 18px;
-      color: var(--muted);
-      font-size: 0.9rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px 16px;
-      align-items: center;
-    }
-
-      .pagination {
+    .explorer-head {
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 12px;
-      margin: 0 0 24px;
+      margin-bottom: 18px;
       font-size: 0.9rem;
       color: var(--muted);
     }
 
-    .pagination[hidden] {
+    .tree {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 6px;
+    }
+
+    .tree-item {
+      display: block;
+    }
+
+    .tree-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px 6px calc(8px + var(--indent, 0px));
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 120ms ease;
+      font-size: 0.92rem;
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .tree-row:hover,
+    .tree-row:focus-visible {
+      outline: none;
+      background: rgba(95, 212, 255, 0.12);
+    }
+
+    .tree-row.active {
+      background: rgba(95, 212, 255, 0.2);
+      color: #e9f7ff;
+    }
+
+    .toggle {
+      border: none;
+      background: none;
+      display: grid;
+      place-items: center;
+      width: 20px;
+      height: 20px;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 0;
+      margin-left: calc(var(--indent, 0px));
+    }
+
+    .toggle svg {
+      width: 14px;
+      height: 14px;
+      transition: transform 160ms ease;
+    }
+
+    .tree-item.collapsed > .children {
       display: none;
     }
 
-    .pagination button {
-      border: 1px solid var(--border);
-      background: rgba(17, 23, 34, 0.65);
-      color: inherit;
-      padding: 8px 14px;
-      border-radius: 999px;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+    .tree-item.collapsed > .tree-row .toggle svg {
+      transform: rotate(-90deg);
     }
 
-    .pagination button:hover:not(:disabled),
-    .pagination button:focus-visible:not(:disabled) {
-      outline: none;
-      transform: translateY(-1px);
-      border-color: rgba(102, 217, 255, 0.35);
+    .tree-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
     }
 
-    .pagination button:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
+    .tree-label svg {
+      width: 18px;
+      height: 18px;
+      color: var(--accent);
     }
 
-  .gallery {
-      display: grid;
-      gap: 18px;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    }
-
-    .tile {
+    section.gallery-view {
+      background: var(--panel-alt);
       display: flex;
       flex-direction: column;
-      border-radius: 18px;
-      border: 1px solid rgba(255, 255, 255, 0.04);
-      background: var(--card-bg);
-      padding: 12px;
-      gap: 12px;
-      text-align: left;
-      cursor: pointer;
-      color: inherit;
-      transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
-      min-height: 100%;
+      min-height: 0;
     }
 
-    .tile:hover,
-    .tile:focus-visible {
-      outline: none;
-      transform: translateY(-4px);
-      border-color: rgba(102, 217, 255, 0.45);
-      box-shadow: 0 12px 32px rgba(5, 9, 16, 0.55);
-      background: var(--card-hover);
+    .gallery-head {
+      padding: 24px clamp(18px, 5vw, 36px) 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
     }
 
-    .tile__media {
-      border-radius: 14px;
+    .breadcrumbs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .breadcrumbs span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .breadcrumbs span + span::before {
+      content: '\u203A';
+      opacity: 0.65;
+      font-size: 0.85rem;
+    }
+
+    .gallery-summary {
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    .gallery-grid {
+      padding: 24px clamp(18px, 5vw, 36px) 48px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+      overflow: auto;
+      flex: 1;
+    }
+
+    .card {
+      background: rgba(12, 15, 24, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
       overflow: hidden;
-      aspect-ratio: 4/3;
-      background: rgba(6, 9, 14, 0.7);
+      display: flex;
+      flex-direction: column;
+      transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .card:hover,
+    .card:focus-within {
+      border-color: rgba(95, 212, 255, 0.5);
+      transform: translateY(-4px);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    .thumb {
+      aspect-ratio: 4 / 3;
+      background: rgba(6, 8, 14, 0.8);
       display: grid;
       place-items: center;
+      overflow: hidden;
     }
 
-    .tile__media img {
+    .thumb img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
     }
 
-    .tile__title {
+    .card-body {
+      padding: 14px 16px 18px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .card-title {
       font-weight: 600;
-      font-size: 1rem;
+      font-size: 0.95rem;
       line-height: 1.35;
     }
 
-    .tile__folder {
+    .card-meta {
       font-size: 0.8rem;
       color: var(--muted);
     }
 
-    .empty-state {
+    .card button,
+    .card a {
+      background: none;
+      border: none;
+      color: inherit;
+      text-align: inherit;
+      font: inherit;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .folder-card {
+      align-items: center;
+      text-align: left;
+    }
+
+    .folder-thumb {
+      background: rgba(95, 212, 255, 0.14);
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+    }
+
+    .empty {
+      grid-column: 1 / -1;
       text-align: center;
-      padding: 40px;
+      padding: 48px 24px;
       border: 1px dashed rgba(255, 255, 255, 0.12);
-      border-radius: 18px;
-      background: rgba(8, 11, 18, 0.55);
+      border-radius: 16px;
       color: var(--muted);
     }
 
     .lightbox {
       position: fixed;
       inset: 0;
-      background: rgba(4, 8, 15, 0.85);
+      background: rgba(8, 10, 16, 0.78);
       backdrop-filter: blur(12px);
       display: none;
       align-items: center;
       justify-content: center;
       padding: 24px;
-      z-index: 20;
+      z-index: 40;
     }
 
     .lightbox.open {
       display: flex;
     }
 
-    .viewer {
-      background: rgba(14, 19, 29, 0.96);
-      border: 1px solid rgba(102, 217, 255, 0.2);
-      border-radius: 24px;
-      max-width: min(92vw, 1100px);
-      width: min(92vw, 1100px);
-      max-height: 88vh;
+    .lightbox figure {
+      background: rgba(12, 15, 24, 0.95);
+      border-radius: 20px;
+      max-width: min(1000px, 90vw);
+      max-height: 85vh;
+      padding: 18px 18px 24px;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
-      box-shadow: 0 32px 80px rgba(0, 0, 0, 0.55);
-    }
-
-    .viewer__head {
-      display: flex;
-      align-items: center;
       gap: 12px;
-      padding: 16px 20px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(95, 212, 255, 0.3);
+      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
     }
 
-    .viewer__title {
-      font-size: 1.05rem;
-      font-weight: 600;
-      flex: 1;
+    .lightbox img {
+      max-width: 100%;
+      max-height: 70vh;
+      border-radius: 12px;
     }
 
-    .viewer__meta {
-      color: var(--muted);
+    .lightbox .close-btn {
+      align-self: flex-end;
+      border: none;
+      border-radius: 999px;
+      padding: 8px 14px;
+      background: rgba(95, 212, 255, 0.16);
+      color: #e9f7ff;
+      cursor: pointer;
       font-size: 0.85rem;
     }
 
-    .viewer__media {
-      flex: 1;
-      padding: 16px;
-      display: grid;
-      place-items: center;
-      background: rgba(5, 9, 16, 0.8);
-    }
-
-    .viewer__media img {
-      max-width: 100%;
-      max-height: 100%;
-      width: auto;
-      height: auto;
-      border-radius: 14px;
-      box-shadow: 0 18px 36px rgba(0, 0, 0, 0.4);
-    }
-
-    .viewer__actions {
-      padding: 14px 20px 20px;
-      display: flex;
-      gap: 10px;
-      justify-content: flex-end;
-      flex-wrap: wrap;
-    }
-
-    .btn {
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      padding: 9px 16px;
-      font-size: 0.9rem;
-      cursor: pointer;
-      background: rgba(18, 24, 35, 0.9);
-      color: inherit;
-      transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
-    }
-
-    .btn:hover,
-    .btn:focus-visible {
-      outline: none;
-      border-color: rgba(102, 217, 255, 0.4);
-      background: rgba(24, 32, 47, 0.95);
-      transform: translateY(-1px);
-    }
-
-    .btn[disabled] {
-      opacity: 0.45;
-      pointer-events: none;
-    }
-
     footer {
-      padding: 24px 18px 32px;
+      padding: 18px;
       text-align: center;
-      color: rgba(154, 165, 186, 0.65);
       font-size: 0.8rem;
-  }
+      color: rgba(255, 255, 255, 0.45);
+    }
   </style>
 </head>
 <body>
   <header>
-    <div class="wrap">
-      <h1>Digital Gratitude List</h1>
-        <p class="intro">Browse every documented find from the garage and workshop. Use the filters to zero in on a specific collection or search by name, then pop open a detailed view for a closer look.</p>
-      </div>
-</header>
-
-  <main>
-    <div class="wrap">
-      <section class="controls" aria-label="Gallery filters">
-        <div c        <div class="chip-row" id="chipRow" role="listbox" aria-label="Collections"></div>
-        <label class="search" aria-label="Search items">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16a6.471 6.471 0 0 0 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg>
-          <input id="search" type="search" placeholder="Search by name or description" autocomplete="off">
-        </label>
-      </section>
-
-      <p class="summary" id="summary" aria-live="polite"></p>
-      <nav class="pagination" id="pagination" aria-label="Gallery pagination" hidden></nav>
-
-      <section id="gallery" class="gallery" aria-label="Gallery grid"></section>
-    </div>
-  </main>
-
-  <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="viewer">
-      <div class="viewer__head">
-        <div>
-          <div class="viewer__title" id="viewerTitle"></div>
-          <div class="viewer__meta" id="viewerMeta"></div>
-        </div>
-        <div style="display:flex; gap:8px;">
-          <button class="btn" type="button" id="prevBtn">← Prev</button>
-          <button class="btn" type="button" id="nextBtn">Next →</button>
-          <button class="btn" type="button" id="closeBtn">Close</button>
-        </div>
-      </div>
-      <div class="viewer__media">
-        <img id="viewerImage" alt="" loading="lazy">
-      </div>
-      <div class="viewer__actions">
-        <a class="btn" id="downloadBtn" href="#" download>Download</a>
-        <a class="btn" id="openOriginal" href="#" target="_blank" rel="noopener">Open original</a>
-      </div>
-div>
+    <h1>Digital Gratitude List</h1>
+    <p class="intro">Browse every photo catalogued in the <strong>Digital Gratitude List</strong>. Use the navigation tree to drill into folders just like Windows Explorer, or jump into the all-photos view to skim everything at once.</p>
   </header>
 
-<<<<<<  <main>
-    <div class="wrap">
-      <section class="controls" aria-label="Gallery filters">
-        <div class="chip-row" id="chipRow" role="listbox" aria-label="Collections"></div>
-        <label class="search" aria-label="Search items">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16a6.471 6.471 0 0 0 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg>
-          <input id="search" type="search" placeholder="Search by name or description" autocomplete="off">
-        </label>
-      </section>
+  <main>
+    <aside>
+      <div class="explorer-head">
+        <span>Folders</span>
+        <button class="toggle" id="collapseAll" title="Collapse all folders" aria-label="Collapse all folders">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17 12a1 1 0 0 1-1 1H8a1 1 0 1 1 0-2h8a1 1 0 0 1 1 1Z"/></svg>
+        </button>
+      </div>
+      <ul class="tree" id="treeRoot"></ul>
+    </aside>
 
-      <p class="summary" id="summary" aria-live="polite"></p>
-
-      <section id="gallery" class="gallery" aria-label="Gallery grid"></section>
-    </div>
+    <section class="gallery-view">
+      <div class="gallery-head">
+        <div class="breadcrumbs" id="breadcrumbs"></div>
+        <div class="gallery-summary" id="gallerySummary"></div>
+      </div>
+      <div class="gallery-grid" id="galleryGrid"></div>
+    </section>
   </main>
 
-  <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="viewer">
-      <div class="viewer__head">
-        <div>
-          <div class="viewer__title" id="viewerTitle"></div>
-          <div class="viewer__meta" id="viewerMeta"></div>
-        </div>
-        <div style="display:flex; gap:8px;">
-          <button class="btn" type="button" id="prevBtn">← Prev</button>
-          <button class="btn" type="button" id="nextBtn">Next →</button>
-          <button class="btn" type="button" id="closeBtn">Close</button>
-        </div>
-      </div>
-      <div class="viewer__media">
-        <img id="viewerImage" alt="" loading="lazy">
-      </div>
-      <div class="viewer__actions">
-        <a class="btn" id="downloadBtn" href="#" download>Download</a>
-        <a class="btn" id="openOriginal" href="#" target="_blank" rel="noopener">Open original</a>
-      </div>
-    </div>
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <figure>
+      <button class="close-btn" id="lightboxClose" type="button">Close</button>
+      <img id="lightboxImage" alt="Expanded view">
+      <figcaption id="lightboxCaption"></figcaption>
+    </figure>
   </div>
 
   <footer>
-    Built with care for quick browsing — all images load directly from the repository.
+    Built automatically from the folder structure inside <code>Digital_Gratitude_List</code>.
   </footer>
 
   <script>
-    const ROOT = "Digital_Gratitude_List";
-    const COLLECTIONS = [
-      {
-        "folder": "Workshop",
-        "label": "Workshop",
-        "items": [
-          "Black Plastic Trough Bin.jpg",
-          "Blue Plastic Bucket.jpg",
-          "Brick Trowel.jpg",
-          "Carpet Seam Roller with Wooden Handle.jpg",
-          "Caulking Gun.jpg",
-          "Chicago Electric 18V Cordless Drill With Case And Charger.jpg",
-          "Chicago Electric Rotary Tool Kit With Accessories.jpg",
-          "Coca-Cola Bottle Crate.jpg",
-          "Concrete Finishing Trowel 2.jpg",
-          "Concrete Finishing Trowel.jpg",
-          "Concrete Float Wooden Handle.jpg",
-          "Concrete Float.jpg",
-          "Concrete Hand Float with Wooden Handle 2.jpg",
-          "Concrete Hand Float with Wooden Handle.jpg",
-          "Curved Pruning Saw Blade.jpg",
-          "Dayton Motor Run Capacitor.jpg",
-          "Drive Belt Large.jpg",
-          "Drive Belt.jpg",
-          "Fluorescent Light Fixture Housing.jpg",
-          "Foam Pipe Insulation.jpg",
-          "Generac XG8000E portable generator.jpg",
-          "Hacksaw Blade 12 Inch Metal Cutting.jpg",
-          "Hand Saw Blade.jpg",
-          "Leather Tool Belt Pouch.jpg",
-          "Marshalltown Brick Jointer No. 505.jpg",
-          "Masonry Float.jpg",
-          "MassAir 120V 150PSI AirCompressor Box.jpg",
-          "Metal Shims Stack (10).jpg",
-          "Plastic Funnel.jpg",
-          "Plastic Push Stick.jpg",
-          "Pointing Trowel 2.jpg",
-          "Pointing Trowel.jpg",
-          "Portable Halogen Work Light 2.jpg",
-          "Portable Halogen Work Light.jpg",
-          "Porter Cable Brad Nailer In Case.jpg",
-          "Propane Tank with Heater Attachment.jpg",
-          "Propane Tank-Top Heater Head.jpg",
-          "Ridgid 18V 2.5Ah Battery.jpg",
-          "Ridgid 18V Battery.jpg",
-          "Ridgid Grinding Wheel 7 Inch Metal Disc.jpg",
-          "Ridgid Rapid Max Battery Charger.jpg",
-          "Roofing Felt Roll.jpg",
-          "Rubber Grout Float.jpg",
-          "Rusted Metal Hand Float with Wooden Handle.jpg",
-          "Ryobi Corner Cat Sander With Case.jpg",
-          "Ryobi Miter Saw.jpg",
-          "Shut-Line Paint Pail.jpg",
-          "Small Rusted Hand Float with Wooden Handle.jpg",
-          "Stanley Coping Saw Blades 15-106A Pack.jpg",
-          "Stanley Electric Staple Gun.jpg",
-          "Table Saw Accessories Parts Kit.JPEG",
-          "Thermo Lite Winter Boots.jpg",
-          "Tile Cutter 13 Inch.jpg",
-          "Toastmaster Vintage Space Heater.jpg",
-          "american_flag_in_plastic_package.jpg",
-          "black_and_decker_finishing_sander.jpg",
-          "black_cargo_storage_nets.jpg",
-          "blue_finishing_sander.jpg",
-          "blue_safety_helmet_petzl.jpg",
-          "campbell_hausfeld_air_hammer.jpg",
-          "carrera_yellow_red_ski_goggles.jpg",
-          "chainsaw_safety_helmet_mesh_faceshield.jpg",
-          "ice_scraper_snow_brush.jpg",
-          "leather_tool_belt.jpg",
-          "metal_frame_hacksaw.jpg",
-          "oakley_goggles.jpg",
-          "propane_camping_stove.jpg",
-          "shower_curtain_and_bed_skirt_in_storage_bag.jpg",
-          "smith_orange_lens_goggles.jpg",
-          "thermogrip_hot_glue_gun.jpg",
-          "wire_brush_wood_handle.jpg",
-          "work_light_tripod_halogen.jpg",
-          "work_light_tripod_stand.jpg"
-        ]
-      },
-      {
-        "folder": "Workshop/Saw_Blades",
-        "label": "Workshop • Saw Blades",
-        "items": [
-          "12 Inch Circular Saw Blade Yellow Tip Teeth Clean.jpg",
-          "12 Inch Circular Saw Blade Yellow Tip Teeth Rusted.jpg",
-          "Avanti Pro 10 Inch Fine Finish 60T Circular Saw Blade Blue Rim.jpg",
-          "Black And Decker 10 Inch Chrome Crosscut Saw Blade.jpg",
-          "Carbide Circular Saw Blade Rusted.jpg",
-          "Circular Saw Blade 6.5 Inch Yellow.jpg",
-          "Circular Saw Blade Crosscut.jpg",
-          "Circular Saw Blade Rusted.jpg",
-          "DeWalt Construction 12 Inch Fine Finish 60T Circular Saw Blade Yellow Rim.jpg",
-          "Diamond Masonry Tile Blade 10 Inch Blue Center.jpg",
-          "Diamond Masonry Tile Blade 10 Inch Blue Label.jpg",
-          "Kromedge Hollow Ground Planer Blade Chrome Nickel Steel.jpg",
-          "Los Angeles Diamond Tools Masonry Blade 10 Inch.jpg",
-          "Oldham 10 Inch Steel Saw Blade.jpg",
-          "Oldham Circular Saw Blade 7.25 Inch 16 Tooth.jpg",
-          "Oldham Steel Circular Saw Blade Made in USA.jpg",
-          "Oldham Steel Saw Blade 10 Inch.jpg",
-          "Sears Craftsman 10 Inch Circular Saw Blade Steel.jpg",
-          "Sears Craftsman Kromedge Thin Rim Saw Blade Molybdenum Steel.jpg",
-          "circular_saw_blade_rusted.jpg",
-          "freud 10” Fine Cut-Off Saw Blade.jpg"
-        ]
-      },
-      {
-        "folder": "Workshop/PVC Pipe Parts",
-        "label": "Workshop • PVC Pipe Parts",
-        "items": [
-          "PVC Pipe Cap Open.jpg",
-          "PVC Pipe Cap Side.jpg",
-          "PVC Pipe Cap Small.jpg",
-          "PVC Pipe Cap.jpg",
-          "pvc_90_degree_elbow_fitting.jpg",
-          "pvc_electrical_junction_box_cover.jpg"
-        ]
-      },
-      {
-        "folder": "Garage",
-        "label": "Garage",
-        "items": [
-          "1:2_Inch_Drive_Ratchet.jpg",
-          "1:2“_Drive_Chrome_Vanadium_Evercraft_Ratchet.jpg",
-          "4_Foot_Level.jpg",
-          "4_Foot_Level_2.jpg",
-          "Allway_Tools_Shingle_Remover.jpg",
-          "Bench Plane.jpg",
-          "Bent_Hay_Hook.jpg",
-          "Block Plane.jpg",
-          "Blue_Flat_Head_Screwdriver_.jpg",
-          "Chalk_Line_Reel.jpg",
-          "Corkscrew_Combo.jpg",
-          "Drywall_Knife.jpg",
-          "Extension_Cord.jpg",
-          "Extension_Cord_2.jpg",
-          "Groove_Joint_Pliers.jpg",
-          "Hacksaw.jpg",
-          "Hacksaw_2.jpg",
-          "Hacksaw_3.jpg",
-          "Hacksaw_4.jpg",
-          "Hammer.jpg",
-          "Hay_Hook.jpg",
-          "Husky_Paint_Scraper.jpg",
-          "Johnson Level.jpg",
-          "Johnson_Level_&_Tool_Level.jpg",
-          "Lufkin_25’_Tape_Measure.jpg",
-          "Metal_File.jpg",
-          "Nicholson Metal File 2.jpg",
-          "Nicholson Metal File.jpg",
-          "Performance_Tool_W1075_Hammer.jpg",
-          "Stanley 42-294 Level 2.jpg",
-          "Stanley 42-294 Level.jpg",
-          "Stanley_Flathead_Screwdriver.jpg",
-          "Steel Wire Brush.jpg",
-          "Surform Plane 2.jpg",
-          "Surform Plane.jpg",
-          "Voltage Tester.jpg",
-          "Wood_Chisel.jpg",
-          "⅜″_Drive_Metrinch_Ratchet.jpg"
-        ]
-      }
-    ];
-
-    const chipRow = document.getElementById('chipRow');
-    const searchInput = document.getElementById('search');
-    const gallery = document.getElementById('gallery');
-    const summary = document.getElementById('summary');
-
-    const lightbox = document.getElementById('lightbox');
-    const viewerTitle = document.getElementById('viewerTitle');
-    const viewerMeta = document.getElementById('viewerMeta');
-    const viewerImage = document.getElementById('viewerImage');
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    const closeBtn = document.getElementById('closeBtn');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const openOriginalBtn = document.getElementById('openOriginal');
-
-    const totalItems = COLLECTIONS.reduce((sum, group) => sum + group.items.length, 0);
-
-    const state = {
-      collection: 'all',
-      query: ''
+    const DATA = {
+      name: 'Digital Gratitude List',
+      files: [],
+      dirs: [
+        {
+          name: 'Garage',
+          files: [
+            '1-2_Inch_Drive_Ratchet.jpg',
+            '1-2“_Drive_Chrome_Vanadium_Evercraft_Ratchet.jpg',
+            '4_Foot_Level.jpg',
+            '4_Foot_Level_2.jpg',
+            'Allway_Tools_Shingle_Remover.jpg',
+            'Bench Plane.jpg',
+            'Bent_Hay_Hook.jpg',
+            'Block Plane.jpg',
+            'Blue_Flat_Head_Screwdriver_.jpg',
+            'Chalk_Line_Reel.jpg',
+            'Corkscrew_Combo.jpg',
+            'Drywall_Knife.jpg',
+            'Extension_Cord.jpg',
+            'Extension_Cord_2.jpg',
+            'Groove_Joint_Pliers.jpg',
+            'Hacksaw.jpg',
+            'Hacksaw_2.jpg',
+            'Hacksaw_3.jpg',
+            'Hacksaw_4.jpg',
+            'Hammer.jpg',
+            'Hay_Hook.jpg',
+            'Husky_Paint_Scraper.jpg',
+            'Johnson Level.jpg',
+            'Johnson_Level_&_Tool_Level.jpg',
+            'Lufkin_25’_Tape_Measure.jpg',
+            'Metal_File.jpg',
+            'Nicholson Metal File 2.jpg',
+            'Nicholson Metal File.jpg',
+            'Performance_Tool_W1075_Hammer.jpg',
+            'Stanley 42-294 Level 2.jpg',
+            'Stanley 42-294 Level.jpg',
+            'Stanley_Flathead_Screwdriver.jpg',
+            'Steel Wire Brush.jpg',
+            'Surform Plane 2.jpg',
+            'Surform Plane.jpg',
+            'Voltage Tester.jpg',
+            'Wood_Chisel.jpg',
+            '⅜″_Drive_Metrinch_Ratchet.jpg'
+          ],
+          dirs: []
+        },
+        {
+          name: 'Workshop',
+          files: [
+            'Black Plastic Trough Bin.jpg',
+            'Blue Plastic Bucket.jpg',
+            'Brick Trowel.jpg',
+            'Carpet Seam Roller with Wooden Handle.jpg',
+            'Caulking Gun.jpg',
+            'Chicago Electric 18V Cordless Drill With Case And Charger.jpg',
+            'Chicago Electric Rotary Tool Kit With Accessories.jpg',
+            'Coca-Cola Bottle Crate.jpg',
+            'Concrete Finishing Trowel 2.jpg',
+            'Concrete Finishing Trowel.jpg',
+            'Concrete Float Wooden Handle.jpg',
+            'Concrete Float.jpg',
+            'Concrete Hand Float with Wooden Handle 2.jpg',
+            'Concrete Hand Float with Wooden Handle.jpg',
+            'Curved Pruning Saw Blade.jpg',
+            'Dayton Motor Run Capacitor.jpg',
+            'Drive Belt Large.jpg',
+            'Drive Belt.jpg',
+            'Fluorescent Light Fixture Housing.jpg',
+            'Foam Pipe Insulation.jpg',
+            'Generac XG8000E portable generator.jpg',
+            'Hacksaw Blade 12 Inch Metal Cutting.jpg',
+            'Hand Saw Blade.jpg',
+            'Leather Tool Belt Pouch.jpg',
+            'Marshalltown Brick Jointer No. 505.jpg',
+            'Masonry Float.jpg',
+            'MassAir 120V 150PSI AirCompressor Box.jpg',
+            'Metal Shims Stack (10).jpg',
+            'Plastic Funnel.jpg',
+            'Plastic Push Stick.jpg',
+            'Pointing Trowel 2.jpg',
+            'Pointing Trowel.jpg',
+            'Portable Halogen Work Light 2.jpg',
+            'Portable Halogen Work Light.jpg',
+            'Porter Cable Brad Nailer In Case.jpg',
+            'Propane Tank with Heater Attachment.jpg',
+            'Propane Tank-Top Heater Head.jpg',
+            'Ridgid 18V 2.5Ah Battery.jpg',
+            'Ridgid 18V Battery.jpg',
+            'Ridgid Grinding Wheel 7 Inch Metal Disc.jpg',
+            'Ridgid Rapid Max Battery Charger.jpg',
+            'Roofing Felt Roll.jpg',
+            'Rubber Grout Float.jpg',
+            'Rusted Metal Hand Float with Wooden Handle.jpg',
+            'Ryobi Corner Cat Sander With Case.jpg',
+            'Ryobi Miter Saw.jpg',
+            'Shut-Line Paint Pail.jpg',
+            'Small Rusted Hand Float with Wooden Handle.jpg',
+            'Stanley Coping Saw Blades 15-106A Pack.jpg',
+            'Stanley Electric Staple Gun.jpg',
+            'Table Saw Accessories Parts Kit.JPEG',
+            'Thermo Lite Winter Boots.jpg',
+            'Tile Cutter 13 Inch.jpg',
+            'Toastmaster Vintage Space Heater.jpg',
+            'american_flag_in_plastic_package.jpg',
+            'black_and_decker_finishing_sander.jpg',
+            'black_cargo_storage_nets.jpg',
+            'blue_finishing_sander.jpg',
+            'blue_safety_helmet_petzl.jpg',
+            'campbell_hausfeld_air_hammer.jpg',
+            'carrera_yellow_red_ski_goggles.jpg',
+            'chainsaw_safety_helmet_mesh_faceshield.jpg',
+            'ice_scraper_snow_brush.jpg',
+            'leather_tool_belt.jpg',
+            'metal_frame_hacksaw.jpg',
+            'oakley_goggles.jpg',
+            'propane_camping_stove.jpg',
+            'shower_curtain_and_bed_skirt_in_storage_bag.jpg',
+            'smith_orange_lens_goggles.jpg',
+            'thermogrip_hot_glue_gun.jpg',
+            'wire_brush_wood_handle.jpg',
+            'work_light_tripod_halogen.jpg',
+            'work_light_tripod_stand.jpg'
+          ],
+          dirs: [
+            {
+              name: 'PVC Pipe Parts',
+              files: [
+                'PVC Pipe Cap Open.jpg',
+                'PVC Pipe Cap Side.jpg',
+                'PVC Pipe Cap Small.jpg',
+                'PVC Pipe Cap.jpg',
+                'pvc_90_degree_elbow_fitting.jpg',
+                'pvc_electrical_junction_box_cover.jpg'
+              ],
+              dirs: []
+            },
+            {
+              name: 'Saw_Blades',
+              files: [
+                '12 Inch Circular Saw Blade Yellow Tip Teeth Clean.jpg',
+                '12 Inch Circular Saw Blade Yellow Tip Teeth Rusted.jpg',
+                'Avanti Pro 10 Inch Fine Finish 60T Circular Saw Blade Blue Rim.jpg',
+                'Black And Decker 10 Inch Chrome Crosscut Saw Blade.jpg',
+                'Carbide Circular Saw Blade Rusted.jpg',
+                'Circular Saw Blade 6.5 Inch Yellow.jpg',
+                'Circular Saw Blade Crosscut.jpg',
+                'Circular Saw Blade Rusted.jpg',
+                'DeWalt Construction 12 Inch Fine Finish 60T Circular Saw Blade Yellow Rim.jpg',
+                'Diamond Masonry Tile Blade 10 Inch Blue Center.jpg',
+                'Diamond Masonry Tile Blade 10 Inch Blue Label.jpg',
+                'Kromedge Hollow Ground Planer Blade Chrome Nickel Steel.jpg',
+                'Los Angeles Diamond Tools Masonry Blade 10 Inch.jpg',
+                'Oldham 10 Inch Steel Saw Blade.jpg',
+                'Oldham Circular Saw Blade 7.25 Inch 16 Tooth.jpg',
+                'Oldham Steel Circular Saw Blade Made in USA.jpg',
+                'Oldham Steel Saw Blade 10 Inch.jpg',
+                'Sears Craftsman 10 Inch Circular Saw Blade Steel.jpg',
+                'Sears Craftsman Kromedge Thin Rim Saw Blade Molybdenum Steel.jpg',
+                'circular_saw_blade_rusted.jpg',
+                'freud 10” Fine Cut-Off Saw Blade.jpg'
+              ],
+              dirs: []
+            }
+          ]
+        }
+      ]
     };
 
-    let filteredItems = [];
-    let currentIndex = -1;
+    const treeRoot = document.getElementById('treeRoot');
+    const breadcrumbs = document.getElementById('breadcrumbs');
+    const galleryGrid = document.getElementById('galleryGrid');
+    const gallerySummary = document.getElementById('gallerySummary');
+    const collapseAllBtn = document.getElementById('collapseAll');
 
-    function encodeSegments(folder, file) {
-      const parts = [ROOT];
-      if (folder) {
-        folder.split('/').forEach(part => parts.push(part));
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImage = document.getElementById('lightboxImage');
+    const lightboxCaption = document.getElementById('lightboxCaption');
+    const lightboxClose = document.getElementById('lightboxClose');
+
+    const state = {
+      currentPath: ['ALL'],
+      expanded: new Set()
+    };
+
+    function encodePath(parts) {
+      return parts.map(part => encodeURIComponent(part)).join('/');
+    }
+
+    function buildFolderUrl(parts) {
+      const path = ['Digital_Gratitude_List', ...parts];
+      return encodePath(path);
+    }
+
+    function getNode(pathParts) {
+      if (!pathParts.length) return DATA;
+      let node = DATA;
+      for (const segment of pathParts) {
+        const next = node.dirs.find(d => d.name === segment);
+        if (!next) return null;
+        node = next;
       }
-      parts.push(file);
-      return parts.map(encodeURIComponent).join('/');
+      return node;
     }
 
-    function formatTitle(file) {
-      const base = file.replace(/\.[^.]+$/, '');
-      return base.replace(/[\-_]+/g, ' ').replace(/\s+/g, ' ').trim();
-    }
-
-    function buildItems() {
-      const results = [];
-      COLLECTIONS.forEach(group => {
-        group.items.forEach(file => {
-          results.push({
-            folder: group.folder,
-            collectionLabel: group.label,
-            file,
-            label: formatTitle(file),
-            src: encodeSegments(group.folder, file)
-          });
+    function collectFiles(node, basePath = []) {
+      const items = [];
+      for (const file of node.files || []) {
+        items.push({
+          file,
+          path: basePath,
+          url: buildFolderUrl([...basePath, file])
         });
-      });
-      return results;
-    }
-
-    const allItems = buildItems();
-
-    function renderChips() {
-      const frag = document.createDocumentFragment();
-
-      const allButton = document.createElement('button');
-      allButton.type = 'button';
-      allButton.className = 'chip' + (state.collection === 'all' ? ' active' : '');
-      allButton.dataset.value = 'all';
-      allButton.textContent = `All items (${totalItems})`;
-      frag.appendChild(allButton);
-
-      COLLECTIONS.forEach(group => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'chip' + (state.collection === group.folder ? ' active' : '');
-        btn.dataset.value = group.folder;
-        btn.textContent = `${group.label} (${group.items.length})`;
-        frag.appendChild(btn);
-      });
-
-      chipRow.replaceChildren(frag);
-    }
-
-    function applyFilters() {
-      const query = state.query.trim().toLowerCase();
-      filteredItems = allItems.filter(item => {
-        const matchesCollection = state.collection === 'all' || item.folder === state.collection;
-        if (!matchesCollection) return false;
-        if (!query) return true;
-        const haystack = `${item.label} ${item.collectionLabel}`.toLowerCase();
-        return haystack.includes(query);
-      });
-
-      if (state.collection === 'all') {
-        filteredItems.sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
       }
+      for (const dir of node.dirs || []) {
+        items.push(...collectFiles(dir, [...basePath, dir.name]));
+      }
+      return items;
+    }
 
-      renderGallery();
-      updateSummary();
+    function formatCount(count) {
+      return new Intl.NumberFormat().format(count);
+    }
+
+    function renderBreadcrumbs() {
+      breadcrumbs.innerHTML = '';
+      const frag = document.createDocumentFragment();
+      if (state.currentPath[0] === 'ALL') {
+        const span = document.createElement('span');
+        span.textContent = 'All Photos';
+        frag.appendChild(span);
+      } else {
+        const home = document.createElement('span');
+        home.textContent = DATA.name;
+        home.tabIndex = 0;
+        home.setAttribute('role', 'link');
+        home.addEventListener('click', () => selectFolder([]));
+        home.addEventListener('keydown', evt => {
+          if (evt.key === 'Enter' || evt.key === ' ') {
+            evt.preventDefault();
+            selectFolder([]);
+          }
+        });
+        frag.appendChild(home);
+        let path = [];
+        for (const segment of state.currentPath) {
+          const span = document.createElement('span');
+          path = [...path, segment];
+          span.textContent = segment;
+          frag.appendChild(span);
+        }
+      }
+      breadcrumbs.appendChild(frag);
     }
 
     function renderGallery() {
-      if (!filteredItems.length) {
-        gallery.innerHTML = '<div class="empty-state">No items match your filters yet. Try a different search or switch collections.</div>';
+      galleryGrid.innerHTML = '';
+      let files = [];
+      let node;
+      if (state.currentPath[0] === 'ALL') {
+        node = DATA;
+        files = collectFiles(DATA, []);
+      } else {
+        node = getNode(state.currentPath);
+        if (!node) return;
+        const baseFiles = node.files.map(file => ({
+          file,
+          path: state.currentPath,
+          url: buildFolderUrl([...state.currentPath, file])
+        }));
+        files = baseFiles;
+      }
+
+      const folderItems = [];
+      if (state.currentPath[0] !== 'ALL') {
+        for (const dir of node.dirs) {
+          folderItems.push({ dir, path: [...state.currentPath, dir.name] });
+        }
+      }
+
+      if (state.currentPath[0] !== 'ALL' && !folderItems.length && !files.length) {
+        const empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = 'This folder does not contain any photos.';
+        galleryGrid.appendChild(empty);
         return;
       }
 
-      const frag = document.createDocumentFragment();
-      filteredItems.forEach((item, index) => {
-        const tile = document.createElement('button');
-        tile.type = 'button';
-        tile.className = 'tile';
-        tile.dataset.index = index.toString();
-        tile.setAttribute('aria-label', `View ${item.label}`);
-
-        const media = document.createElement('div');
-        media.className = 'tile__media';
-        const img = document.createElement('img');
-        img.src = item.src;
-        img.alt = item.label;
-        img.loading = 'lazy';
-        media.appendChild(img);
-
-        const title = document.createElement('div');
-        title.className = 'tile__title';
-        title.textContent = item.label;
-
-        const folder = document.createElement('div');
-        folder.className = 'tile__folder';
-        folder.textContent = item.collectionLabel;
-
-        tile.append(media, title, folder);
-        frag.appendChild(tile);
-      });
-
-      gallery.replaceChildren(frag);
-    }
-
-    function updateSummary() {
-      if (!filteredItems.length) {
-        summary.textContent = 'Showing 0 results.';
-        return;
-      }
-      const collectionText = state.collection === 'all' ? 'all collections' : COLLECTIONS.find(group => group.folder === state.collection)?.label ?? '';
-      summary.textContent = `Showing ${filteredItems.length} item${filteredItems.length === 1 ? '' : 's'} from ${collectionText} (total catalogue: ${totalItems}).`;
- for quick browsing — all images load directly from the repository.
-  </footer>
-
-  <script>
-    const ROOT = "Digital_Gratitude_List";
-    const COLLECTIONS = [
-      {
-        "folder": "Workshop",
-        "label": "Workshop",
-        "items": [
-          "Black Plastic Trough Bin.jpg",
-          "Blue Plastic Bucket.jpg",
-          "Brick Trowel.jpg",
-          "Carpet Seam Roller with Wooden Handle.jpg",
-          "Caulking Gun.jpg",
-          "Chicago Electric 18V Cordless Drill With Case And Charger.jpg",
-          "Chicago Electric Rotary Tool Kit With Accessories.jpg",
-          "Coca-Cola Bottle Crate.jpg",
-          "Concrete Finishing Trowel 2.jpg",
-          "Concrete Finishing Trowel.jpg",
-          "Concrete Float Wooden Handle.jpg",
-          "Concrete Float.jpg",
-          "Concrete Hand Float with Wooden Handle 2.jpg",
-          "Concrete Hand Float with Wooden Handle.jpg",
-          "Curved Pruning Saw Blade.jpg",
-          "Dayton Motor Run Capacitor.jpg",
-          "Drive Belt Large.jpg",
-          "Drive Belt.jpg",
-          "Fluorescent Light Fixture Housing.jpg",
-          "Foam Pipe Insulation.jpg",
-          "Generac XG8000E portable generator.jpg",
-          "Hacksaw Blade 12 Inch Metal Cutting.jpg",
-          "Hand Saw Blade.jpg",
-          "Leather Tool Belt Pouch.jpg",
-          "Marshalltown Brick Jointer No. 505.jpg",
-          "Masonry Float.jpg",
-          "MassAir 120V 150PSI AirCompressor Box.jpg",
-          "Metal Shims Stack (10).jpg",
-          "Plastic Funnel.jpg",
-          "Plastic Push Stick.jpg",
-          "Pointing Trowel 2.jpg",
-          "Pointing Trowel.jpg",
-          "Portable Halogen Work Light 2.jpg",
-          "Portable Halogen Work Light.jpg",
-          "Porter Cable Brad Nailer In Case.jpg",
-          "Propane Tank with Heater Attachment.jpg",
-          "Propane Tank-Top Heater Head.jpg",
-          "Ridgid 18V 2.5Ah Battery.jpg",
-          "Ridgid 18V Battery.jpg",
-          "Ridgid Grinding Wheel 7 Inch Metal Disc.jpg",
-          "Ridgid Rapid Max Battery Charger.jpg",
-          "Roofing Felt Roll.jpg",
-          "Rubber Grout Float.jpg",
-          "Rusted Metal Hand Float with Wooden Handle.jpg",
-          "Ryobi Corner Cat Sander With Case.jpg",
-          "Ryobi Miter Saw.jpg",
-          "Shut-Line Paint Pail.jpg",
-          "Small Rusted Hand Float with Wooden Handle.jpg",
-          "Stanley Coping Saw Blades 15-106A Pack.jpg",
-          "Stanley Electric Staple Gun.jpg",
-          "Table Saw Accessories Parts Kit.JPEG",
-          "Thermo Lite Winter Boots.jpg",
-          "Tile Cutter 13 Inch.jpg",
-          "Toastmaster Vintage Space Heater.jpg",
-          "american_flag_in_plastic_package.jpg",
-          "black_and_decker_finishing_sander.jpg",
-          "black_cargo_storage_nets.jpg",
-          "blue_finishing_sander.jpg",
-          "blue_safety_helmet_petzl.jpg",
-          "campbell_hausfeld_air_hammer.jpg",
-          "carrera_yellow_red_ski_goggles.jpg",
-          "chainsaw_safety_helmet_mesh_faceshield.jpg",
-          "ice_scraper_snow_brush.jpg",
-          "leather_tool_belt.jpg",
-          "metal_frame_hacksaw.jpg",
-          "oakley_goggles.jpg",
-          "propane_camping_stove.jpg",
-          "shower_curtain_and_bed_skirt_in_storage_bag.jpg",
-          "smith_orange_lens_goggles.jpg",
-          "thermogrip_hot_glue_gun.jpg",
-          "wire_brush_wood_handle.jpg",
-          "work_light_tripod_halogen.jpg",
-          "work_light_tripod_stand.jpg"
-        ]
-      },
-      {
-        "folder": "Workshop/Saw_Blades",
-        "label": "Workshop • Saw Blades",
-        "items": [
-          "12 Inch Circular Saw Blade Yellow Tip Teeth Clean.jpg",
-          "12 Inch Circular Saw Blade Yellow Tip Teeth Rusted.jpg",
-          "Avanti Pro 10 Inch Fine Finish 60T Circular Saw Blade Blue Rim.jpg",
-          "Black And Decker 10 Inch Chrome Crosscut Saw Blade.jpg",
-          "Carbide Circular Saw Blade Rusted.jpg",
-          "Circular Saw Blade 6.5 Inch Yellow.jpg",
-          "Circular Saw Blade Crosscut.jpg",
-          "Circular Saw Blade Rusted.jpg",
-          "DeWalt Construction 12 Inch Fine Finish 60T Circular Saw Blade Yellow Rim.jpg",
-          "Diamond Masonry Tile Blade 10 Inch Blue Center.jpg",
-          "Diamond Masonry Tile Blade 10 Inch Blue Label.jpg",
-          "Kromedge Hollow Ground Planer Blade Chrome Nickel Steel.jpg",
-          "Los Angeles Diamond Tools Masonry Blade 10 Inch.jpg",
-          "Oldham 10 Inch Steel Saw Blade.jpg",
-          "Oldham Circular Saw Blade 7.25 Inch 16 Tooth.jpg",
-          "Oldham Steel Circular Saw Blade Made in USA.jpg",
-          "Oldham Steel Saw Blade 10 Inch.jpg",
-          "Sears Craftsman 10 Inch Circular Saw Blade Steel.jpg",
-          "Sears Craftsman Kromedge Thin Rim Saw Blade Molybdenum Steel.jpg",
-          "circular_saw_blade_rusted.jpg",
-          "freud 10” Fine Cut-Off Saw Blade.jpg"
-        ]
-      },
-      {
-        "folder": "Workshop/PVC Pipe Parts",
-        "label": "Workshop • PVC Pipe Parts",
-        "items": [
-          "PVC Pipe Cap Open.jpg",
-          "PVC Pipe Cap Side.jpg",
-          "PVC Pipe Cap Small.jpg",
-          "PVC Pipe Cap.jpg",
-          "pvc_90_degree_elbow_fitting.jpg",
-          "pvc_electrical_junction_box_cover.jpg"
-        ]
-      },
-      {
-        "folder": "Garage",
-        "label": "Garage",
-        "items": [
-          "1:2_Inch_Drive_Ratchet.jpg",
-          "1:2“_Drive_Chrome_Vanadium_Evercraft_Ratchet.jpg",
-          "4_Foot_Level.jpg",
-          "4_Foot_Level_2.jpg",
-          "Allway_Tools_Shingle_Remover.jpg",
-          "Bench Plane.jpg",
-          "Bent_Hay_Hook.jpg",
-          "Block Plane.jpg",
-          "Blue_Flat_Head_Screwdriver_.jpg",
-          "Chalk_Line_Reel.jpg",
-          "Corkscrew_Combo.jpg",
-          "Drywall_Knife.jpg",
-          "Extension_Cord.jpg",
-          "Extension_Cord_2.jpg",
-          "Groove_Joint_Pliers.jpg",
-          "Hacksaw.jpg",
-          "Hacksaw_2.jpg",
-          "Hacksaw_3.jpg",
-          "Hacksaw_4.jpg",
-          "Hammer.jpg",
-          "Hay_Hook.jpg",
-          "Husky_Paint_Scraper.jpg",
-          "Johnson Level.jpg",
-          "Johnson_Level_&_Tool_Level.jpg",
-          "Lufkin_25’_Tape_Measure.jpg",
-          "Metal_File.jpg",
-          "Nicholson Metal File 2.jpg",
-          "Nicholson Metal File.jpg",
-          "Performance_Tool_W1075_Hammer.jpg",
-          "Stanley 42-294 Level 2.jpg",
-          "Stanley 42-294 Level.jpg",
-          "Stanley_Flathead_Screwdriver.jpg",
-          "Steel Wire Brush.jpg",
-          "Surform Plane 2.jpg",
-          "Surform Plane.jpg",
-          "Voltage Tester.jpg",
-          "Wood_Chisel.jpg",
-          "⅜″_Drive_Metrinch_Ratchet.jpg"
-        ]
-      }
-    ];
-
-    const chipRow = document.getElementById('chipRow');
-    const searchInput = document.getElementById('search');
-    const gallery = document.getElementById('gallery');
-    const summary = document.getElementById('summary');
-    const pagination = document.getElementById('pagination');
-
-    const lightbox = document.getElementById('lightbox');
-    const viewerTitle = document.getElementById('viewerTitle');
-    const viewerMeta = document.getElementById('viewerMeta');
-    const viewerImage = document.getElementById('viewerImage');
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    const closeBtn = document.getElementById('closeBtn');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const openOriginalBtn = document.getElementById('openOriginal');
-
-    const totalItems = COLLECTIONS.reduce((sum, group) => sum + group.items.length, 0);
-    const PER_PAGE = 25;
-
-    const state = {
-      collection: 'all',
-      query: '',
-      page: 1
-    };
-
-    let filteredItems = [];
-    let visibleItems = [];
-    let currentIndex = -1;
-
-    function encodeSegments(folder, file) {
-      const parts = [ROOT];
-      if (folder) {
-        folder.split('/').forEach(part => parts.push(part));
-      }
-      parts.push(file);
-      return parts.map(encodeURIComponent).join('/');
-    }
-
-    function formatTitle(file) {
-      const base = file.replace(/\.[^.]+$/, '');
-      return base.replace(/[\-_]+/g, ' ').replace(/\s+/g, ' ').trim();
-    }
-
-    function buildItems() {
-      const results = [];
-      COLLECTIONS.forEach(group => {
-        group.items.forEach(file => {
-          results.push({
-            folder: group.folder,
-            collectionLabel: group.label,
-            file,
-            label: formatTitle(file),
-            src: encodeSegments(group.folder, file)
-          });
-        });
-      });
-      return results;
-    }
-
-    const allItems = buildItems();
-
-    function renderChips() {
-      const frag = document.createDocumentFragment();
-
-      const allButton = document.createElement('button');
-      allButton.type = 'button';
-      allButton.className = 'chip' + (state.collection === 'all' ? ' active' : '');
-      allButton.dataset.value = 'all';
-      allButton.textContent = `All items (${totalItems})`;
-      frag.appendChild(allButton);
-
-      COLLECTIONS.forEach(group => {
+      for (const folder of folderItems) {
+        const card = document.createElement('article');
+        card.className = 'card folder-card';
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'chip' + (state.collection === group.folder ? ' active' : '');
-        btn.dataset.value = group.folder;
-        btn.textContent = `${group.label} (${group.items.length})`;
-        frag.appendChild(btn);
-      });
-
-      chipRow.replaceChildren(frag);
-    }
-
-    function applyFilters() {
-      const query = state.query.trim().toLowerCase();
-      filteredItems = allItems.filter(item => {
-        const matchesCollection = state.collection === 'all' || item.folder === state.collection;
-        if (!matchesCollection) return false;
-        if (!query) return true;
-        const haystack = `${item.label} ${item.collectionLabel}`.toLowerCase();
-        return haystack.includes(query);
-      });
-
-      if (state.collection === 'all') {
-        filteredItems.sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
-      }
-
-      state.page = 1;
-      renderGallery();
-      updateSummary();
-      updatePagination();
-    }
-
-    function renderGallery() {
-      if (!filteredItems.length) {
-        gallery.innerHTML = '<div class="empty-state">No items match your filters yet. Try a different search or switch collections.</div>';
-        visibleItems = [];
-        pagination.hidden = true;
-        return;
-      }
-
-      const totalPages = Math.max(1, Math.ceil(filteredItems.length / PER_PAGE));
-      if (state.page > totalPages) {
-        state.page = totalPages;
-      }
-
-      const start = (state.page - 1) * PER_PAGE;
-      const end = Math.min(start + PER_PAGE, filteredItems.length);
-      visibleItems = filteredItems.slice(start, end);
-
-      const frag = document.createDocumentFragment();
-      visibleItems.forEach((item, index) => {
-        const tile = document.createElement('button');
-        tile.type = 'button';
-        tile.className = 'tile';
-        tile.dataset.index = (start + index).toString();
-        tile.setAttribute('aria-label', `View ${item.label}`);
-
-        const media = document.createElement('div');
-        media.className = 'tile__media';
-        const img = document.createElement('img');
-        img.src = item.src;
-        img.alt = item.label;
-        img.loading = 'lazy';
-        media.appendChild(img);
-
+        btn.className = 'thumb folder-thumb';
+        btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 6.75A1.75 1.75 0 0 1 5.75 5h3.086a1.75 1.75 0 0 1 1.238.512l.414.414c.1.1.236.156.378.156H18.25A1.75 1.75 0 0 1 20 7.832v8.918A2.25 2.25 0 0 1 17.75 19H6.25A2.25 2.25 0 0 1 4 16.75V6.75Z"/></svg>';
+        btn.addEventListener('click', () => selectFolder(folder.path));
+        const body = document.createElement('div');
+        body.className = 'card-body';
         const title = document.createElement('div');
-        title.className = 'tile__title';
-        title.textContent = item.label;
-
-        const folder = document.createElement('div');
-        folder.className = 'tile__folder';
-        folder.textContent = item.collectionLabel;
-
-        tile.append(media, title, folder);
-        frag.appendChild(tile);
-      });
-
-      gallery.replaceChildren(frag);
-    }
-
-    function updateSummary() {
-      if (!filteredItems.length) {
-        summary.textContent = 'Showing 0 results.';
-        return;
-      }
-      const collectionText = state.collection === 'all' ? 'all collections' : COLLECTIONS.find(group => group.folder === state.collection)?.label ?? '';
-      const totalPages = Math.max(1, Math.ceil(filteredItems.length / PER_PAGE));
-      const start = (state.page - 1) * PER_PAGE + 1;
-      const end = (state.page - 1) * PER_PAGE + visibleItems.length;
-      summary.textContent = `Showing ${start}–${end} of ${filteredItems.length} item${filteredItems.length === 1 ? '' : 's'} from ${collectionText} (page ${state.page} of ${totalPages}, total catalogue: ${totalItems}).`;
-    }
-
-    function updatePagination() {
-      if (!filteredItems.length || filteredItems.length <= PER_PAGE) {
-        pagination.innerHTML = '';
-        pagination.hidden = true;
-        return;
+        title.className = 'card-title';
+        title.textContent = folder.dir.name;
+        const meta = document.createElement('div');
+        meta.className = 'card-meta';
+        const photoCount = collectFiles(folder.dir, []).length;
+        meta.textContent = `${formatCount(photoCount)} photo${photoCount === 1 ? '' : 's'} inside`;
+        body.append(title, meta);
+        card.append(btn, body);
+        galleryGrid.appendChild(card);
       }
 
-      const totalPages = Math.max(1, Math.ceil(filteredItems.length / PER_PAGE));
-      pagination.hidden = false;
+      for (const item of files) {
+        const card = document.createElement('article');
+        card.className = 'card';
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'thumb';
+        const img = document.createElement('img');
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        img.src = item.url;
+        img.alt = item.file;
+        button.appendChild(img);
+        button.addEventListener('click', () => openLightbox(item));
+        const body = document.createElement('div');
+        body.className = 'card-body';
+        const title = document.createElement('div');
+        title.className = 'card-title';
+        title.textContent = item.file;
+        const meta = document.createElement('div');
+        meta.className = 'card-meta';
+        if (state.currentPath[0] === 'ALL') {
+          meta.textContent = item.path.length ? item.path.join(' › ') : DATA.name;
+        } else {
+          meta.textContent = 'Photo';
+        }
+        body.append(title, meta);
+        card.append(button, body);
+        galleryGrid.appendChild(card);
+      }
 
-      const frag = document.createDocumentFragment();
+      const fileCount = files.length;
+      const folderCount = folderItems.length;
+      const locationLabel = state.currentPath[0] === 'ALL'
+        ? 'All folders'
+        : (state.currentPath.length ? state.currentPath.join(' › ') : DATA.name);
+      gallerySummary.textContent = `${locationLabel}: ${formatCount(fileCount)} photo${fileCount === 1 ? '' : 's'}${folderCount ? `, ${formatCount(folderCount)} folder${folderCount === 1 ? '' : 's'}` : ''}`;
+    }
 
-      const prevButton = document.createElement('button');
-      prevButton.type = 'button';
-      prevButton.textContent = 'Previous';
-      prevButton.dataset.page = (state.page - 1).toString();
-      prevButton.disabled = state.page === 1;
-      frag.appendChild(prevButton);
-
-      const status = document.createElement('span');
-      status.textContent = `Page ${state.page} of ${totalPages}`;
-      frag.appendChild(status);
-
-      const nextButton = document.createElement('button');
-      nextButton.type = 'button';
-      nextButton.textContent = 'Next';
-      nextButton.dataset.page = (state.page + 1).toString();
-      nextButton.disabled = state.page === totalPages;
-      frag.appendChild(nextButton);
-
-      pagination.replaceChildren(frag);
->>>>>>>+origin/codex/de
-    const item = filteredItems[index];
-      if (!item) return;
-      currentIndex = index;
-      viewerTitle.textContent = item.label;
-      viewerMeta.textContent = item.collectionLabel;
-      viewerImage.src = item.src;
-      viewerImage.alt = item.label;
-      downloadBtn.href = item.src;
-      downloadBtn.download = item.file;
-      openOriginalBtn.href = item.src;
-      prevBtn.disabled = index === 0;
-      nextBtn.disabled = index === filteredItems.length - 1;
+    function openLightbox(item) {
+      lightboxImage.src = item.url;
+      const pathLabel = item.path.length ? item.path.join(' › ') : DATA.name;
+      lightboxCaption.textContent = `${item.file} — ${pathLabel}`;
       lightbox.classList.add('open');
       lightbox.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
-      closeBtn.focus();
     }
 
     function closeLightbox() {
       lightbox.classList.remove('open');
       lightbox.setAttribute('aria-hidden', 'true');
+      lightboxImage.src = '';
       document.body.style.overflow = '';
-      currentIndex = -1;
     }
 
-    function stepLightbox(delta) {
-      if (currentIndex === -1) return;
-      const nextIndex = currentIndex + delta;
-      if (nextIndex < 0 || nextIndex >= filteredItems.length) return;
-      openLightbox(nextIndex);
-    }
-
-    chipRow.addEventListener('click', event => {
-      const target = event.target.closest('button[data-value]');
-      if (!target) return;
-      const value = target.dataset.value ?? 'all';
-      if (state.collection === value) return;
-      state.collection = value;
-      renderChips();
-      applyFilters();
-    });
-
-    pagination.addEventListener('click', eve    pagination.addEventListener('click', event => {
-      const button = event.target.closest('button[data-page]');
-      if (!button || button.disabled) return;
-      const targetPage = Number.parseInt(button.dataset.page ?? '', 10);
-      if (Number.isNaN(targetPage)) return;
-      const totalPages = Math.max(1, Math.ceil(filteredItems.length / PER_PAGE));
-      if (targetPage < 1 || targetPage > totalPages) return;
-      state.page = targetPage;
-      renderGallery();
-      updateSummary();
-      updatePagination();
-      gallery.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-
- => {
-      state.query = searchInput.value;
-      applyFilters();
-    });
-
-    gallery.addEventListener('click', event => {
-      const tile = event.target.closest('.tile');
-      if (!tile) return;
-      const index = Number.parseInt(tile.dataset.index || '-1', 10);
-      if (!Number.isNaN(index)) {
-        openLightbox(index);
+    lightbox.addEventListener('click', (evt) => {
+      if (evt.target === lightbox) {
+        closeLightbox();
       }
     });
-
-    lightbox.addEventL    });
-
-    lightbox.addEventListener('click', event => {
-      if (event.target === lightbox) {
+    lightboxClose.addEventListener('click', closeLightbox);
+    window.addEventListener('keydown', (evt) => {
+      if (evt.key === 'Escape' && lightbox.classList.contains('open')) {
         closeLightbox();
       }
     });
 
->>>>>>>+main
-er('clic    });
+    function buildTree(parent, node, path = []) {
+      const item = document.createElement('li');
+      item.className = 'tree-item';
+      const row = document.createElement('div');
+      row.className = 'tree-row';
+      row.style.setProperty('--indent', `${path.length * 18}px`);
+      row.dataset.path = path.length ? path.join('|') : '__root__';
 
-    lightbox.addEventListener('click', event => {
-      if (event.target === lightbox) {
-        closeLightbox();
-      }
-    });
+      const toggle = document.createElement('button');
+      toggle.className = 'toggle';
+      toggle.type = 'button';
+      toggle.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="m9.17 5.17 6 6a1 1 0 0 1 0 1.41l-6 6A1 1 0 0 1 8 17.59V6.41a1 1 0 0 1 1.17-1.24Z"/></svg>';
+      toggle.addEventListener('click', (evt) => {
+        evt.stopPropagation();
+        item.classList.toggle('collapsed');
+      });
 
->>>>>>>-origin/codex/de
-Lightbox);
-    prevBtn.addEventListener('click', () => stepLightbox(-1));
-    nextBtn.addEventListener('click', () => stepLightbox(1));
+      const label = document.createElement('span');
+      label.className = 'tree-label';
+      label.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 6.75A1.75 1.75 0 0 1 4.75 5h4.586a1.75 1.75 0 0 1 1.237.512l.915.914c.1.1.236.156.378.156H19.25A1.75 1.75 0 0 1 21 8.332v8.918A2.25 2.25 0 0 1 18.75 19H5.25A2.25 2.25 0 0 1 3 16.75V6.75Z"/></svg>';
+      const text = document.createElement('span');
+      text.textContent = node.name;
+      label.appendChild(text);
 
-    document.addEventListener('keydown', event => {
-      if (lightbox.classList.contains('open')) {
-        if (event.key === 'Escape') {
-          closeLightbox();
-        } else if (event.key === 'ArrowLeft') {
-          stepLightbox(-1);
-        } else if (event.key === 'ArrowRight') {
-          stepLightbox(1);
+      row.append(toggle, label);
+      row.addEventListener('click', () => selectFolder(path));
+      row.addEventListener('keydown', (evt) => {
+        if (evt.key === 'Enter' || evt.key === ' ') {
+          evt.preventDefault();
+          selectFolder(path);
         }
-      }
-    });
-
-    renderChips();
-    applyFilters();
-  </script>
-</body>
-</html>
- => {
-      state.query = searchInput.value;
-      applyFilters();
-    });
-
-    gallery.addEventListener('click', event => {
-      const tile = event.target.closest('.tile');
-      if (!tile) return;
-      const index = Number.parseInt(tile.dataset.index || '-1', 10);
-      if (!Number.isNaN(index)) {
-        openLightbox(index);
-      }
- for quick browsing — all images load directly from the repository.
-  </footer>
-
-  <script>
-    const ROOT = "Digital_Gratitude_List";
-    const COLLECTIONS = [
-      {
-        "folder": "Workshop",
-        "label": "Workshop",
-        "items": [
-          "Black Plastic Trough Bin.jpg",
-          "Blue Plastic Bucket.jpg",
-          "Brick Trowel.jpg",
-          "Carpet Seam Roller with Wooden Handle.jpg",
-          "Caulking Gun.jpg",
-          "Chicago Electric 18V Cordless Drill With Case And Charger.jpg",
-          "Chicago Electric Rotary Tool Kit With Accessories.jpg",
-          "Coca-Cola Bottle Crate.jpg",
-          "Concrete Finishing Trowel 2.jpg",
-          "Concrete Finishing Trowel.jpg",
-          "Concrete Float Wooden Handle.jpg",
-          "Concrete Float.jpg",
-          "Concrete Hand Float with Wooden Handle 2.jpg",
-          "Concrete Hand Float with Wooden Handle.jpg",
-          "Curved Pruning Saw Blade.jpg",
-          "Dayton Motor Run Capacitor.jpg",
-          "Drive Belt Large.jpg",
-          "Drive Belt.jpg",
-          "Fluorescent Light Fixture Housing.jpg",
-          "Foam Pipe Insulation.jpg",
-          "Generac XG8000E portable generator.jpg",
-          "Hacksaw Blade 12 Inch Metal Cutting.jpg",
-          "Hand Saw Blade.jpg",
-          "Leather Tool Belt Pouch.jpg",
-          "Marshalltown Brick Jointer No. 505.jpg",
-          "Masonry Float.jpg",
-          "MassAir 120V 150PSI AirCompressor Box.jpg",
-          "Metal Shims Stack (10).jpg",
-          "Plastic Funnel.jpg",
-          "Plastic Push Stick.jpg",
-          "Pointing Trowel 2.jpg",
-          "Pointing Trowel.jpg",
-          "Portable Halogen Work Light 2.jpg",
-          "Portable Halogen Work Light.jpg",
-          "Porter Cable Brad Nailer In Case.jpg",
-          "Propane Tank with Heater Attachment.jpg",
-          "Propane Tank-Top Heater Head.jpg",
-          "Ridgid 18V 2.5Ah Battery.jpg",
-          "Ridgid 18V Battery.jpg",
-          "Ridgid Grinding Wheel 7 Inch Metal Disc.jpg",
-          "Ridgid Rapid Max Battery Charger.jpg",
-          "Roofing Felt Roll.jpg",
-          "Rubber Grout Float.jpg",
-          "Rusted Metal Hand Float with Wooden Handle.jpg",
-          "Ryobi Corner Cat Sander With Case.jpg",
-          "Ryobi Miter Saw.jpg",
-          "Shut-Line Paint Pail.jpg",
-          "Small Rusted Hand Float with Wooden Handle.jpg",
-          "Stanley Coping Saw Blades 15-106A Pack.jpg",
-          "Stanley Electric Staple Gun.jpg",
-          "Table Saw Accessories Parts Kit.JPEG",
-          "Thermo Lite Winter Boots.jpg",
-          "Tile Cutter 13 Inch.jpg",
-          "Toastmaster Vintage Space Heater.jpg",
-          "american_flag_in_plastic_package.jpg",
-          "black_and_decker_finishing_sander.jpg",
-          "black_cargo_storage_nets.jpg",
-          "blue_finishing_sander.jpg",
-          "blue_safety_helmet_petzl.jpg",
-          "campbell_hausfeld_air_hammer.jpg",
-          "carrera_yellow_red_ski_goggles.jpg",
-          "chainsaw_safety_helmet_mesh_faceshield.jpg",
-          "ice_scraper_snow_brush.jpg",
-          "leather_tool_belt.jpg",
-          "metal_frame_hacksaw.jpg",
-          "oakley_goggles.jpg",
-          "propane_camping_stove.jpg",
-          "shower_curtain_and_bed_skirt_in_storage_bag.jpg",
-          "smith_orange_lens_goggles.jpg",
-          "thermogrip_hot_glue_gun.jpg",
-          "wire_brush_wood_handle.jpg",
-          "work_light_tripod_halogen.jpg",
-          "work_light_tripod_stand.jpg"
-        ]
-      },
-      {
-        "folder": "Workshop/Saw_Blades",
-        "label": "Workshop • Saw Blades",
-        "items": [
-          "12 Inch Circular Saw Blade Yellow Tip Teeth Clean.jpg",
-          "12 Inch Circular Saw Blade Yellow Tip Teeth Rusted.jpg",
-          "Avanti Pro 10 Inch Fine Finish 60T Circular Saw Blade Blue Rim.jpg",
-          "Black And Decker 10 Inch Chrome Crosscut Saw Blade.jpg",
-          "Carbide Circular Saw Blade Rusted.jpg",
-          "Circular Saw Blade 6.5 Inch Yellow.jpg",
-          "Circular Saw Blade Crosscut.jpg",
-          "Circular Saw Blade Rusted.jpg",
-          "DeWalt Construction 12 Inch Fine Finish 60T Circular Saw Blade Yellow Rim.jpg",
-          "Diamond Masonry Tile Blade 10 Inch Blue Center.jpg",
-          "Diamond Masonry Tile Blade 10 Inch Blue Label.jpg",
-          "Kromedge Hollow Ground Planer Blade Chrome Nickel Steel.jpg",
-          "Los Angeles Diamond Tools Masonry Blade 10 Inch.jpg",
-          "Oldham 10 Inch Steel Saw Blade.jpg",
-          "Oldham Circular Saw Blade 7.25 Inch 16 Tooth.jpg",
-          "Oldham Steel Circular Saw Blade Made in USA.jpg",
-          "Oldham Steel Saw Blade 10 Inch.jpg",
-          "Sears Craftsman 10 Inch Circular Saw Blade Steel.jpg",
-          "Sears Craftsman Kromedge Thin Rim Saw Blade Molybdenum Steel.jpg",
-          "circular_saw_blade_rusted.jpg",
-          "freud 10” Fine Cut-Off Saw Blade.jpg"
-        ]
-      },
-      {
-        "folder": "Workshop/PVC Pipe Parts",
-        "label": "Workshop • PVC Pipe Parts",
-        "items": [
-          "PVC Pipe Cap Open.jpg",
-          "PVC Pipe Cap Side.jpg",
-          "PVC Pipe Cap Small.jpg",
-          "PVC Pipe Cap.jpg",
-          "pvc_90_degree_elbow_fitting.jpg",
-          "pvc_electrical_junction_box_cover.jpg"
-        ]
-      },
-      {
-        "folder": "Garage",
-        "label": "Garage",
-        "items": [
-          "1:2_Inch_Drive_Ratchet.jpg",
-          "1:2“_Drive_Chrome_Vanadium_Evercraft_Ratchet.jpg",
-          "4_Foot_Level.jpg",
-          "4_Foot_Level_2.jpg",
-          "Allway_Tools_Shingle_Remover.jpg",
-          "Bench Plane.jpg",
-          "Bent_Hay_Hook.jpg",
-          "Block Plane.jpg",
-          "Blue_Flat_Head_Screwdriver_.jpg",
-          "Chalk_Line_Reel.jpg",
-          "Corkscrew_Combo.jpg",
-          "Drywall_Knife.jpg",
-          "Extension_Cord.jpg",
-          "Extension_Cord_2.jpg",
-          "Groove_Joint_Pliers.jpg",
-          "Hacksaw.jpg",
-          "Hacksaw_2.jpg",
-          "Hacksaw_3.jpg",
-          "Hacksaw_4.jpg",
-          "Hammer.jpg",
-          "Hay_Hook.jpg",
-          "Husky_Paint_Scraper.jpg",
-          "Johnson Level.jpg",
-          "Johnson_Level_&_Tool_Level.jpg",
-          "Lufkin_25’_Tape_Measure.jpg",
-          "Metal_File.jpg",
-          "Nicholson Metal File 2.jpg",
-          "Nicholson Metal File.jpg",
-          "Performance_Tool_W1075_Hammer.jpg",
-          "Stanley 42-294 Level 2.jpg",
-          "Stanley 42-294 Level.jpg",
-          "Stanley_Flathead_Screwdriver.jpg",
-          "Steel Wire Brush.jpg",
-          "Surform Plane 2.jpg",
-          "Surform Plane.jpg",
-          "Voltage Tester.jpg",
-          "Wood_Chisel.jpg",
-          "⅜″_Drive_Metrinch_Ratchet.jpg"
-        ]
-      }
-    ];
-
-    const chipRow = document.getElementById('chipRow');
-    const searchInput = document.getElementById('search');
-    const gallery = document.getElementById('gallery');
-    const summary = document.getElementById('summary');
-    const pagination = document.getElementById('pagination');
-
-    const lightbox = document.getElementById('lightbox');
-    const viewerTitle = document.getElementById('viewerTitle');
-    const viewerMeta = document.getElementById('viewerMeta');
-    const viewerImage = document.getElementById('viewerImage');
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    const closeBtn = document.getElementById('closeBtn');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const openOriginalBtn = document.getElementById('openOriginal');
-
-    const totalItems = COLLECTIONS.reduce((sum, group) => sum + group.items.length, 0);
-    const PER_PAGE = 25;
-
-    const state = {
-      collection: 'all',
-      query: '',
-      page: 1
-    };
-
-    let filteredItems = [];
-    let visibleItems = [];
-    let currentIndex = -1;
-
-    function encodeSegments(folder, file) {
-      const parts = [ROOT];
-      if (folder) {
-        folder.split('/').forEach(part => parts.push(part));
-      }
-      parts.push(file);
-      return parts.map(encodeURIComponent).join('/');
-    }
-
-    function formatTitle(file) {
-      const base = file.replace(/\.[^.]+$/, '');
-      return base.replace(/[\-_]+/g, ' ').replace(/\s+/g, ' ').trim();
-    }
-
-    function buildItems() {
-      const results = [];
-      COLLECTIONS.forEach(group => {
-        group.items.forEach(file => {
-          results.push({
-            folder: group.folder,
-            collectionLabel: group.label,
-            file,
-            label: formatTitle(file),
-            src: encodeSegments(group.folder, file)
-          });
-        });
       });
-      return results;
-    }
+      row.tabIndex = 0;
 
-    const allItems = buildItems();
+      const children = document.createElement('ul');
+      children.className = 'tree children';
 
-    function renderChips() {
-      const frag = document.createDocumentFragment();
+      item.append(row, children);
+      parent.appendChild(item);
 
-      const allButton = document.createElement('button');
-      allButton.type = 'button';
-      allButton.className = 'chip' + (state.collection === 'all' ? ' active' : '');
-      allButton.dataset.value = 'all';
-      allButton.textContent = `All items (${totalItems})`;
-      frag.appendChild(allButton);
-
-      COLLECTIONS.forEach(group => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'chip' + (state.collection === group.folder ? ' active' : '');
-        btn.dataset.value = group.folder;
-        btn.textContent = `${group.label} (${group.items.length})`;
-        frag.appendChild(btn);
-      });
-
-      chipRow.replaceChildren(frag);
-    }
-
-    function applyFilters() {
-      const query = state.query.trim().toLowerCase();
-      filteredItems = allItems.filter(item => {
-        const matchesCollection = state.collection === 'all' || item.folder === state.collection;
-        if (!matchesCollection) return false;
-        if (!query) return true;
-        const haystack = `${item.label} ${item.collectionLabel}`.toLowerCase();
-        return haystack.includes(query);
-      });
-
-      if (state.collection === 'all') {
-        filteredItems.sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
+      for (const dir of node.dirs) {
+        buildTree(children, dir, [...path, dir.name]);
       }
+    }
 
-      state.page = 1;
+    function buildExplorer() {
+      treeRoot.innerHTML = '';
+      const allItem = document.createElement('li');
+      allItem.className = 'tree-item';
+      const allRow = document.createElement('div');
+      allRow.className = 'tree-row';
+      allRow.dataset.path = '__all__';
+      allRow.innerHTML = '<span class="tree-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 6a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V6Zm3-1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H8Z"/></svg><span>All Photos</span></span>';
+      allRow.tabIndex = 0;
+      allRow.addEventListener('click', () => selectFolder(['ALL']));
+      allRow.addEventListener('keydown', (evt) => {
+        if (evt.key === 'Enter' || evt.key === ' ') {
+          evt.preventDefault();
+          selectFolder(['ALL']);
+        }
+      });
+      allItem.appendChild(allRow);
+      treeRoot.appendChild(allItem);
+
+      buildTree(treeRoot, DATA, []);
+    }
+
+    function selectFolder(path) {
+      state.currentPath = path.length && path[0] === 'ALL' ? ['ALL'] : path;
+      highlightSelection();
+      renderBreadcrumbs();
       renderGallery();
-      updateSummary();
-      updatePagination();
     }
 
-    function renderGallery() {
-      if (!filteredItems.length) {
-        gallery.innerHTML = '<div class="empty-state">No items match your filters yet. Try a different search or switch collections.</div>';
-        visibleItems = [];
-        pagination.hidden = true;
+    function highlightSelection() {
+      const rows = treeRoot.querySelectorAll('.tree-row');
+      rows.forEach(row => row.classList.remove('active'));
+      if (state.currentPath[0] === 'ALL') {
+        const allRow = treeRoot.querySelector('.tree-row[data-path="__all__"]');
+        if (allRow) allRow.classList.add('active');
         return;
       }
-
-      const totalPages = Math.max(1, Math.ceil(filteredItems.length / PER_PAGE));
-      if (state.page > totalPages) {
-        state.page = totalPages;
+      const key = state.currentPath.length ? state.currentPath.join('|') : '__root__';
+      const target = treeRoot.querySelector(`.tree-row[data-path="${CSS.escape(key)}"]`);
+      if (target) {
+        target.classList.add('active');
       }
+    }
 
-      const start = (state.page - 1) * PER_PAGE;
-      const end = Math.min(start + PER_PAGE, filteredItems.length);
-      visibleItems = filteredItems.slice(start, end);
-
-      const frag = document.createDocumentFragment();
-      visibleItems.forEach((item, index) => {
-        const tile = document.createElement('button');
-        tile.type = 'button';
-        tile.className = 'tile';
-        tile.dataset.index = (start + index).toString();
-        tile.setAttribute('aria-label', `View ${item.label}`);
-
-        const media = document.createElement('div');
-        media.className = 'tile__media';
-        const img = document.createElement('img');
-        img.src = item.src;
-        img.alt = item.label;
-        img.loading = 'lazy';
-        media.appendChild(img);
-
-        const title = document.createElement('div');
-        title.className = 'tile__title';
-        title.textContent = item.label;
-
-        const folder = document.createElement('div');
-        folder.className = 'tile__folder';
-        folder.textContent = item.collectionLabel;
-
-        tile.append(media, title, folder);
-        frag.appendChild(tile);
+    collapseAllBtn.addEventListener('click', () => {
+      const items = treeRoot.querySelectorAll('.tree-item');
+      items.forEach((item, index) => {
+        if (index === 0) return; // Skip All Photos item
+        item.classList.toggle('collapsed');
       });
-
-      gallery.replaceChildren(frag);
-    }
-
-    function updateSummary() {
-      if (!filteredItems.length) {
-        summary.textContent = 'Showing 0 results.';
-        return;
-      }
-      const collectionText = state.collection === 'all' ? 'all collections' : COLLECTIONS.find(group => group.folder === state.collection)?.label ?? '';
-      const totalPages = Math.max(1, Math.ceil(filteredItems.length / PER_PAGE));
-      const start = (state.page - 1) * PER_PAGE + 1;
-      const end = (state.page - 1) * PER_PAGE + visibleItems.length;
-      summary.textContent = `Showing ${start}–${end} of ${filteredItems.length} item${filteredItems.length === 1 ? '' : 's'} from ${collectionText} (page ${state.page} of ${totalPages}, total catalogue: ${totalItems}).`;
-    }
-
-    function updatePagination() {
-      if (!filteredItems.length || filteredItems.length <= PER_PAGE) {
-        pagination.innerHTML = '';
-        pagination.hidden = true;
-        return;
-      }
-
-      const totalPages = Math.max(1, Math.ceil(filteredItems.length / PER_PAGE));
-      pagination.hidden = false;
-
-      const frag = document.createDocumentFragment();
-
-      const prevButton = document.createElement('button');
-      prevButton.type = 'button';
-      prevButton.textContent = 'Previous';
-      prevButton.dataset.page = (state.page - 1).toString();
-      prevButton.disabled = state.page === 1;
-      frag.appendChild(prevButton);
-
-      const status = document.createElement('span');
-      status.textContent = `Page ${state.page} of ${totalPages}`;
-      frag.appendChild(status);
-
-      const nextButton = document.createElement('button');
-      nextButton.type = 'button';
-      nextButton.textContent = 'Next';
-      nextButton.dataset.page = (state.page + 1).toString();
-      nextButton.disabled = state.page === totalPages;
-      frag.appendChild(nextButton);
-
-      pagination.replaceChildren(frag);
->>>>>>>+origin/codex/de
-    const item = filteredItems[index];
-      if (!item) return;
-      currentIndex = index;
-      viewerTitle.textContent = item.label;
-      viewerMeta.textContent = item.collectionLabel;
-      viewerImage.src = item.src;
-      viewerImage.alt = item.label;
-      downloadBtn.href = item.src;
-      downloadBtn.download = item.file;
-      openOriginalBtn.href = item.src;
-      prevBtn.disabled = index === 0;
-      nextBtn.disabled = index === filteredItems.length - 1;
-      lightbox.classList.add('open');
-      lightbox.setAttribute('aria-hidden', 'false');
-      document.body.style.overflow = 'hidden';
-      closeBtn.focus();
-    }
-
-    function closeLightbox() {
-      lightbox.classList.remove('open');
-      lightbox.setAttribute('aria-hidden', 'true');
-      document.body.style.overflow = '';
-      currentIndex = -1;
-    }
-
-    function stepLightbox(delta) {
-      if (currentIndex === -1) return;
-      const nextIndex = currentIndex + delta;
-      if (nextIndex < 0 || nextIndex >= filteredItems.length) return;
-      openLightbox(nextIndex);
-    }
-
-    chipRow.addEventListener('click', event => {
-      const target = event.target.closest('button[data-value]');
-      if (!target) return;
-      const value = target.dataset.value ?? 'all';
-      if (state.collection === value) return;
-      state.collection = value;
-      renderChips();
-      applyFilters();
     });
 
-    pagination.addEventListener('click', eve    pagination.addEventListener('click', event => {
-      const button = event.target.closest('button[data-page]');
-      if (!button || button.disabled) return;
-      const targetPage = Number.parseInt(button.dataset.page ?? '', 10);
-      if (Number.isNaN(targetPage)) return;
-      const totalPages = Math.max(1, Math.ceil(filteredItems.length / PER_PAGE));
-      if (targetPage < 1 || targetPage > totalPages) return;
-      state.page = targetPage;
-      renderGallery();
-      updateSummary();
-      updatePagination();
-      gallery.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-
- => {
-      state.query = searchInput.value;
-      applyFilters();
-    });
-
-    gallery.addEventListener('click', event => {
-      const tile = event.target.closest('.tile');
-      if (!tile) return;
-      const index = Number.parseInt(tile.dataset.index || '-1', 10);
-      if (!Number.isNaN(index)) {
-        openLightbox(index);
-      }
-    });
-
-    lightbox.addEventL    });
-
-    lightbox.addEventListener('click', event => {
-      if (event.target === lightbox) {
-        closeLightbox();
-      }
-    });
-
->>>>>>>+main
-er('clic    });
-
-    lightbox.addEventListener('click', event => {
-      if (event.target === lightbox) {
-        closeLightbox();
-      }
-    });
-
->>>>>>>-origin/codex/de
-Lightbox);
-    prevBtn.addEventListener('click', () => stepLightbox(-1));
-    nextBtn.addEventListener('click', () => stepLightbox(1));
-
-    document.addEventListener('keydown', event => {
-      if (lightbox.classList.contains('open')) {
-        if (event.key === 'Escape') {
-          closeLightbox();
-        } else if (event.key === 'ArrowLeft') {
-          stepLightbox(-1);
-        } else if (event.key === 'ArrowRight') {
-          stepLightbox(1);
-        }
-      }
-    });
-
-    renderChips();
-    applyFilters();
-  </script>
-</body>
-</html>
- => {
-      state.query = searchInput.value;
-      applyFilters();
-    });
-
-    gallery.addEventListener('click', event => {
-      const tile = event.target.closest('.tile');
-      if (!tile) return;
-      const index = Number.parseInt(tile.dataset.index || '-1', 10);
-      if (!Number.isNaN(index)) {
-        openLightbox(index);
-      }
-<<<<<<< main
-    });
-
-    lightbox.addEventL    });
-
-    lightbox.addEventListener('click', event => {
-      if (event.target === lightbox) {
-        closeLightbox();
-      }
-    });
-
->>>>>>>+main
-er('clic    });
-
-    lightbox.addEventListener('click', event => {
-      if (event.target === lightbox) {
-        closeLightbox();
-      }
-    });
-
->>>>>>>-origin/codex/de
-Lightbox);
-    prevBtn.addEventListener('click', () => stepLightbox(-1));
-    nextBtn.addEventListener('click', () => stepLightbox(1));
-
-    document.addEventListener('keydown', event => {
-      if (lightbox.classList.contains('open')) {
-        if (event.key === 'Escape') {
-          closeLightbox();
-        } else if (event.key === 'ArrowLeft') {
-          stepLightbox(-1);
-        } else if (event.key === 'ArrowRight') {
-          stepLightbox(1);
-        }
-      }
-    });
-
-    renderChips();
-    applyFilters();
->>>>>>> main
+    buildExplorer();
+    selectFolder(['ALL']);
   </script>
 </body>
 </html>
