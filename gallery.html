@@ -8,13 +8,13 @@
     :root {
       color-scheme: dark;
       font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-      --bg: #0d111b;
-      --panel: #151b27;
-      --border: #222a39;
-      --text: #e9efff;
-      --muted: #98a2b8;
+      --bg: #0b0f19;
+      --panel: #131b2c;
+      --border: #1f2940;
+      --text: #f1f5ff;
+      --muted: #9aa8c7;
       --accent: #7bc5ff;
-      --chip: rgba(255, 255, 255, 0.06);
+      --accent-strong: #34a0ff;
     }
 
     * {
@@ -24,18 +24,18 @@
     body {
       margin: 0;
       min-height: 100vh;
-      background: radial-gradient(circle at top, #141b2d, #05070c 60%);
+      background: radial-gradient(circle at top, #1a2742 0%, #05070c 70%);
       color: var(--text);
       display: flex;
       flex-direction: column;
     }
 
     header {
-      padding: 32px 18px 12px;
+      padding: 40px 20px 18px;
     }
 
     main {
-      padding: 0 18px 60px;
+      padding: 0 20px 80px;
       flex: 1;
     }
 
@@ -46,31 +46,30 @@
 
     h1 {
       margin: 0;
-      font-size: clamp(2.2rem, 3vw, 3.1rem);
+      font-size: clamp(2.4rem, 3.5vw, 3.3rem);
       letter-spacing: -0.02em;
     }
 
     .intro {
-      margin-top: 10px;
+      margin-top: 12px;
       color: var(--muted);
-      max-width: 70ch;
-      line-height: 1.5;
-      font-size: 0.98rem;
+      max-width: 72ch;
+      line-height: 1.6;
     }
 
-    .controls {
-      margin: 24px 0 20px;
-      padding: 16px;
-      border-radius: 18px;
-      background: rgba(7, 10, 18, 0.6);
+    .panel {
+      margin: 28px 0 24px;
+      background: rgba(8, 12, 22, 0.7);
       border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 20px;
+      padding: 18px;
       display: grid;
-      gap: 12px;
+      gap: 18px;
     }
 
-    @media (min-width: 720px) {
-      .controls {
-        grid-template-columns: auto 240px;
+    @media (min-width: 760px) {
+      .panel {
+        grid-template-columns: minmax(0, 1fr) 240px;
         align-items: center;
       }
     }
@@ -78,31 +77,31 @@
     .chips {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 10px;
     }
 
     button.chip {
       border: 1px solid var(--border);
-      background: var(--chip);
+      background: rgba(255, 255, 255, 0.05);
       color: inherit;
-      padding: 8px 14px;
+      padding: 8px 16px;
       border-radius: 999px;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       cursor: pointer;
-      transition: transform 0.18s ease, border 0.18s ease, background 0.18s ease;
+      transition: border 0.2s ease, background 0.2s ease, transform 0.2s ease;
     }
 
     button.chip:hover,
     button.chip:focus-visible {
       outline: none;
       transform: translateY(-1px);
-      border-color: rgba(123, 197, 255, 0.5);
+      border-color: rgba(123, 197, 255, 0.6);
     }
 
     button.chip.active {
-      background: rgba(123, 197, 255, 0.16);
-      border-color: rgba(123, 197, 255, 0.7);
-      color: #f5faff;
+      background: rgba(123, 197, 255, 0.18);
+      border-color: rgba(123, 197, 255, 0.8);
+      color: #f8fbff;
     }
 
     .search {
@@ -111,10 +110,10 @@
 
     .search input {
       width: 100%;
-      padding: 10px 12px 10px 38px;
+      padding: 12px 14px 12px 40px;
       border-radius: 14px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(18, 22, 32, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(18, 24, 38, 0.9);
       color: inherit;
       font-size: 0.95rem;
     }
@@ -124,7 +123,7 @@
       height: 18px;
       position: absolute;
       top: 50%;
-      left: 12px;
+      left: 14px;
       transform: translateY(-50%);
       color: var(--muted);
     }
@@ -142,165 +141,209 @@
     }
 
     .summary {
-      margin: 4px 0 18px;
-      font-size: 0.9rem;
+      margin: 0 0 16px;
       color: var(--muted);
+      font-size: 0.92rem;
       display: flex;
-      gap: 14px;
       flex-wrap: wrap;
+      gap: 16px;
       align-items: center;
+    }
+
+    .summary strong {
+      color: #f6f9ff;
     }
 
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 16px;
+      gap: 18px;
     }
 
     .card {
-      display: flex;
-      flex-direction: column;
+      position: relative;
+      background: rgba(5, 8, 15, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.05);
       border-radius: 16px;
       overflow: hidden;
-      background: var(--panel);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      cursor: pointer;
-      transition: transform 0.18s ease, border 0.18s ease;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+      transition: transform 0.2s ease, border 0.2s ease;
+      display: flex;
+      flex-direction: column;
     }
 
     .card:hover,
-    .card:focus-visible {
-      outline: none;
-      transform: translateY(-2px);
-      border-color: rgba(123, 197, 255, 0.6);
+    .card:focus-within {
+      transform: translateY(-3px);
+      border-color: rgba(123, 197, 255, 0.4);
+    }
+
+    .card button {
+      all: unset;
+      cursor: pointer;
+      display: block;
+      flex: 1;
     }
 
     .card img {
-      display: block;
       width: 100%;
-      height: 150px;
+      aspect-ratio: 4 / 3;
       object-fit: cover;
-      background: #05070c;
+      display: block;
+      background: #0f1729;
+    }
+
+    .card footer {
+      padding: 12px 14px 14px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .card .title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
     }
 
     .card .meta {
-      padding: 10px 12px;
-    }
-
-    .card .meta .name {
-      font-size: 0.85rem;
-      line-height: 1.3;
-    }
-
-    .card .meta .folder {
-      margin-top: 4px;
-      font-size: 0.75rem;
       color: var(--muted);
+      font-size: 0.82rem;
     }
 
     .pagination {
-      margin: 24px 0 0;
       display: flex;
-      gap: 8px;
-      align-items: center;
       justify-content: center;
+      gap: 12px;
+      margin: 32px 0 0;
       flex-wrap: wrap;
-      color: var(--muted);
-      font-size: 0.9rem;
     }
 
     .pagination button {
-      border-radius: 12px;
       border: 1px solid var(--border);
-      background: var(--panel);
+      background: rgba(255, 255, 255, 0.05);
       color: inherit;
-      padding: 8px 12px;
-      font-size: 0.85rem;
+      padding: 10px 14px;
+      border-radius: 12px;
       cursor: pointer;
-      transition: transform 0.18s ease, border 0.18s ease, background 0.18s ease;
+      min-width: 120px;
+      font-size: 0.9rem;
+      transition: border 0.2s ease, background 0.2s ease;
     }
 
-    .pagination button:hover:not(:disabled),
-    .pagination button:focus-visible:not(:disabled) {
-      outline: none;
-      transform: translateY(-1px);
-      border-color: rgba(123, 197, 255, 0.6);
-    }
-
-    .pagination button:disabled {
-      opacity: 0.45;
+    .pagination button[disabled] {
+      opacity: 0.5;
       cursor: not-allowed;
     }
 
-    dialog#lightbox {
-      border: none;
+    .pagination button:not([disabled]):hover,
+    .pagination button:not([disabled]):focus-visible {
+      outline: none;
+      border-color: rgba(123, 197, 255, 0.6);
+      background: rgba(123, 197, 255, 0.15);
+    }
+
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 9, 18, 0.88);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      z-index: 100;
+    }
+
+    .lightbox.open {
+      display: flex;
+    }
+
+    .lightbox-content {
+      position: relative;
+      width: min(900px, 100%);
+      max-height: 90vh;
+      background: rgba(12, 18, 30, 0.9);
       border-radius: 18px;
-      padding: 0;
-      background: rgba(10, 14, 22, 0.95);
-      color: inherit;
-      width: min(920px, 92vw);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
-    dialog::backdrop {
-      background: rgba(2, 6, 12, 0.82);
-      backdrop-filter: blur(2px);
-    }
-
-    .lightbox-head {
-      padding: 12px 16px;
+    .lightbox header {
       display: flex;
       justify-content: space-between;
-      gap: 12px;
       align-items: center;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      gap: 16px;
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     }
 
-    .lightbox-title {
-      font-size: 0.95rem;
-      line-height: 1.4;
+    .lightbox h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      letter-spacing: -0.01em;
     }
 
-    .lightbox-actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    .lightbox-actions a,
-    .lightbox-actions button {
-      border: 1px solid var(--border);
-      background: var(--panel);
-      color: inherit;
-      padding: 8px 12px;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-
-    .lightbox-body {
+    .lightbox main {
       padding: 0;
+      flex: 1;
+      display: grid;
+      place-items: center;
+      background: #020306;
     }
 
-    .lightbox-body img {
-      display: block;
-      max-width: min(900px, 90vw);
-      max-height: min(70vh, 600px);
+    .lightbox img {
       width: 100%;
-      height: auto;
+      height: 100%;
       object-fit: contain;
-      background: #02050a;
+      background: #020306;
     }
 
-    @media (max-width: 640px) {
-      header {
-        padding-top: 24px;
-      }
+    .lightbox footer {
+      padding: 14px 20px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(8, 10, 20, 0.85);
+    }
 
-      .controls {
-        grid-template-columns: 1fr;
-      }
+    .lightbox .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
 
-      .card img {
-        height: 140px;
-      }
+    .lightbox button,
+    .lightbox a {
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.05);
+      color: inherit;
+      padding: 8px 14px;
+      border-radius: 12px;
+      text-decoration: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: border 0.2s ease, background 0.2s ease;
+    }
+
+    .lightbox button:hover,
+    .lightbox button:focus-visible,
+    .lightbox a:hover,
+    .lightbox a:focus-visible {
+      outline: none;
+      border-color: rgba(123, 197, 255, 0.6);
+      background: rgba(123, 197, 255, 0.16);
+    }
+
+    .empty {
+      padding: 60px 0;
+      text-align: center;
+      color: var(--muted);
+      font-size: 1rem;
     }
   </style>
 </head>
@@ -308,300 +351,337 @@
   <header>
     <div class="wrap">
       <h1>Digital Gratitude List</h1>
-      <p class="intro">Browse the gratitude catalog photographed in the Garage and Workshop collections. Use the filters to narrow the view and open any thumbnail for a closer look.</p>
+      <p class="intro">Browse every photographed treasure from the Garage and Workshop. Use the collection filters or search by name to find a specific tool, part, or keepsake. Tap an image for a closer look and download the original file if you want to keep a copy.</p>
     </div>
   </header>
 
   <main>
     <div class="wrap">
-      <section class="controls" aria-label="Gallery filters">
-        <div class="chips" id="folderChips" role="tablist" aria-label="Folders"></div>
+      <section class="panel" aria-label="Gallery controls">
+        <div class="chips" id="filterChips" role="tablist" aria-label="Collections">
+          <button class="chip active" data-filter="all" role="tab" aria-selected="true">All items</button>
+        </div>
         <label class="search">
           <span class="sr-only">Search images</span>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.71.71l.27.28v.79l4.25 4.25 1.49-1.49L15.5 14Zm-6 0a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9Z" />
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.71.71l.27.28v.79l5 4.99L20.49 19zM10.5 15a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9z" />
           </svg>
-          <input id="search" type="search" placeholder="Search titles" autocomplete="off">
+          <input id="searchInput" type="search" placeholder="Search by name or keyword" autocomplete="off" />
         </label>
       </section>
 
-      <div class="summary" id="summary"></div>
-      <div class="grid" id="grid" role="list"></div>
-      <nav class="pagination" id="pagination" aria-label="Gallery pagination"></nav>
+      <div class="summary" id="summary" aria-live="polite"></div>
+      <div class="grid" id="gallery" aria-live="polite"></div>
+      <nav class="pagination" id="pagination" aria-label="Pagination"></nav>
     </div>
   </main>
 
-  <dialog id="lightbox" aria-modal="true">
-    <div class="lightbox-head">
-      <div class="lightbox-title" id="lightboxTitle">Image</div>
-      <div class="lightbox-actions">
-        <a id="downloadLink" href="#" download>Download</a>
-        <a id="openLink" href="#" target="_blank" rel="noopener">Open original</a>
-        <button type="button" id="closeLightbox">Close</button>
-      </div>
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Image viewer">
+    <div class="lightbox-content">
+      <header>
+        <h2 id="lightboxTitle"></h2>
+        <button type="button" id="closeLightbox" aria-label="Close viewer">Close</button>
+      </header>
+      <main>
+        <img id="lightboxImage" alt="" />
+      </main>
+      <footer>
+        <span id="lightboxMeta"></span>
+        <div class="actions">
+          <button type="button" id="prevLightbox" aria-label="View previous image">Prev</button>
+          <button type="button" id="nextLightbox" aria-label="View next image">Next</button>
+          <a id="downloadLightbox" download>Download</a>
+          <a id="openLightbox" target="_blank" rel="noopener">Open original</a>
+        </div>
+      </footer>
     </div>
-    <div class="lightbox-body" id="lightboxBody"></div>
-  </dialog>
+  </div>
 
   <script>
     const PAGE_SIZE = 25;
-    const folderChips = document.getElementById('folderChips');
-    const searchInput = document.getElementById('search');
-    const grid = document.getElementById('grid');
-    const summary = document.getElementById('summary');
-    const pagination = document.getElementById('pagination');
-    const lightbox = document.getElementById('lightbox');
-    const lightboxTitle = document.getElementById('lightboxTitle');
-    const lightboxBody = document.getElementById('lightboxBody');
-    const closeLightbox = document.getElementById('closeLightbox');
-    const downloadLink = document.getElementById('downloadLink');
-    const openLink = document.getElementById('openLink');
-
-    const STATE = {
-      items: [],
-      folders: ['All'],
-      activeFolder: 'All',
-      query: '',
+    const state = {
+      assets: [],
+      filtered: [],
+      filter: 'all',
       page: 1,
+      query: '',
+      lightboxIndex: -1
     };
 
-    function normalise(str) {
-      return str.toLowerCase().replace(/[_-]+/g, ' ');
+    const galleryEl = document.getElementById('gallery');
+    const summaryEl = document.getElementById('summary');
+    const chipsEl = document.getElementById('filterChips');
+    const paginationEl = document.getElementById('pagination');
+    const searchInput = document.getElementById('searchInput');
+    const lightboxEl = document.getElementById('lightbox');
+    const lightboxImage = document.getElementById('lightboxImage');
+    const lightboxTitle = document.getElementById('lightboxTitle');
+    const lightboxMeta = document.getElementById('lightboxMeta');
+    const downloadLink = document.getElementById('downloadLightbox');
+    const openLink = document.getElementById('openLightbox');
+
+    const prevBtn = document.getElementById('prevLightbox');
+    const nextBtn = document.getElementById('nextLightbox');
+    const closeBtn = document.getElementById('closeLightbox');
+
+    function formatTitle(name) {
+      return name
+        .replace(/\.[^.]+$/, '')
+        .replace(/[\-_]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .replace(/\b([a-z])/g, (s) => s.toUpperCase());
     }
 
-    function describeFolder(folder) {
-      if (folder === '.' || !folder) {
-        return 'Digital Gratitude List';
-      }
+    function formatFolder(folder) {
       return folder
         .split('/')
-        .map((part) => part.trim())
-        .filter(Boolean)
-        .join(' / ');
+        .map((part) => part
+          .replace(/[\-_]+/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .replace(/\b([a-z])/g, (s) => s.toUpperCase())
+        )
+        .join(' › ');
     }
 
-    function encodeAssetPath(folder, name) {
-      const parts = ['Digital_Gratitude_List'];
-      if (folder && folder !== '.') {
-        parts.push(...folder.split('/'));
+    async function loadManifest() {
+      try {
+        const response = await fetch('Digital_Gratitude_List/manifest.json');
+        if (!response.ok) {
+          throw new Error('Could not load manifest');
+        }
+        const manifest = await response.json();
+        const assets = [];
+        for (const [folder, files] of Object.entries(manifest)) {
+          for (const file of files) {
+            assets.push({
+              folder,
+              file,
+              title: formatTitle(file),
+              folderLabel: formatFolder(folder),
+              path: `Digital_Gratitude_List/${folder}/${encodeURIComponent(file).replace(/%2F/g, '/')}`
+            });
+          }
+        }
+        assets.sort((a, b) => a.title.localeCompare(b.title));
+        state.assets = assets;
+        buildFilters();
+        applyFilters();
+      } catch (error) {
+        galleryEl.innerHTML = `<p class="empty">${error.message}. Double-check that <code>manifest.json</code> exists in the <code>Digital_Gratitude_List</code> folder.</p>`;
       }
-      parts.push(name);
-      return parts.map((segment) => encodeURIComponent(segment)).join('/');
     }
 
-    function buildItems(manifest) {
-      const entries = Object.entries(manifest);
-      const items = entries.flatMap(([folder, files]) =>
-        files.map((file) => ({
-          name: file,
-          folder,
-          path: encodeAssetPath(folder, file),
-        }))
-      );
-      return items.sort((a, b) => a.name.localeCompare(b.name));
-    }
-
-    function getFilteredItems() {
-      return STATE.items.filter((item) => {
-        const matchesFolder = STATE.activeFolder === 'All' || item.folder === STATE.activeFolder;
-        const matchesQuery =
-          !STATE.query ||
-          normalise(item.name).includes(STATE.query) ||
-          normalise(describeFolder(item.folder)).includes(STATE.query);
-        return matchesFolder && matchesQuery;
-      });
-    }
-
-    function renderChips() {
-      folderChips.innerHTML = '';
-      STATE.folders.forEach((folder) => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = `chip${folder === STATE.activeFolder ? ' active' : ''}`;
-        btn.textContent = folder === 'All' ? 'All' : describeFolder(folder);
-        btn.dataset.folder = folder;
-        btn.addEventListener('click', () => {
-          STATE.activeFolder = folder;
-          STATE.page = 1;
-          render();
+    function buildFilters() {
+      const folders = Array.from(new Set(state.assets.map((asset) => asset.folder)));
+      const fragment = document.createDocumentFragment();
+      folders.sort((a, b) => a.localeCompare(b));
+      for (const folder of folders) {
+        const button = document.createElement('button');
+        button.className = 'chip';
+        button.type = 'button';
+        button.dataset.filter = folder;
+        button.role = 'tab';
+        button.textContent = formatFolder(folder);
+        button.setAttribute('aria-selected', 'false');
+        button.addEventListener('click', () => {
+          if (state.filter === folder) {
+            return;
+          }
+          state.filter = folder;
+          state.page = 1;
+          updateFilterSelection();
+          applyFilters();
         });
-        folderChips.appendChild(btn);
+        fragment.appendChild(button);
+      }
+      chipsEl.appendChild(fragment);
+
+      chipsEl.addEventListener('click', (event) => {
+        const target = event.target.closest('button.chip');
+        if (!target) {
+          return;
+        }
+        if (target.dataset.filter === 'all' && state.filter !== 'all') {
+          state.filter = 'all';
+          state.page = 1;
+          updateFilterSelection();
+          applyFilters();
+        }
+      });
+
+      updateFilterSelection();
+    }
+
+    function updateFilterSelection() {
+      const buttons = chipsEl.querySelectorAll('button.chip');
+      buttons.forEach((button) => {
+        const isActive = button.dataset.filter === state.filter || (state.filter === 'all' && button.dataset.filter === 'all');
+        button.classList.toggle('active', isActive);
+        button.setAttribute('aria-selected', isActive ? 'true' : 'false');
       });
     }
 
-    function renderGrid(items) {
-      grid.innerHTML = '';
-      if (!STATE.items.length) {
-        const placeholder = document.createElement('p');
-        placeholder.textContent = 'Loading images…';
-        placeholder.style.color = 'var(--muted)';
-        grid.appendChild(placeholder);
+    function applyFilters() {
+      const query = state.query.trim().toLowerCase();
+      const byFolder = state.filter === 'all'
+        ? state.assets
+        : state.assets.filter((asset) => asset.folder === state.filter);
+      state.filtered = query
+        ? byFolder.filter((asset) => asset.title.toLowerCase().includes(query))
+        : byFolder.slice();
+      state.page = Math.min(state.page, Math.max(1, Math.ceil(state.filtered.length / PAGE_SIZE)) || 1);
+      render();
+    }
+
+    function render() {
+      const total = state.filtered.length;
+      if (!total) {
+        galleryEl.innerHTML = '<p class="empty">No images match your filters yet. Try a different search term or switch collections.</p>';
+        paginationEl.innerHTML = '';
+        paginationEl.style.display = 'none';
+        summaryEl.textContent = 'No items to show.';
         return;
       }
 
-      if (!items.length) {
-        const empty = document.createElement('p');
-        empty.textContent = 'No items match your filters yet.';
-        empty.style.color = 'var(--muted)';
-        grid.appendChild(empty);
-        return;
-      }
+      const startIndex = (state.page - 1) * PAGE_SIZE;
+      const endIndex = Math.min(startIndex + PAGE_SIZE, total);
+      const pageItems = state.filtered.slice(startIndex, endIndex);
 
-      items.forEach((item) => {
-        const card = document.createElement('button');
-        card.type = 'button';
+      const fragment = document.createDocumentFragment();
+      pageItems.forEach((asset, index) => {
+        const card = document.createElement('article');
         card.className = 'card';
-        card.setAttribute('role', 'listitem');
-        card.innerHTML = `
-          <img src="${item.path}" alt="${item.name}">
-          <div class="meta">
-            <div class="name">${item.name}</div>
-            <div class="folder">${describeFolder(item.folder)}</div>
-          </div>
-        `;
-        card.addEventListener('click', () => openLightbox(item));
-        grid.appendChild(card);
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.addEventListener('click', () => openLightbox(startIndex + index));
+
+        const img = document.createElement('img');
+        img.src = asset.path;
+        img.alt = `${asset.title} — ${asset.folderLabel}`;
+        img.loading = 'lazy';
+        button.appendChild(img);
+
+        const footer = document.createElement('footer');
+        const title = document.createElement('div');
+        title.className = 'title';
+        title.textContent = asset.title;
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.textContent = asset.folderLabel;
+        footer.append(title, meta);
+
+        card.append(button, footer);
+        fragment.appendChild(card);
       });
-    }
 
-    function renderPagination(totalItems) {
-      pagination.innerHTML = '';
-      const totalPages = Math.ceil(totalItems / PAGE_SIZE);
-      if (totalPages <= 1) {
-        pagination.hidden = true;
-        return;
-      }
-      pagination.hidden = false;
+      galleryEl.innerHTML = '';
+      galleryEl.appendChild(fragment);
 
+      const pageCount = Math.ceil(total / PAGE_SIZE);
+      summaryEl.innerHTML = `<strong>${total}</strong> item${total === 1 ? '' : 's'} found · showing <strong>${startIndex + 1}–${endIndex}</strong> · page <strong>${state.page}</strong> of <strong>${pageCount}</strong>`;
+
+      paginationEl.innerHTML = '';
       const prev = document.createElement('button');
       prev.type = 'button';
       prev.textContent = 'Previous';
-      prev.disabled = STATE.page === 1;
+      prev.disabled = state.page === 1;
       prev.addEventListener('click', () => {
-        if (STATE.page > 1) {
-          STATE.page--;
+        if (state.page > 1) {
+          state.page -= 1;
           render();
         }
       });
-
       const next = document.createElement('button');
       next.type = 'button';
       next.textContent = 'Next';
-      next.disabled = STATE.page >= totalPages;
+      next.disabled = state.page === pageCount;
       next.addEventListener('click', () => {
-        if (STATE.page < totalPages) {
-          STATE.page++;
+        if (state.page < pageCount) {
+          state.page += 1;
           render();
         }
       });
-
-      const indicator = document.createElement('span');
-      indicator.textContent = `Page ${STATE.page} of ${totalPages}`;
-
-      pagination.append(prev, indicator, next);
+      paginationEl.append(prev, next);
+      paginationEl.style.display = pageCount > 1 ? 'flex' : 'none';
     }
 
-    function renderSummary(totalItems) {
-      if (!STATE.items.length) {
-        summary.textContent = 'Loading images…';
-        return;
-      }
+    function openLightbox(index) {
+      state.lightboxIndex = index;
+      const asset = state.filtered[index];
+      if (!asset) return;
 
-      if (!totalItems) {
-        summary.textContent = 'No items to show.';
-        return;
-      }
-      const start = (STATE.page - 1) * PAGE_SIZE + 1;
-      const end = Math.min(start + PAGE_SIZE - 1, totalItems);
-      summary.textContent = `${start}–${end} of ${totalItems} ${totalItems === 1 ? 'item' : 'items'}`;
+      lightboxTitle.textContent = asset.title;
+      lightboxMeta.textContent = asset.folderLabel;
+      lightboxImage.src = asset.path;
+      lightboxImage.alt = asset.title;
+      downloadLink.href = asset.path;
+      downloadLink.download = asset.file;
+      openLink.href = asset.path;
+
+      lightboxEl.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      updateLightboxButtons();
     }
 
-    function openLightbox(item) {
-      lightboxTitle.textContent = `${item.name} (${describeFolder(item.folder)})`;
-      lightboxBody.innerHTML = '';
-      const img = document.createElement('img');
-      img.src = item.path;
-      img.alt = item.name;
-      lightboxBody.appendChild(img);
-
-      downloadLink.href = item.path;
-      downloadLink.download = item.name;
-      openLink.href = item.path;
-
-      if (typeof lightbox.showModal === 'function' && !lightbox.open) {
-        lightbox.showModal();
-      }
+    function closeLightbox() {
+      lightboxEl.classList.remove('open');
+      document.body.style.overflow = '';
+      state.lightboxIndex = -1;
     }
 
-    closeLightbox.addEventListener('click', () => {
-      if (lightbox.open) {
-        lightbox.close();
+    function updateLightboxButtons() {
+      prevBtn.disabled = state.lightboxIndex <= 0;
+      nextBtn.disabled = state.lightboxIndex >= state.filtered.length - 1;
+    }
+
+    prevBtn.addEventListener('click', () => {
+      if (state.lightboxIndex > 0) {
+        openLightbox(state.lightboxIndex - 1);
       }
     });
 
-    lightbox.addEventListener('cancel', (event) => {
-      event.preventDefault();
-      lightbox.close();
+    nextBtn.addEventListener('click', () => {
+      if (state.lightboxIndex < state.filtered.length - 1) {
+        openLightbox(state.lightboxIndex + 1);
+      }
     });
 
-    function render() {
-      const filtered = getFilteredItems();
-      const total = filtered.length;
-      const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-      if (STATE.page > totalPages) {
-        STATE.page = totalPages;
+    closeBtn.addEventListener('click', closeLightbox);
+
+    lightboxEl.addEventListener('click', (event) => {
+      if (event.target === lightboxEl) {
+        closeLightbox();
       }
-      const startIndex = (STATE.page - 1) * PAGE_SIZE;
-      const pageItems = filtered.slice(startIndex, startIndex + PAGE_SIZE);
-      renderGrid(pageItems);
-      renderPagination(total);
-      renderSummary(total);
-      Array.from(folderChips.children).forEach((chip) => {
-        chip.classList.toggle('active', chip.dataset.folder === STATE.activeFolder);
-      });
-    }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (!lightboxEl.classList.contains('open')) {
+        return;
+      }
+      if (event.key === 'Escape') {
+        closeLightbox();
+      }
+      if (event.key === 'ArrowLeft' && state.lightboxIndex > 0) {
+        openLightbox(state.lightboxIndex - 1);
+      }
+      if (event.key === 'ArrowRight' && state.lightboxIndex < state.filtered.length - 1) {
+        openLightbox(state.lightboxIndex + 1);
+      }
+    });
 
     searchInput.addEventListener('input', (event) => {
-      if (!STATE.items.length) {
-        return;
-      }
-      STATE.query = normalise(event.target.value.trim());
-      STATE.page = 1;
-      render();
+      state.query = event.target.value;
+      state.page = 1;
+      applyFilters();
     });
 
-    async function init() {
-      summary.textContent = 'Loading images…';
-      grid.innerHTML = '';
-      pagination.hidden = true;
-      try {
-        const response = await fetch('Digital_Gratitude_List/manifest.json', { cache: 'no-store' });
-        if (!response.ok) {
-          throw new Error(`Failed to load manifest: ${response.status}`);
-        }
-        const manifest = await response.json();
-        const folders = Object.keys(manifest).sort((a, b) => a.localeCompare(b));
-        STATE.items = buildItems(manifest);
-        STATE.folders = ['All', ...folders];
-        if (!STATE.items.length) {
-          summary.textContent = 'No images available yet.';
-          return;
-        }
-        renderChips();
-        render();
-      } catch (error) {
-        console.error(error);
-        summary.textContent = 'Could not load gallery data.';
-        grid.innerHTML = '';
-        const errorMessage = document.createElement('p');
-        errorMessage.textContent = 'Something went wrong while loading the gallery.';
-        errorMessage.style.color = 'var(--muted)';
-        grid.appendChild(errorMessage);
-      }
-    }
-
-    init();
+    document.addEventListener('DOMContentLoaded', () => {
+      updateFilterSelection();
+      loadManifest();
+    });
   </script>
-
 </body>
 </html>
