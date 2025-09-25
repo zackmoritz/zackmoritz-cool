@@ -67,6 +67,7 @@
         border-right: none !important;
         border-bottom: 1px solid rgba(255, 255, 255, 0.06);
       }
+
     }
 
     aside {
@@ -164,6 +165,7 @@
 
     section.gallery-view {
       background: var(--panel-alt);
+
       display: flex;
       flex-direction: column;
       min-height: 0;
@@ -220,8 +222,10 @@
       color: var(--muted);
     }
 
-    .pagination[hidden] {
-      display: none;
+    .breadcrumbs span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .pagination button {
@@ -758,6 +762,7 @@
       }
 
       for (const item of pagedFiles) {
+
         const card = document.createElement('article');
         card.className = 'card';
         const button = document.createElement('button');
