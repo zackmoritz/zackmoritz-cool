@@ -94,12 +94,55 @@
       overflow: hidden;
       border: 2px solid rgba(255, 255, 255, 0.12);
       box-shadow: 0 12px 24px rgba(3, 6, 22, 0.65);
+      display: grid;
+      place-items: center;
+      min-height: 220px;
+      background: linear-gradient(140deg, rgba(24, 33, 62, 0.85), rgba(12, 16, 32, 0.9));
     }
 
     .portrait img {
       display: block;
       width: 100%;
       height: auto;
+<<      grid-area: 1 / 1;
+    }
+
+    .portrait-placeholder {
+      grid-area: 1 / 1;
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      align-items: center;
+      text-align: center;
+      padding: 24px;
+      background: radial-gradient(circle at 50% 30%, rgba(154, 215, 255, 0.2), transparent 65%),
+                  radial-gradient(circle at 50% 70%, rgba(255, 216, 107, 0.12), transparent 70%);
+      border: 1px dashed rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+    }
+
+    .portrait-placeholder strong {
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.72);
+    }
+
+    .portrait-placeholder span {
+      font-size: 0.75rem;
+      color: rgba(244, 247, 251, 0.68);
+      letter-spacing: 0.05em;
+    }
+
+    .portrait--missing img {
+      display: none;
+    }
+
+    .portrait--missing .portrait-placeholder {
+      display: flex;
+>>>>>>> codex/edit-inde
+=====
+>>>>>>> origin/main
     }
 
     .card-text {
@@ -177,9 +220,17 @@
         <p class="card-role">Creative Human</p>
       </header>
 
-      <figure class="portrait">
-        <img src="images/IMG_2455.jpg" alt="Portrait of Zachary Moritz">
-      </figure>
+      <figure class="portrait" data-portrait-slot>
+        <img src="images/IMG_2455.jpg"
+             alt="Portrait of Zachary Moritz"
+             loading="lazy"
+             onload="this.closest('.portrait').classList.remove('portrait--missing')"
+             onerror="this.closest('.portrait').classList.add('portrait--missing')">
+        <div class="portrait-placeholder" aria-hidden="true">
+          <strong>Portrait Missing</strong>
+          <span>Add images/IMG_2455.jpg to display Zachary's photo.</span>
+        </div>
+    </figure>
 
       <section class="card-text">
         <p><strong>Origin Story:</strong> Zachary channels curiosity, compassion, and a dash of cosmic wonder into everything he touches. This legendary card celebrates the person beyond the stats.</p>
