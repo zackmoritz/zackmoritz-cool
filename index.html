@@ -167,6 +167,10 @@
       gap: 16px;
     }
 
+    .zodiac-module[data-open="false"] .zodiac-panel {
+      display: none;
+    }
+
     .zodiac-root-button {
       width: 100%;
       border: 1px solid rgba(255, 255, 255, 0.1);
@@ -190,6 +194,10 @@
       outline: none;
       border-color: rgba(255, 216, 107, 0.6);
       transform: translateY(-1px);
+    }
+
+    .zodiac-root-button[aria-expanded="true"] .zodiac-chevron {
+      transform: rotate(90deg);
     }
 
     .zodiac-panel {
@@ -351,7 +359,7 @@
         <p><strong>Origin Story:</strong> Zachary channels curiosity, compassion, and a dash of cosmic wonder into everything he touches. This legendary card celebrates the person beyond the stats.</p>
       </section>
 
-      <section class="zodiac-module" aria-label="Zodiac placements menu">
+      <section class="zodiac-module" aria-label="Zodiac placements menu" data-open="false">
         <button class="zodiac-root-button" type="button" aria-expanded="false" aria-controls="zodiac-panel">
           <span>Zodiac Signs</span>
           <span class="zodiac-chevron" aria-hidden="true">›</span>
@@ -548,17 +556,25 @@
     </article>
   </div>
   <script>
+    const zodiacModule = document.querySelector('.zodiac-module');
     const zodiacRootButton = document.querySelector('.zodiac-root-button');
     const zodiacPanel = document.getElementById('zodiac-panel');
     const zodiacItemButtons = zodiacPanel ? Array.from(zodiacPanel.querySelectorAll('.zodiac-item button')) : [];
 
-    if (zodiacRootButton && zodiacPanel) {
+    if (zodiacModule && zodiacRootButton && zodiacPanel) {
+      zodiacModule.setAttribute('data-open', 'false');
+      zodiacRootButton.setAttribute('aria-expanded', 'false');
+      zodiacPanel.hidden = true;
+
       zodiacRootButton.addEventListener('click', () => {
         const expanded = zodiacRootButton.getAttribute('aria-expanded') === 'true';
-        zodiacRootButton.setAttribute('aria-expanded', String(!expanded));
-        zodiacPanel.hidden = expanded;
+        const nextState = !expanded;
 
-        if (expanded) {
+        zodiacRootButton.setAttribute('aria-expanded', String(nextState));
+        zodiacModule.setAttribute('data-open', String(nextState));
+        zodiacPanel.hidden = !nextState;
+
+        if (!nextState) {
           zodiacItemButtons.forEach((button) => {
             button.setAttribute('aria-expanded', 'false');
             const content = document.getElementById(button.getAttribute('aria-controls') || '');
