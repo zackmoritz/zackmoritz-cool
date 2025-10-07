@@ -156,6 +156,122 @@
       letter-spacing: 0.04em;
     }
 
+    .zodiac-module {
+      z-index: 1;
+      background: var(--section-bg);
+      border-radius: 10px;
+      padding: 16px;
+      box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .zodiac-root-button {
+      width: 100%;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: linear-gradient(90deg, rgba(18, 24, 42, 0.75), rgba(32, 38, 58, 0.9));
+      color: #f4f7fb;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .zodiac-root-button:hover,
+    .zodiac-root-button:focus-visible {
+      outline: none;
+      border-color: rgba(255, 216, 107, 0.6);
+      transform: translateY(-1px);
+    }
+
+    .zodiac-panel {
+      display: grid;
+      gap: 14px;
+    }
+
+    .zodiac-intro {
+      margin: 0;
+      font-size: 0.85rem;
+      color: rgba(244, 247, 251, 0.75);
+      line-height: 1.6;
+    }
+
+    .zodiac-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .zodiac-item {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      background: rgba(18, 24, 42, 0.72);
+      overflow: hidden;
+    }
+
+    .zodiac-item button {
+      width: 100%;
+      text-align: left;
+      border: none;
+      background: transparent;
+      color: #f4f7fb;
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.95rem;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .zodiac-item button:hover,
+    .zodiac-item button:focus-visible {
+      outline: none;
+      background: rgba(255, 216, 107, 0.14);
+    }
+
+    .zodiac-item-label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .zodiac-item-label strong {
+      font-size: 0.92rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #ffd86b;
+    }
+
+    .zodiac-item-label span {
+      font-size: 0.78rem;
+      color: rgba(244, 247, 251, 0.7);
+    }
+
+    .zodiac-item-content {
+      padding: 0 16px 16px;
+      font-size: 0.86rem;
+      line-height: 1.6;
+      color: rgba(244, 247, 251, 0.82);
+    }
+
+    .zodiac-chevron {
+      font-size: 1.2rem;
+      transition: transform 0.2s ease;
+    }
+
+    .zodiac-item button[aria-expanded="true"] .zodiac-chevron {
+      transform: rotate(90deg);
+    }
+
     .stat-grid {
       z-index: 1;
       display: grid;
@@ -235,6 +351,174 @@
         <p><strong>Origin Story:</strong> Zachary channels curiosity, compassion, and a dash of cosmic wonder into everything he touches. This legendary card celebrates the person beyond the stats.</p>
       </section>
 
+      <section class="zodiac-module" aria-label="Zodiac placements menu">
+        <button class="zodiac-root-button" type="button" aria-expanded="false" aria-controls="zodiac-panel">
+          <span>Zodiac Signs</span>
+          <span class="zodiac-chevron" aria-hidden="true">›</span>
+        </button>
+        <div id="zodiac-panel" class="zodiac-panel" hidden>
+          <p class="zodiac-intro">Tap any placement to see the key takeaway from your Cafe Astrology natal chart report.</p>
+          <div class="zodiac-list">
+            <section class="zodiac-item">
+              <button type="button" aria-expanded="false" aria-controls="zodiac-sun">
+                <span class="zodiac-item-label">
+                  <strong>Sun · Pisces</strong>
+                  <span>25°26′ · 3rd House</span>
+                </span>
+                <span class="zodiac-chevron" aria-hidden="true">›</span>
+              </button>
+              <div id="zodiac-sun" class="zodiac-item-content" hidden>
+                Your Pisces Sun lends you adaptable, compassionate energy with a poetic streak. You intuitively understand many viewpoints and channel that empathy into creative communication and storytelling.
+              </div>
+            </section>
+            <section class="zodiac-item">
+              <button type="button" aria-expanded="false" aria-controls="zodiac-moon">
+                <span class="zodiac-item-label">
+                  <strong>Moon · Taurus</strong>
+                  <span>8°38′ · 5th House</span>
+                </span>
+                <span class="zodiac-chevron" aria-hidden="true">›</span>
+              </button>
+              <div id="zodiac-moon" class="zodiac-item-content" hidden>
+                A Taurus Moon seeks familiar comforts and steady rhythms. You ground yourself through sensory pleasures, loyal bonds, and creative play that feels safe yet indulgent.
+              </div>
+            </section>
+            <section class="zodiac-item">
+              <button type="button" aria-expanded="false" aria-controls="zodiac-mercury">
+                <span class="zodiac-item-label">
+                  <strong>Mercury · Aquarius</strong>
+                  <span>27°56′ · 3rd House</span>
+                </span>
+                <span class="zodiac-chevron" aria-hidden="true">›</span>
+              </button>
+              <div id="zodiac-mercury" class="zodiac-item-content" hidden>
+                Mercury in Aquarius gives you quirky insight and a love of debate. You notice patterns others miss and enjoy swapping fresh ideas, keeping multiple conversations and curiosities in motion.
+              </div>
+            </section>
+            <section class="zodiac-item">
+              <button type="button" aria-expanded="false" aria-controls="zodiac-venus">
+                <span class="zodiac-item-label">
+                  <strong>Venus · Aries</strong>
+                  <span>9°31′ · 4th House</span>
+                </span>
+                <span class="zodiac-chevron" aria-hidden="true">›</span>
+              </button>
+              <div id="zodiac-venus" class="zodiac-item-content" hidden>
+                Venus in Aries flirts boldly and thrives on spontaneity. You keep relationships exciting, leading with passion, playfulness, and a craving for action-packed love.
+              </div>
+            </section>
+            <section class="zodiac-item">
+              <button type="button" aria-expanded="false" aria-controls="zodiac-mars">
+                <span class="zodiac-item-label">
+                  <strong>Mars · Pisces</strong>
+                  <span>6°56′ · 3rd House</span>
+                </span>
+                <span class="zodiac-chevron" aria-hidden="true">›</span>
+              </button>
+              <div id="zodiac-mars" class="zodiac-item-content" hidden>
+                With Mars in Pisces, your drive is compassionate and adaptive. You act through intuition, channeling energy into creative expression and gentle yet persistent problem solving.
+              </div>
+            </section>
+            <section class="zodiac-item">
+              <button type="button" aria-expanded="false" aria-controls="zodiac-jupiter">
+                <span class="zodiac-item-label">
+                  <strong>Jupiter · Scorpio</strong>
+                  <span>14°16′ · 11th House</span>
+                </span>
+                <span class="zodiac-chevron" aria-hidden="true">›</span>
+              </button>
+              <div id="zodiac-jupiter" class="zodiac-item-content" hidden>
+                Jupiter in Scorpio rewards your all-or-nothing focus. You grow through deep research, healing collaborations, and committing fully to causes that transform communities.
+              </div>
+            </section>
+            <section class="zodiac-item">
+              <button type="button" aria-expanded="false" aria-controls="zodiac-saturn">
+                <span class="zodiac-item-label">
+                  <strong>Saturn · Pisces</strong>
+                  <span>5°33′ · 3rd House</span>
+                </span>
+                <span class="zodiac-chevron" aria-hidden="true">›</span>
+              </button>
+              <div id="zodiac-saturn" class="zodiac-item-content" hidden>
+                Saturn in Pisces invites boundaries around compassion. You take communication seriously, preferring thoughtful, focused learning and conversations that honor sincerity.
+              </div>
+            </section>
+            <section class="zodiac-item">
+              <button type="button" aria-expanded="false" aria-controls="zodiac-uranus">
+                <span class="zodiac-item-label">
+                  <strong>Uranus · Capricorn</strong>
+                  <span>25°29′ · 2nd House</span>
+                </span>
+                <span class="zodiac-chevron" aria-hidden="true">›</span>
+              </button>
+              <div id="zodiac-uranus" class="zodiac-item-content" hidden>
+                Uranus in Capricorn rebels through strategy. You’re driven to redefine success on your own terms and shine when your work allows unconventional approaches and constant evolution.
+              </div>
+            </section>
+            <section class="zodiac-item">
+              <button type="button" aria-expanded="false" aria-controls="zodiac-neptune">
+                <span class="zodiac-item-label">
+                  <strong>Neptune · Capricorn</strong>
+                  <span>22°55′ · 2nd House</span>
+                </span>
+                <span class="zodiac-chevron" aria-hidden="true">›</span>
+              </button>
+              <div id="zodiac-neptune" class="zodiac-item-content" hidden>
+                Neptune in Capricorn blends vision with pragmatism. You’re discerning with dreams, yet need grounded financial plans so creative pursuits and idealism can flourish responsibly.
+              </div>
+            </section>
+            <section class="zodiac-item">
+              <button type="button" aria-expanded="false" aria-controls="zodiac-pluto">
+                <span class="zodiac-item-label">
+                  <strong>Pluto · Scorpio</strong>
+                  <span>28°01′ · 12th House</span>
+                </span>
+                <span class="zodiac-chevron" aria-hidden="true">›</span>
+              </button>
+              <div id="zodiac-pluto" class="zodiac-item-content" hidden>
+                Pluto in Scorpio fuels potent transformation. You possess magnetic willpower and can channel it into healing, leadership, and reshaping systems with depth and integrity.
+              </div>
+            </section>
+            <section class="zodiac-item">
+              <button type="button" aria-expanded="false" aria-controls="zodiac-ascendant">
+                <span class="zodiac-item-label">
+                  <strong>Ascendant · Sagittarius</strong>
+                  <span>7°53′</span>
+                </span>
+                <span class="zodiac-chevron" aria-hidden="true">›</span>
+              </button>
+              <div id="zodiac-ascendant" class="zodiac-item-content" hidden>
+                Sagittarius rising greets life with optimism and candor. You radiate curiosity, keep the mood light with humor, and inspire others through hopeful big-picture perspectives.
+              </div>
+            </section>
+            <section class="zodiac-item">
+              <button type="button" aria-expanded="false" aria-controls="zodiac-midheaven">
+                <span class="zodiac-item-label">
+                  <strong>Midheaven · Virgo</strong>
+                  <span>26°45′</span>
+                </span>
+                <span class="zodiac-chevron" aria-hidden="true">›</span>
+              </button>
+              <div id="zodiac-midheaven" class="zodiac-item-content" hidden>
+                A Virgo Midheaven points to purposeful service. You’re drawn to careers that merge precision, care, and tangible support—health, wellness, and social impact paths all resonate.
+              </div>
+            </section>
+            <section class="zodiac-item">
+              <button type="button" aria-expanded="false" aria-controls="zodiac-node">
+                <span class="zodiac-item-label">
+                  <strong>North Node · Scorpio</strong>
+                  <span>25°57′ · 12th House</span>
+                </span>
+                <span class="zodiac-chevron" aria-hidden="true">›</span>
+              </button>
+              <div id="zodiac-node" class="zodiac-item-content" hidden>
+                Your Scorpio North Node in the twelfth house asks you to share power, embrace transformation, and trust your intuition. Growth comes from vulnerability, spiritual practice, and going all in with healing work.
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+
       <section class="stat-grid" aria-label="Core stats">
         <div class="stat-block">
           <h3>Energy</h3>
@@ -259,9 +543,57 @@
       </section>
 
       <footer class="footer-banner">
-        Future add-ons incoming: natal chart, contact info, and real-time stats.
+        Quick menu pulled from your Cafe Astrology natal chart—more cosmic modules coming soon.
       </footer>
     </article>
   </div>
+  <script>
+    const zodiacRootButton = document.querySelector('.zodiac-root-button');
+    const zodiacPanel = document.getElementById('zodiac-panel');
+    const zodiacItemButtons = zodiacPanel ? Array.from(zodiacPanel.querySelectorAll('.zodiac-item button')) : [];
+
+    if (zodiacRootButton && zodiacPanel) {
+      zodiacRootButton.addEventListener('click', () => {
+        const expanded = zodiacRootButton.getAttribute('aria-expanded') === 'true';
+        zodiacRootButton.setAttribute('aria-expanded', String(!expanded));
+        zodiacPanel.hidden = expanded;
+
+        if (expanded) {
+          zodiacItemButtons.forEach((button) => {
+            button.setAttribute('aria-expanded', 'false');
+            const content = document.getElementById(button.getAttribute('aria-controls') || '');
+            if (content) {
+              content.hidden = true;
+            }
+          });
+        }
+      });
+    }
+
+    zodiacItemButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const expanded = button.getAttribute('aria-expanded') === 'true';
+        const contentId = button.getAttribute('aria-controls') || '';
+        const content = document.getElementById(contentId);
+
+        if (!expanded) {
+          zodiacItemButtons.forEach((other) => {
+            if (other !== button) {
+              other.setAttribute('aria-expanded', 'false');
+              const otherContent = document.getElementById(other.getAttribute('aria-controls') || '');
+              if (otherContent) {
+                otherContent.hidden = true;
+              }
+            }
+          });
+        }
+
+        button.setAttribute('aria-expanded', String(!expanded));
+        if (content) {
+          content.hidden = expanded;
+        }
+      });
+    });
+  </script>
 </body>
 </html>
