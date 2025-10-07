@@ -156,6 +156,93 @@
       letter-spacing: 0.04em;
     }
 
+    .natal-menu {
+      z-index: 1;
+      background: var(--section-bg);
+      border-radius: 10px;
+      padding: 16px;
+      box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .natal-menu h2 {
+      margin: 0;
+      font-size: 0.95rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .natal-menu ul {
+      margin: 0;
+      padding-left: 0;
+      list-style: none;
+      display: grid;
+      gap: 8px;
+    }
+
+    .natal-menu a {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: rgba(18, 24, 42, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      text-decoration: none;
+      color: #f4f7fb;
+      font-size: 0.9rem;
+      letter-spacing: 0.04em;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .natal-menu a:hover,
+    .natal-menu a:focus-visible {
+      transform: translateY(-2px);
+      border-color: rgba(255, 216, 107, 0.6);
+      outline: none;
+    }
+
+    .natal-menu .menu-label {
+      font-weight: 600;
+      color: #ffd86b;
+    }
+
+    .natal-menu .menu-detail {
+      font-size: 0.8rem;
+      color: rgba(244, 247, 251, 0.7);
+    }
+
+    .natal-insights {
+      z-index: 1;
+      display: grid;
+      gap: 12px;
+    }
+
+    .insight-card {
+      background: var(--section-bg);
+      border-radius: 10px;
+      padding: 14px 16px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .insight-card h3 {
+      margin: 0 0 6px;
+      font-size: 0.95rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.72);
+    }
+
+    .insight-card p {
+      margin: 0;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      color: rgba(244, 247, 251, 0.82);
+    }
+
     .stat-grid {
       z-index: 1;
       display: grid;
@@ -235,6 +322,40 @@
         <p><strong>Origin Story:</strong> Zachary channels curiosity, compassion, and a dash of cosmic wonder into everything he touches. This legendary card celebrates the person beyond the stats.</p>
       </section>
 
+      <nav class="natal-menu" aria-label="Natal chart quick menu">
+        <h2>Natal Chart Highlights</h2>
+        <ul>
+          <li><a href="#sun-sign"><span class="menu-label">Sun</span><span class="menu-detail">Pisces · 25°26′ · 3rd House</span></a></li>
+          <li><a href="#moon-sign"><span class="menu-label">Moon</span><span class="menu-detail">Taurus · 8°38′ · 5th House</span></a></li>
+          <li><a href="#mars-sign"><span class="menu-label">Mars</span><span class="menu-detail">Pisces · 6°56′ · 3rd House</span></a></li>
+          <li><a href="#ascendant"><span class="menu-label">Ascendant</span><span class="menu-detail">Sagittarius Rising · 7°53′</span></a></li>
+          <li><a href="#midheaven"><span class="menu-label">Midheaven</span><span class="menu-detail">Virgo MC · 26°45′</span></a></li>
+        </ul>
+      </nav>
+
+      <section class="natal-insights" aria-label="Natal chart insights">
+        <article id="sun-sign" class="insight-card">
+          <h3>Sun in Pisces (3rd House)</h3>
+          <p>Your core identity is fluid, intuitive, and expressive, finding its center in storytelling and close connections that keep your mind engaged.</p>
+        </article>
+        <article id="moon-sign" class="insight-card">
+          <h3>Moon in Taurus (5th House)</h3>
+          <p>Emotionally, you gravitate toward steady comforts and creative play, nourishing yourself through art, romance, and sensory experiences.</p>
+        </article>
+        <article id="mars-sign" class="insight-card">
+          <h3>Mars in Pisces (3rd House)</h3>
+          <p>Your drive moves like water—adaptive yet purposeful—fueling compassionate communication and imaginative problem solving.</p>
+        </article>
+        <article id="ascendant" class="insight-card">
+          <h3>Sagittarius Ascendant</h3>
+          <p>You meet the world with open horizons, leading with optimism, candor, and a seeker’s curiosity that invites big adventures.</p>
+        </article>
+        <article id="midheaven" class="insight-card">
+          <h3>Midheaven in Virgo</h3>
+          <p>Your public path thrives on precision and service, crafting offerings that are thoughtful, dependable, and tuned to what people need.</p>
+        </article>
+      </section>
+
       <section class="stat-grid" aria-label="Core stats">
         <div class="stat-block">
           <h3>Energy</h3>
@@ -259,7 +380,7 @@
       </section>
 
       <footer class="footer-banner">
-        Future add-ons incoming: natal chart, contact info, and real-time stats.
+        Quick menu pulled from your Cafe Astrology natal chart—more cosmic modules coming soon.
       </footer>
     </article>
   </div>
