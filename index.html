@@ -217,15 +217,17 @@
         <p class="card-role">Creative Human</p>
       </header>
 
-      <figure class="portrait portrait--missing"
-              data-portrait-slot
-              data-portrait-candidates="/images/Suit.jpg,/images/suit.jpg,images/Suit.jpg,images/suit.jpg,./images/Suit.jpg">
-        <img alt="Portrait of Zachary Moritz"
-             loading="lazy"
-             decoding="async">
+      <figure class="portrait portrait--missing" data-portrait-slot>
+        <img
+          src="images/Suit.jpg"
+          alt="Portrait of Zachary Moritz"
+          loading="lazy"
+          onload="this.closest('.portrait').classList.remove('portrait--missing')"
+          onerror="this.closest('.portrait').classList.add('portrait--missing')"
+        >
         <div class="portrait-placeholder" aria-hidden="true">
           <strong>Portrait Missing</strong>
-          <span>Add Suit.jpg to the images folder so the portrait can display.</span>
+          <span>Place Suit.jpg in the images folder next to index.html.</span>
         </div>
       </figure>
 
@@ -261,54 +263,5 @@
       </footer>
     </article>
   </div>
-
-  <script>
-    (function () {
-      const portraitFigure = document.querySelector('[data-portrait-slot]');
-      if (!portraitFigure) return;
-
-      const portraitImage = portraitFigure.querySelector('img');
-      if (!portraitImage) return;
-
-      const placeholderNote = portraitFigure.querySelector('.portrait-placeholder span');
-      const candidateAttribute = portraitFigure.getAttribute('data-portrait-candidates') || '';
-      const candidates = candidateAttribute
-        .split(',')
-        .map((candidate) => candidate.trim())
-        .filter(Boolean);
-
-      if (!candidates.length) return;
-
-      let attemptIndex = 0;
-
-      const updatePlaceholderMessage = () => {
-        if (placeholderNote) {
-          placeholderNote.textContent = 'Add Suit.jpg to the images folder at the site root to restore this portrait.';
-        }
-      };
-
-      const tryNextCandidate = () => {
-        if (attemptIndex >= candidates.length) {
-          portraitFigure.classList.add('portrait--missing');
-          updatePlaceholderMessage();
-          return;
-        }
-
-        const nextCandidate = candidates[attemptIndex++];
-        portraitImage.src = nextCandidate;
-      };
-
-      portraitImage.addEventListener('load', () => {
-        portraitFigure.classList.remove('portrait--missing');
-      });
-
-      portraitImage.addEventListener('error', () => {
-        portraitFigure.classList.add('portrait--missing');
-        tryNextCandidate();
-      });
-
-      tryNextCandidate();
-    })();
-  </script>
 </body>
 </html>
