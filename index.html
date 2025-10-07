@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Zachary Moritz — Character Card</title>
+  <title>Zachary Moritz -- Character Card</title>
   <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAZElEQVR42u3XwREAEBBD0XRgHNSnaf1QAXaMJUwOzv/dNhBiqjcfBHgKkEs1ve0Aa3gFAq+4FQHPuAUB7/gMgRPxEYIP4BXvIQQQQAAB+AC6BRTnmGKQUEwyilFKMcv1M/oa0AD36JLNg+KoVQAAAABJRU5ErkJggg==">
   <style>
     :root {
@@ -104,12 +104,8 @@
       display: block;
       width: 100%;
       height: auto;
-<<<<      grid-area: 1 / 1;
->>>>>>>-main
-=====
-        grid-area: 1 / 1;
->>>>>>>+origin/codex/ed
-  }
+      grid-area: 1 / 1;
+    }
 
     .portrait-placeholder {
       grid-area: 1 / 1;
@@ -144,12 +140,6 @@
 
     .portrait--missing .portrait-placeholder {
       display: flex;
-<<>>>>>>> codex/edit-inde
-=====
->>>>>>> origin/main
->>>>>>> main
-=====
->>>>>>> origin/codex/edit-index.html-to-display-trading-card-style-p5syoe
     }
 
     .card-text {
@@ -227,20 +217,7 @@
         <p class="card-role">Creative Human</p>
       </header>
 
-<<      <figure class="portrait" data-portrait-slot>
-        <img src="images/Suit.jpg"
-             alt="Portrait of Zachary Moritz"
-             loading="lazy"
-             onload="this.closest('.portrait').classList.remove('portrait--missing')"
-             onerror="this.closest('.portrait').classList.add('portrait--missing')">
-        <div class="portrait-placeholder" aria-hidden="true">
-          <strong>Portrait Missing</strong>
-          <span>Add images/Suit.jpg to display Zachary's photo.</span>
-        </div>
-    </figure>
->>>>>>> main
-=====
-        <figure class="portrait portrait--missing"
+      <figure class="portrait portrait--missing"
               data-portrait-slot
               data-portrait-candidates="/images/Suit.jpg,/images/suit.jpg,images/Suit.jpg,images/suit.jpg,./images/Suit.jpg">
         <img alt="Portrait of Zachary Moritz"
@@ -251,8 +228,8 @@
           <span>Add Suit.jpg to the images folder so the portrait can display.</span>
         </div>
       </figure>
->>>>>>>+origin/codex/ed
-     <section class="card-text">
+
+      <section class="card-text">
         <p><strong>Origin Story:</strong> Zachary channels curiosity, compassion, and a dash of cosmic wonder into everything he touches. This legendary card celebrates the person beyond the stats.</p>
       </section>
 
