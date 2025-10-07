@@ -1,194 +1,195 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Zachary Moritz -- Character Card</title>
-  <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAZElEQVR42u3XwREAEBBD0XRgHNSnaf1QAXaMJUwOzv/dNhBiqjcfBHgKkEs1ve0Aa3gFAq+4FQHPuAUB7/gMgRPxEYIP4BXvIQQQQAAB+AC6BRTnmGKQUEwyilFKMcv1M/oa0AD36JLNg+KoVQAAAABJRU5ErkJggg==">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zach Moritz Trading Card</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto+Slab:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --card-width: min(90vw, 380px);
-      --card-height: 560px;
-      --bg-dark: #06060d;
-      --bg-glow: radial-gradient(circle at 20% 20%, rgba(96, 162, 255, 0.25), transparent 60%),
-                  radial-gradient(circle at 80% 10%, rgba(255, 195, 113, 0.18), transparent 55%),
-                  radial-gradient(circle at 50% 80%, rgba(84, 255, 175, 0.18), transparent 60%);
-      --border-gold: linear-gradient(135deg, #f4e5a1, #f2d16a 45%, #c38c29 65%, #f8f0c8);
-      --section-bg: rgba(9, 10, 22, 0.86);
-      color-scheme: dark;
+      color-scheme: light dark;
+      --bg: #0b1021;
+      --bg-secondary: #141a33;
+      --accent: #ffcc00;
+      --text: #f5f7ff;
+      --muted: rgba(245, 247, 255, 0.75);
+      font-size: 16px;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
       min-height: 100vh;
-      display: grid;
-      place-items: center;
-      background: var(--bg-dark);
-      background-image: var(--bg-glow);
-      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
-      color: #f4f7fb;
-      padding: 24px;
-    }
-
-    .card-shell {
-      width: var(--card-width);
-      max-width: 420px;
-      padding: 12px;
-      border-radius: 18px;
-      background: var(--border-gold);
-      box-shadow: 0 24px 42px rgba(0, 0, 0, 0.45), inset 0 0 12px rgba(255, 255, 255, 0.16);
+      font-family: 'Montserrat', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: radial-gradient(circle at top, rgba(17, 24, 54, 0.9) 0%, rgba(8, 11, 24, 0.98) 55%, #05060d 100%);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2.5rem 1.5rem;
     }
 
     .card {
-      width: 100%;
-      min-height: var(--card-height);
-      background: linear-gradient(160deg, rgba(9, 12, 24, 0.96) 0%, rgba(18, 24, 42, 0.98) 100%);
-      border-radius: 12px;
-      padding: 22px 20px 26px;
-      border: 2px solid rgba(255, 255, 255, 0.06);
+      width: min(100%, 380px);
+      background: linear-gradient(160deg, rgba(20, 26, 51, 0.95), rgba(10, 14, 28, 0.96));
+      border-radius: 22px;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      border: 1px solid rgba(255, 204, 0, 0.25);
       position: relative;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 1.2rem;
+      border: 1px solid rgba(255, 204, 0, 0.4);
+      border-radius: 16px;
+      pointer-events: none;
+    }
+
+    .card-header {
+      position: relative;
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .card-header h1 {
+      margin: 0;
+      font-size: 2rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      margin-top: 0.4rem;
+      font-size: 0.85rem;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--muted);
     }
 
     .portrait {
-      position: relative;
-      z-index: 1;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 2px solid rgba(255, 255, 255, 0.12);
-      box-shadow: 0 12px 24px rgba(3, 6, 22, 0.65);
-      display: grid;
-      place-items: center;
-      min-height: 220px;
-      background: linear-gradient(140deg, rgba(24, 33, 62, 0.85), rgba(12, 16, 32, 0.9));
-    }
-
-    .portrait img {
-      display: block;
       width: 100%;
-      height: auto;
-      grid-area: 1 / 1;
+      aspect-ratio: 4 / 5;
       object-fit: cover;
+      border-radius: 16px;
+      border: 2px solid rgba(255, 204, 0, 0.6);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
+      margin-top: 1.5rem;
     }
 
-    .portrait-placeholder {
-      display: none;
-    }
-
-    .card-text {
-      z-index: 1;
-      background: var(--section-bg);
-      border-radius: 10px;
-      padding: 16px;
-      box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.04);
-      line-height: 1.5;
-    }
-
-    .card-text strong {
-      color: #ffd86b;
-      letter-spacing: 0.04em;
-    }
-
-    .stat-grid {
-      z-index: 1;
+    .card-body {
+      padding: 1.25rem 1.75rem 1.75rem;
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
+      gap: 1.25rem;
+      font-family: 'Roboto Slab', 'Times New Roman', serif;
     }
 
-    .stat-block {
-      background: var(--section-bg);
-      border-radius: 10px;
-      padding: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      font-size: 0.9rem;
+    .bio {
+      font-size: 0.95rem;
+      line-height: 1.55;
+      color: var(--muted);
     }
 
-    .stat-block h3 {
-      margin: 0 0 8px;
+    .stats {
+      display: grid;
+      gap: 0.8rem;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0.9rem;
+      background: rgba(8, 11, 24, 0.6);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .stat-label {
       font-size: 0.8rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.6);
+      color: rgba(255, 255, 255, 0.7);
     }
 
     .stat-value {
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: #9ad7ff;
-      letter-spacing: 0.04em;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--accent);
     }
 
-    .footer-banner {
-      z-index: 1;
-      background: linear-gradient(90deg, rgba(255, 216, 107, 0.12), rgba(154, 215, 255, 0.12));
-      border-radius: 8px;
-      padding: 12px;
-      font-size: 0.78rem;
-      letter-spacing: 0.1em;
+    .signature {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.65);
       text-transform: uppercase;
-      text-align: center;
-      color: rgba(244, 247, 251, 0.82);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      letter-spacing: 0.22em;
     }
 
-    @media (max-width: 420px) {
-      .card-title {
-        font-size: 1.6rem;
+    .signature::before,
+    .signature::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 204, 0, 0.7), rgba(255, 255, 255, 0));
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 2rem 1rem;
       }
+
       .card {
-        padding: 18px 16px 22px;
+        width: min(100%, 320px);
+      }
+
+      .card-body {
+        padding: 1.25rem 1.25rem 1.5rem;
       }
     }
   </style>
 </head>
 <body>
-  <div class="card-shell">
-    <article class="card" aria-labelledby="card-title">
-      <header class="card-header">
-        <h1 id="card-title" class="card-title">Zachary Moritz</h1>
-        <p class="card-role">Creative Human</p>
-      </header>
-
-      <figure class="portrait">
-        <img src="/images/Suit.jpg" alt="Portrait of Zachary Moritz" loading="lazy">
-      </figure>
-
-      <section class="card-text">
-        <p><strong>Origin Story:</strong> Zachary channels curiosity, compassion, and a dash of cosmic wonder into everything he touches. This legendary card celebrates the person beyond the stats.</p>
-      </section>
-
-      <section class="stat-grid" aria-label="Core stats">
-        <div class="stat-block">
-          <h3>Energy</h3>
-          <div class="stat-value">92</div>
-          <p>Fueled by movement, music, and meaningful connection.</p>
+  <article class="card" role="figure" aria-labelledby="card-title">
+    <header class="card-header">
+      <h1 id="card-title">Zach Moritz</h1>
+      <p class="subtitle">Strategist · Storyteller · Explorer</p>
+      <img class="portrait" src="/images/Suit.jpg" alt="Portrait of Zach Moritz in a suit" loading="lazy">
+    </header>
+    <section class="card-body">
+      <p class="bio">
+        Vision-driven creator with a knack for bringing ambitious ideas to life. Zach blends analytical thinking with a
+        love for human connection—transforming complex challenges into engaging experiences and impactful outcomes.
+      </p>
+      <div class="stats" aria-label="Key stats">
+        <div class="stat-row">
+          <span class="stat-label">Power Move</span>
+          <span class="stat-value">Insight Alchemy</span>
         </div>
-        <div class="stat-block">
-          <h3>Focus</h3>
-          <div class="stat-value">88</div>
-          <p>Locks onto the signal within the noise, crafting clarity.</p>
+        <div class="stat-row">
+          <span class="stat-label">Signature Skill</span>
+          <span class="stat-value">Strategic Storycraft</span>
+    </div>
+        <div class="stat-row">
+          <span class="stat-label">Rarity</span>
+          <span class="stat-value">Legendary</span>
         </div>
-        <div class="stat-block">
-          <h3>Empathy</h3>
-          <div class="stat-value">99</div>
-          <p>Always ready to hold space for the people who matter.</p>
-        </div>
-        <div class="stat-block">
-          <h3>Improv</h3>
-          <div class="stat-value">95</div>
-          <p>Quick on the draw with ideas, jokes, and creative pivots.</p>
-        </div>
-      </section>
-
-      <footer class="footer-banner">
-        Future add-ons incoming: natal chart, contact info, and real-time stats.
-      </footer>
-    </article>
-  </div>
+      </div>
+      <div class="signature" aria-hidden="true">
+        <span>Zach Moritz</span>
+      </div>
+    </section>
+  </article>
 </body>
 </html>
