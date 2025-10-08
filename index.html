@@ -310,6 +310,211 @@
       letter-spacing: 0.04em;
     }
 
+    .social-connect {
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(59, 89, 152, 0.45);
+      background: linear-gradient(135deg, rgba(59, 89, 152, 0.28), rgba(24, 33, 62, 0.9));
+      color: #f4f7fb;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-decoration: none;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .contact-module {
+      z-index: 1;
+      background: var(--section-bg);
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .contact-header h2 {
+      margin: 0;
+      font-size: 1.05rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .contact-header p {
+      margin: 6px 0 0;
+      font-size: 0.85rem;
+      color: rgba(244, 247, 251, 0.72);
+      line-height: 1.4;
+    }
+
+    .contact-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 216, 107, 0.45);
+      background: linear-gradient(135deg, rgba(255, 216, 107, 0.24), rgba(24, 33, 62, 0.85));
+      color: #fdf6dc;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-decoration: none;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .contact-primary,
+    .inventory-button,
+    .social-connect {
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .contact-primary:hover,
+    .contact-primary:focus-visible {
+      outline: none;
+      transform: translateY(-1px);
+      border-color: rgba(255, 231, 158, 0.85);
+      background: linear-gradient(135deg, rgba(255, 231, 158, 0.32), rgba(32, 44, 82, 0.92));
+    }
+
+    .contact-primary svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    .contact-primary::after,
+    .inventory-button::after,
+    .social-connect::after {
+      content: "";
+      position: absolute;
+      inset: -140% -40%;
+      background: linear-gradient(
+        120deg,
+        rgba(255, 255, 255, 0) 20%,
+        rgba(255, 255, 255, 0.7) 50%,
+        rgba(255, 255, 255, 0) 80%
+      );
+      transform: translateX(-120%);
+      animation: button-shimmer 6s ease-in-out infinite;
+      pointer-events: none;
+      opacity: 0.65;
+      mix-blend-mode: screen;
+    }
+
+    .contact-primary:hover::after,
+    .contact-primary:focus-visible::after,
+    .inventory-button:hover::after,
+    .inventory-button:focus-visible::after,
+    .social-connect:hover::after,
+    .social-connect:focus-visible::after {
+      animation-duration: 3s;
+      opacity: 0.8;
+    }
+
+    .contact-suggestions {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .contact-suggestions a {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(154, 215, 255, 0.32);
+      background: linear-gradient(135deg, rgba(154, 215, 255, 0.16), rgba(20, 26, 44, 0.88));
+      color: rgba(244, 247, 251, 0.9);
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+      text-decoration: none;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .contact-suggestions a:hover,
+    .contact-suggestions a:focus-visible {
+      outline: none;
+      transform: translateY(-1px);
+      border-color: rgba(154, 215, 255, 0.6);
+      background: linear-gradient(135deg, rgba(154, 215, 255, 0.22), rgba(28, 36, 58, 0.92));
+    }
+
+    .contact-suggestions svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    .inventory-button {
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(132, 255, 219, 0.45);
+      background: linear-gradient(135deg, rgba(132, 255, 219, 0.2), rgba(24, 36, 54, 0.9));
+      color: #ecfff8;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-decoration: none;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .inventory-button:hover,
+    .inventory-button:focus-visible {
+      outline: none;
+      transform: translateY(-1px);
+      border-color: rgba(168, 255, 234, 0.75);
+      background: linear-gradient(135deg, rgba(168, 255, 234, 0.3), rgba(32, 48, 72, 0.95));
+      box-shadow: 0 8px 22px rgba(32, 174, 134, 0.25);
+    }
+
+    .inventory-button svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    .social-connect:hover,
+    .social-connect:focus-visible {
+      outline: none;
+      transform: translateY(-1px);
+      border-color: rgba(88, 122, 196, 0.75);
+      background: linear-gradient(135deg, rgba(88, 122, 196, 0.4), rgba(32, 44, 82, 0.95));
+    }
+
+    .social-connect svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    @keyframes button-shimmer {
+      0% {
+        transform: translateX(-120%);
+      }
+      20% {
+        transform: translateX(120%);
+      }
+      100% {
+        transform: translateX(120%);
+      }
+    }
+
     .footer-banner {
       z-index: 1;
       background: linear-gradient(90deg, rgba(255, 216, 107, 0.12), rgba(154, 215, 255, 0.12));
@@ -549,6 +754,67 @@
           <p>Quick on the draw with ideas, jokes, and creative pivots.</p>
         </div>
       </section>
+
+      <section class="contact-module" aria-labelledby="contact-heading">
+        <div class="contact-header">
+          <h2 id="contact-heading">Send Zack an email</h2>
+          <p>Start a fresh message or jump in with a quick suggestion below.</p>
+        </div>
+        <a class="contact-primary" href="mailto:zack@zackmoritz.cool">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M20.5 4h-17A1.5 1.5 0 0 0 2 5.5v13A1.5 1.5 0 0 0 3.5 20h17a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 20.5 4Zm-.4 2L12 10.88 3.9 6Zm.4 11.5h-17V7.62l8.3 4.7a1 1 0 0 0 1 0l8.3-4.7Z" />
+          </svg>
+          <span>Compose a message</span>
+        </a>
+        <ul class="contact-suggestions" aria-label="Quick email starters">
+          <li>
+            <a href="mailto:zack@zackmoritz.cool?subject=Let%E2%80%99s%20collaborate&body=Hey%20Zack%2C%0D%0A%0D%0AI%E2%80%99ve%20got%20a%20project%20idea%20I%E2%80%99d%20love%20to%20jam%20on%20with%20you.%20Here%E2%80%99s%20the%20vision%3A%0D%0A">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2Zm3.71 8.29-4 4a1 1 0 0 1-1.42 0l-2-2a1 1 0 1 1 1.42-1.42L11 12.17l3.29-3.3a1 1 0 0 1 1.42 1.42Z" />
+              </svg>
+              Collaborate on something new
+            </a>
+          </li>
+          <li>
+            <a href="mailto:zack@zackmoritz.cool?subject=Book%20a%20set&body=Hi%20Zack%2C%0D%0A%0D%0AWe%E2%80%99d%20love%20to%20have%20you%20play%20at%20our%20upcoming%20event.%20Here%20are%20the%20details%3A%0D%0A">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M19 3h-1V1h-2v2H8V1H6v2H5a3 3 0 0 0-3 3v13a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3Zm1 16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10h16Zm0-11H4V6a1 1 0 0 1 1-1h1v2h2V5h8v2h2V5h1a1 1 0 0 1 1 1Z" />
+              </svg>
+              Book a live set
+            </a>
+          </li>
+          <li>
+            <a href="mailto:zack@zackmoritz.cool?subject=Let%E2%80%99s%20catch%20up&body=Hey%20Zack%2C%0D%0A%0D%0ALong%20time%20no%20chat!%20Let%E2%80%99s%20catch%20up%20soon%20and%20talk%20about%3A%0D%0A">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Zm0 14H5.17L4 17.17V4h16Z" />
+              </svg>
+              Just say hi
+            </a>
+          </li>
+        </ul>
+      </section>
+
+      <a
+        class="inventory-button"
+        href="https://zackmoritz.cool/gallery.html"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M12 2C7.03 2 3 3.79 3 6v12c0 2.21 4.03 4 9 4s9-1.79 9-4V6c0-2.21-4.03-4-9-4Zm0 2c4.03 0 7 1.37 7 2s-2.97 2-7 2-7-1.37-7-2 2.97-2 7-2Zm0 16c-4.03 0-7-1.37-7-2v-2.43C6.3 17.27 8.95 18 12 18s5.7-.73 7-2.43V18c0 .63-2.97 2-7 2Zm0-4c-4.03 0-7-1.37-7-2v-2.43C6.3 13.27 8.95 14 12 14s5.7-.73 7-2.43V14c0 .63-2.97 2-7 2Z" />
+        </svg>
+        <span>Virtual Inventory Database</span>
+      </a>
+
+      <a
+        class="social-connect"
+        href="https://www.facebook.com/zackmoritz"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M22 12.07C22 6.51 17.52 2 12 2S2 6.51 2 12.07c0 5 3.66 9.14 8.44 9.93v-7.03H8.08v-2.9h2.36V9.64c0-2.33 1.39-3.62 3.52-3.62 1.02 0 2.09.18 2.09.18v2.3h-1.18c-1.17 0-1.54.73-1.54 1.49v1.79h2.62l-.42 2.9h-2.2V22c4.78-.79 8.44-4.93 8.44-9.93Z" />
+        </svg>
+        <span>Connect on Facebook</span>
+      </a>
 
       <footer class="footer-banner">
         Quick menu pulled from your Cafe Astrology natal chart—more cosmic modules coming soon.
