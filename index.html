@@ -368,6 +368,14 @@
       transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
     }
 
+    .contact-primary,
+    .inventory-button,
+    .social-connect {
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
     .contact-primary:hover,
     .contact-primary:focus-visible {
       outline: none;
@@ -380,6 +388,35 @@
       width: 18px;
       height: 18px;
       fill: currentColor;
+    }
+
+    .contact-primary::after,
+    .inventory-button::after,
+    .social-connect::after {
+      content: "";
+      position: absolute;
+      inset: -140% -40%;
+      background: linear-gradient(
+        120deg,
+        rgba(255, 255, 255, 0) 20%,
+        rgba(255, 255, 255, 0.7) 50%,
+        rgba(255, 255, 255, 0) 80%
+      );
+      transform: translateX(-120%);
+      animation: button-shimmer 6s ease-in-out infinite;
+      pointer-events: none;
+      opacity: 0.65;
+      mix-blend-mode: screen;
+    }
+
+    .contact-primary:hover::after,
+    .contact-primary:focus-visible::after,
+    .inventory-button:hover::after,
+    .inventory-button:focus-visible::after,
+    .social-connect:hover::after,
+    .social-connect:focus-visible::after {
+      animation-duration: 3s;
+      opacity: 0.8;
     }
 
     .contact-suggestions {
@@ -464,6 +501,18 @@
       width: 18px;
       height: 18px;
       fill: currentColor;
+    }
+
+    @keyframes button-shimmer {
+      0% {
+        transform: translateX(-120%);
+      }
+      20% {
+        transform: translateX(120%);
+      }
+      100% {
+        transform: translateX(120%);
+      }
     }
 
     .footer-banner {
