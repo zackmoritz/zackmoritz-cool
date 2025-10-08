@@ -280,34 +280,255 @@
       transform: rotate(90deg);
     }
 
-    .stat-grid {
+    .social-connect {
       z-index: 1;
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-    }
-
-    .stat-block {
-      background: var(--section-bg);
-      border-radius: 10px;
-      padding: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      font-size: 0.9rem;
-    }
-
-    .stat-block h3 {
-      margin: 0 0 8px;
-      font-size: 0.8rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.6);
-    }
-
-    .stat-value {
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: #9ad7ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(59, 89, 152, 0.45);
+      background: linear-gradient(135deg, rgba(59, 89, 152, 0.28), rgba(24, 33, 62, 0.9));
+      color: #f4f7fb;
+      font-weight: 600;
       letter-spacing: 0.04em;
+      text-decoration: none;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .cta-stack {
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .contact-dropdown {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      position: relative;
+    }
+
+    .contact-primary {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 12px 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 216, 107, 0.45);
+      background: linear-gradient(135deg, rgba(255, 216, 107, 0.24), rgba(24, 33, 62, 0.85));
+      color: #fdf6dc;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-decoration: none;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+      cursor: pointer;
+      font: inherit;
+      text-align: left;
+      border-width: 1px;
+      border-style: solid;
+    }
+
+    .contact-primary,
+    .inventory-button,
+    .social-connect {
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .contact-primary:hover,
+    .contact-primary:focus-visible {
+      outline: none;
+      transform: translateY(-1px);
+      border-color: rgba(255, 231, 158, 0.85);
+      background: linear-gradient(135deg, rgba(255, 231, 158, 0.32), rgba(32, 44, 82, 0.92));
+    }
+
+    .contact-primary svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    .contact-primary-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .contact-chevron {
+      margin-left: auto;
+      width: 14px;
+      height: 14px;
+      opacity: 0.8;
+      transition: transform 0.2s ease;
+    }
+
+    .contact-dropdown[data-open="true"] .contact-chevron {
+      transform: rotate(180deg);
+    }
+
+    .contact-dropdown[data-open="true"] .contact-primary {
+      border-color: rgba(255, 231, 158, 0.85);
+      background: linear-gradient(135deg, rgba(255, 231, 158, 0.32), rgba(32, 44, 82, 0.92));
+    }
+
+    .contact-primary::after,
+    .inventory-button::after,
+    .social-connect::after {
+      content: "";
+      position: absolute;
+      inset: -140% -40%;
+      background: linear-gradient(
+        120deg,
+        rgba(255, 255, 255, 0) 20%,
+        rgba(255, 255, 255, 0.7) 50%,
+        rgba(255, 255, 255, 0) 80%
+      );
+      transform: translateX(-120%);
+      animation: button-shimmer 6s ease-in-out infinite;
+      pointer-events: none;
+      opacity: 0.65;
+      mix-blend-mode: screen;
+    }
+
+    .contact-primary:hover::after,
+    .contact-primary:focus-visible::after,
+    .inventory-button:hover::after,
+    .inventory-button:focus-visible::after,
+    .social-connect:hover::after,
+    .social-connect:focus-visible::after {
+      animation-duration: 3s;
+      opacity: 0.8;
+    }
+
+    .contact-menu {
+      list-style: none;
+      padding: 12px;
+      margin: 0;
+      margin-top: 2px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-radius: 14px;
+      border: 1px solid rgba(154, 215, 255, 0.28);
+      background: linear-gradient(150deg, rgba(18, 24, 42, 0.96), rgba(36, 48, 76, 0.92));
+      box-shadow: 0 18px 32px rgba(3, 6, 22, 0.45);
+    }
+
+    .contact-menu[hidden] {
+      display: none;
+    }
+
+    .contact-menu li {
+      margin: 0;
+    }
+
+    .contact-menu a {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      color: rgba(244, 247, 251, 0.95);
+      text-decoration: none;
+      letter-spacing: 0.03em;
+      transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+      border: 1px solid transparent;
+    }
+
+    .contact-menu a:hover,
+    .contact-menu a:focus-visible {
+      outline: none;
+      transform: translateY(-1px);
+      border-color: rgba(154, 215, 255, 0.5);
+      background: linear-gradient(135deg, rgba(154, 215, 255, 0.16), rgba(32, 44, 82, 0.9));
+    }
+
+    .contact-menu svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+      margin-top: 2px;
+    }
+
+    .contact-menu__text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .contact-menu__title {
+      font-size: 0.86rem;
+    }
+
+    .contact-menu__hint {
+      font-size: 0.72rem;
+      color: rgba(244, 247, 251, 0.7);
+      letter-spacing: 0.02em;
+    }
+
+    .inventory-button {
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(132, 255, 219, 0.45);
+      background: linear-gradient(135deg, rgba(132, 255, 219, 0.2), rgba(24, 36, 54, 0.9));
+      color: #ecfff8;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-decoration: none;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .inventory-button:hover,
+    .inventory-button:focus-visible {
+      outline: none;
+      transform: translateY(-1px);
+      border-color: rgba(168, 255, 234, 0.75);
+      background: linear-gradient(135deg, rgba(168, 255, 234, 0.3), rgba(32, 48, 72, 0.95));
+      box-shadow: 0 8px 22px rgba(32, 174, 134, 0.25);
+    }
+
+    .inventory-button svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    .social-connect:hover,
+    .social-connect:focus-visible {
+      outline: none;
+      transform: translateY(-1px);
+      border-color: rgba(88, 122, 196, 0.75);
+      background: linear-gradient(135deg, rgba(88, 122, 196, 0.4), rgba(32, 44, 82, 0.95));
+    }
+
+    .social-connect svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    @keyframes button-shimmer {
+      0% {
+        transform: translateX(-120%);
+      }
+      20% {
+        transform: translateX(120%);
+      }
+      100% {
+        transform: translateX(120%);
+      }
     }
 
     .social-connect {
@@ -796,28 +1017,104 @@
         </div>
       </section>
 
-      <section class="stat-grid" aria-label="Core stats">
-        <div class="stat-block">
-          <h3>Energy</h3>
-          <div class="stat-value">92</div>
-          <p>Fueled by movement, music, and meaningful connection.</p>
+      <div class="cta-stack" aria-label="Connect with Zack">
+        <div class="contact-dropdown" data-open="false">
+          <button
+            type="button"
+            class="contact-primary contact-primary__trigger"
+            aria-expanded="false"
+            aria-controls="contact-menu"
+            aria-haspopup="true"
+          >
+            <span class="contact-primary-label">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M20.5 4h-17A1.5 1.5 0 0 0 2 5.5v13A1.5 1.5 0 0 0 3.5 20h17a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 20.5 4Zm-.4 2L12 10.88 3.9 6Zm.4 11.5h-17V7.62l8.3 4.7a1 1 0 0 0 1 0l8.3-4.7Z" />
+              </svg>
+              <span>Compose a message</span>
+            </span>
+            <svg class="contact-chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M6.12 8.47a1 1 0 0 1 1.41 0L12 12.94l4.47-4.47a1 1 0 1 1 1.41 1.41l-5.18 5.18a1 1 0 0 1-1.41 0L6.12 9.88a1 1 0 0 1 0-1.41Z" />
+            </svg>
+          </button>
+          <ul id="contact-menu" class="contact-menu" role="menu" aria-label="Email options" hidden>
+            <li>
+              <a role="menuitem" href="mailto:zack@zackmoritz.cool">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M20.5 4h-17A1.5 1.5 0 0 0 2 5.5v13A1.5 1.5 0 0 0 3.5 20h17a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 20.5 4Zm-.4 2L12 10.88 3.9 6Zm.4 11.5h-17V7.62l8.3 4.7a1 1 0 0 0 1 0l8.3-4.7Z" />
+                </svg>
+                <span class="contact-menu__text">
+                  <span class="contact-menu__title">Start a blank email</span>
+                  <span class="contact-menu__hint">Open a fresh draft addressed to Zack.</span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a
+                role="menuitem"
+                href="mailto:zack@zackmoritz.cool?subject=Schedule%20a%20coaching%20session&body=Hi%20Zack%2C%0D%0A%0D%0AI%E2%80%99m%20ready%20for%20a%20coaching%20session%20and%20would%20love%20support%20with%3A%0D%0A"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2Zm3.71 8.29-4 4a1 1 0 0 1-1.42 0l-2-2a1 1 0 1 1 1.42-1.42L11 12.17l3.29-3.3a1 1 0 0 1 1.42 1.42Z" />
+                </svg>
+                <span class="contact-menu__text">
+                  <span class="contact-menu__title">Schedule a coaching session</span>
+                  <span class="contact-menu__hint">Share what you’d like guidance on and ideal timing.</span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a
+                role="menuitem"
+                href="mailto:zack@zackmoritz.cool?subject=Design%20a%20mentorship%20plan&body=Hi%20Zack%2C%0D%0A%0D%0AI%E2%80%99d%20love%20your%20insight%20on%20creating%20a%20mentorship%20plan%20for%3A%0D%0A"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M19 3h-1V1h-2v2H8V1H6v2H5a3 3 0 0 0-3 3v13a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3Zm1 16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10h16Zm0-11H4V6a1 1 0 0 1 1-1h1v2h2V5h8v2h2V5h1a1 1 0 0 1 1 1Z" />
+                </svg>
+                <span class="contact-menu__text">
+                  <span class="contact-menu__title">Design a mentorship plan</span>
+                  <span class="contact-menu__hint">Outline who you’re supporting and the outcomes you need.</span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a
+                role="menuitem"
+                href="mailto:zack@zackmoritz.cool?subject=Share%20a%20success%20story&body=Hi%20Zack%2C%0D%0A%0D%0AI%20wanted%20to%20let%20you%20know%20about%20this%20breakthrough%20since%20we%20worked%20together%3A%0D%0A"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Zm0 14H5.17L4 17.17V4h16Z" />
+                </svg>
+                <span class="contact-menu__text">
+                  <span class="contact-menu__title">Share a success story</span>
+                  <span class="contact-menu__hint">Celebrate a win and highlight what’s working.</span>
+                </span>
+              </a>
+            </li>
+          </ul>
         </div>
-        <div class="stat-block">
-          <h3>Focus</h3>
-          <div class="stat-value">88</div>
-          <p>Locks onto the signal within the noise, crafting clarity.</p>
-        </div>
-        <div class="stat-block">
-          <h3>Empathy</h3>
-          <div class="stat-value">99</div>
-          <p>Always ready to hold space for the people who matter.</p>
-        </div>
-        <div class="stat-block">
-          <h3>Improv</h3>
-          <div class="stat-value">95</div>
-          <p>Quick on the draw with ideas, jokes, and creative pivots.</p>
-        </div>
-      </section>
+
+        <a
+          class="inventory-button"
+          href="https://zackmoritz.cool/gallery.html"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M12 2C7.03 2 3 3.79 3 6v12c0 2.21 4.03 4 9 4s9-1.79 9-4V6c0-2.21-4.03-4-9-4Zm0 2c4.03 0 7 1.37 7 2s-2.97 2-7 2-7-1.37-7-2 2.97-2 7-2Zm0 16c-4.03 0-7-1.37-7-2v-2.43C6.3 17.27 8.95 18 12 18s5.7-.73 7-2.43V18c0 .63-2.97 2-7 2Zm0-4c-4.03 0-7-1.37-7-2v-2.43C6.3 13.27 8.95 14 12 14s5.7-.73 7-2.43V14c0 .63-2.97 2-7 2Z" />
+          </svg>
+          <span>Virtual Inventory Database</span>
+        </a>
+
+        <a
+          class="social-connect"
+          href="https://www.facebook.com/zackmoritz"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M22 12.07C22 6.51 17.52 2 12 2S2 6.51 2 12.07c0 5 3.66 9.14 8.44 9.93v-7.03H8.08v-2.9h2.36V9.64c0-2.33 1.39-3.62 3.52-3.62 1.02 0 2.09.18 2.09.18v2.3h-1.18c-1.17 0-1.54.73-1.54 1.49v1.79h2.62l-.42 2.9h-2.2V22c4.78-.79 8.44-4.93 8.44-9.93Z" />
+          </svg>
+          <span>Connect on Facebook</span>
+        </a>
+      </div>
 
       <section class="contact-module" aria-labelledby="contact-heading">
         <div class="contact-header">
