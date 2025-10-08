@@ -310,6 +310,37 @@
       letter-spacing: 0.04em;
     }
 
+    .social-connect {
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(59, 89, 152, 0.45);
+      background: linear-gradient(135deg, rgba(59, 89, 152, 0.28), rgba(24, 33, 62, 0.9));
+      color: #f4f7fb;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-decoration: none;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .social-connect:hover,
+    .social-connect:focus-visible {
+      outline: none;
+      transform: translateY(-1px);
+      border-color: rgba(88, 122, 196, 0.75);
+      background: linear-gradient(135deg, rgba(88, 122, 196, 0.4), rgba(32, 44, 82, 0.95));
+    }
+
+    .social-connect svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
     .footer-banner {
       z-index: 1;
       background: linear-gradient(90deg, rgba(255, 216, 107, 0.12), rgba(154, 215, 255, 0.12));
@@ -549,6 +580,18 @@
           <p>Quick on the draw with ideas, jokes, and creative pivots.</p>
         </div>
       </section>
+
+      <a
+        class="social-connect"
+        href="https://www.facebook.com/zackmoritz"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M22 12.07C22 6.51 17.52 2 12 2S2 6.51 2 12.07c0 5 3.66 9.14 8.44 9.93v-7.03H8.08v-2.9h2.36V9.64c0-2.33 1.39-3.62 3.52-3.62 1.02 0 2.09.18 2.09.18v2.3h-1.18c-1.17 0-1.54.73-1.54 1.49v1.79h2.62l-.42 2.9h-2.2V22c4.78-.79 8.44-4.93 8.44-9.93Z" />
+        </svg>
+        <span>Connect on Facebook</span>
+      </a>
 
       <footer class="footer-banner">
         Quick menu pulled from your Cafe Astrology natal chart—more cosmic modules coming soon.
