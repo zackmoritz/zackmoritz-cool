@@ -420,6 +420,38 @@
       fill: currentColor;
     }
 
+    .inventory-button {
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(132, 255, 219, 0.45);
+      background: linear-gradient(135deg, rgba(132, 255, 219, 0.2), rgba(24, 36, 54, 0.9));
+      color: #ecfff8;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-decoration: none;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .inventory-button:hover,
+    .inventory-button:focus-visible {
+      outline: none;
+      transform: translateY(-1px);
+      border-color: rgba(168, 255, 234, 0.75);
+      background: linear-gradient(135deg, rgba(168, 255, 234, 0.3), rgba(32, 48, 72, 0.95));
+      box-shadow: 0 8px 22px rgba(32, 174, 134, 0.25);
+    }
+
+    .inventory-button svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
     .social-connect:hover,
     .social-connect:focus-visible {
       outline: none;
@@ -712,6 +744,16 @@
           </li>
         </ul>
       </section>
+
+      <a
+        class="inventory-button"
+        href="https://zackmoritz.cool/gallery.html"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M12 2C7.03 2 3 3.79 3 6v12c0 2.21 4.03 4 9 4s9-1.79 9-4V6c0-2.21-4.03-4-9-4Zm0 2c4.03 0 7 1.37 7 2s-2.97 2-7 2-7-1.37-7-2 2.97-2 7-2Zm0 16c-4.03 0-7-1.37-7-2v-2.43C6.3 17.27 8.95 18 12 18s5.7-.73 7-2.43V18c0 .63-2.97 2-7 2Zm0-4c-4.03 0-7-1.37-7-2v-2.43C6.3 13.27 8.95 14 12 14s5.7-.73 7-2.43V14c0 .63-2.97 2-7 2Z" />
+        </svg>
+        <span>Virtual Inventory Database</span>
+      </a>
 
       <a
         class="social-connect"
