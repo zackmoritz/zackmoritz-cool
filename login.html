@@ -512,7 +512,7 @@
 
     const logoutButton = document.getElementById('logout');
 
-    const hasCustomSetupKey = Boolean(ADMIN_SETUP_KEY && ADMIN_SETUP_KEY !== 'Glimvex');
+    const hasCustomSetupKey = Boolean(ADMIN_SETUP_KEY && ADMIN_SETUP_KEY !== 'Change_this_admin_setup_key');
 
     const toHex = (buffer) =>
       Array.from(buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer))
