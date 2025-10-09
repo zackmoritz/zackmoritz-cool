@@ -471,7 +471,7 @@
   </main>
 
   <script>
-    const ADMIN_SETUP_KEY = 'change-this-setup-key'; // Update this to a private phrase before deploying.
+    const ADMIN_SETUP_KEY = 'Glimvex'; // Update this to a private phrase before deploying.
 
     const storageKeys = {
       credentials: 'zm-member-credentials',
@@ -512,7 +512,7 @@
 
     const logoutButton = document.getElementById('logout');
 
-    const hasCustomSetupKey = Boolean(ADMIN_SETUP_KEY && ADMIN_SETUP_KEY !== 'change-this-setup-key');
+    const hasCustomSetupKey = Boolean(ADMIN_SETUP_KEY && ADMIN_SETUP_KEY !== 'Glimvex');
 
     const toHex = (buffer) =>
       Array.from(buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer))
