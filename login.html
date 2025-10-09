@@ -157,6 +157,14 @@
       color: var(--error);
     }
 
+    .status[data-status="info"] {
+      color: var(--muted);
+    }
+
+    .status[data-status="warning"] {
+      color: #ffd86b;
+    }
+
     .status.status--success {
       color: var(--success);
     }
@@ -189,6 +197,14 @@
       color: #b9ffe5;
     }
 
+    .panel-subtitle {
+      margin: 0;
+      font-size: 1rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: rgba(233, 255, 247, 0.9);
+    }
+
     .panel-card p {
       margin: 0;
       color: rgba(233, 255, 247, 0.85);
@@ -197,6 +213,19 @@
 
     .panel-card form {
       gap: 12px;
+    }
+
+    .panel-divider {
+      height: 1px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.16);
+      margin: 4px 0 0;
+    }
+
+    .credential-form {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
     }
 
     .time-grid {
@@ -266,6 +295,20 @@
       border-color: rgba(206, 235, 255, 0.55);
     }
 
+    .button-secondary--solid {
+      background: linear-gradient(135deg, rgba(154, 215, 255, 0.25), rgba(36, 52, 78, 0.95));
+      border-color: var(--accent);
+      color: var(--text);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
+    .button-secondary--solid:hover,
+    .button-secondary--solid:focus-visible {
+      border-color: var(--accent-strong);
+      box-shadow: 0 10px 20px rgba(96, 162, 255, 0.18);
+    }
+
     .status-block {
       font-size: 0.85rem;
       color: rgba(244, 247, 251, 0.75);
@@ -320,31 +363,35 @@
       <header class="portal-header">
         <h1 id="portal-title" class="portal-title">Member Portal</h1>
         <p class="portal-subtitle">
-          Register once, log in with your private credentials, and fine-tune the reading time that displays on your homepage.
+          Secure administrator access to manage the homepage reading time tracker and other back-office settings.
         </p>
       </header>
 
-      <section id="registration-panel" class="panel" aria-live="polite" data-open="false">
+      <section id="setup-panel" class="panel" aria-live="polite" data-open="false">
         <div class="panel-card">
-          <h2>Set up your credentials</h2>
+          <h2>Administrator setup</h2>
           <p class="status-block">
-            Since this portal is just for you, choose the username and password you'll use for future sign-ins.
+            Protect this portal with a private setup key. Enter the key along with your preferred username and password to initialize the administrator account.
           </p>
-          <form id="registration-form" novalidate autocomplete="off">
+          <form id="setup-form" novalidate autocomplete="off">
             <div class="input-group">
-              <label for="register-username">Username</label>
-              <input id="register-username" name="register-username" type="text" autocomplete="off" required>
+              <label for="setup-key">Setup key</label>
+              <input id="setup-key" name="setup-key" type="password" autocomplete="off" required>
             </div>
             <div class="input-group">
-              <label for="register-password">Password</label>
-              <input id="register-password" name="register-password" type="password" autocomplete="new-password" required>
+              <label for="setup-username">Username</label>
+              <input id="setup-username" name="setup-username" type="text" autocomplete="off" required>
             </div>
             <div class="input-group">
-              <label for="register-confirm">Confirm password</label>
-              <input id="register-confirm" name="register-confirm" type="password" autocomplete="new-password" required>
+              <label for="setup-password">Password</label>
+              <input id="setup-password" name="setup-password" type="password" autocomplete="new-password" required>
             </div>
-            <button type="submit" class="button-primary">Save my login</button>
-            <p id="registration-status" class="status" role="status" aria-live="polite"></p>
+            <div class="input-group">
+              <label for="setup-confirm">Confirm password</label>
+              <input id="setup-confirm" name="setup-confirm" type="password" autocomplete="new-password" required>
+            </div>
+            <button type="submit" class="button-primary">Initialize credentials</button>
+            <p id="setup-status" class="status" role="status" aria-live="polite"></p>
           </form>
         </div>
       </section>
@@ -392,7 +439,29 @@
             <p class="helper-text">Changes save instantly and sync with the homepage display.</p>
             <p id="control-status" class="status" role="status" aria-live="polite"></p>
           </form>
-          <button type="button" id="replace-credentials" class="button-secondary">Replace login credentials</button>
+          <div class="panel-divider" role="presentation"></div>
+          <form id="credential-update-form" class="credential-form" novalidate autocomplete="off">
+            <h3 class="panel-subtitle">Update login credentials</h3>
+            <p class="helper-text">Confirm your current password to update your administrator login.</p>
+            <div class="input-group">
+              <label for="current-password">Current password</label>
+              <input id="current-password" name="current-password" type="password" autocomplete="current-password" required>
+            </div>
+            <div class="input-group">
+              <label for="new-username">New username</label>
+              <input id="new-username" name="new-username" type="text" autocomplete="off" placeholder="Leave blank to keep current username">
+            </div>
+            <div class="input-group">
+              <label for="new-password">New password</label>
+              <input id="new-password" name="new-password" type="password" autocomplete="new-password" placeholder="Leave blank to keep current password">
+            </div>
+            <div class="input-group">
+              <label for="confirm-new-password">Confirm new password</label>
+              <input id="confirm-new-password" name="confirm-new-password" type="password" autocomplete="new-password">
+            </div>
+            <button type="submit" class="button-secondary button-secondary--solid">Save updated credentials</button>
+            <p id="credential-status" class="status" role="status" aria-live="polite"></p>
+          </form>
         </div>
         <button type="button" id="logout" class="logout-button">Log out</button>
       </section>
@@ -402,18 +471,21 @@
   </main>
 
   <script>
+    const ADMIN_SETUP_KEY = 'change-this-setup-key'; // Update this to a private phrase before deploying.
+
     const storageKeys = {
       credentials: 'zm-member-credentials',
       session: 'zm-member-session',
       readingTime: 'zm-reading-time-seconds'
     };
 
-    const registrationPanel = document.getElementById('registration-panel');
-    const registrationForm = document.getElementById('registration-form');
-    const registrationStatus = document.getElementById('registration-status');
-    const registerUsername = document.getElementById('register-username');
-    const registerPassword = document.getElementById('register-password');
-    const registerConfirm = document.getElementById('register-confirm');
+    const setupPanel = document.getElementById('setup-panel');
+    const setupForm = document.getElementById('setup-form');
+    const setupStatus = document.getElementById('setup-status');
+    const setupKeyInput = document.getElementById('setup-key');
+    const setupUsername = document.getElementById('setup-username');
+    const setupPassword = document.getElementById('setup-password');
+    const setupConfirm = document.getElementById('setup-confirm');
 
     const loginPanel = document.getElementById('login-panel');
     const loginForm = document.getElementById('login-form');
@@ -430,8 +502,40 @@
     const addButton = document.getElementById('adjust-add');
     const subtractButton = document.getElementById('adjust-subtract');
     const resetButton = document.getElementById('adjust-reset');
-    const replaceCredentialsButton = document.getElementById('replace-credentials');
+
+    const credentialUpdateForm = document.getElementById('credential-update-form');
+    const credentialStatus = document.getElementById('credential-status');
+    const currentPasswordInput = document.getElementById('current-password');
+    const newUsernameInput = document.getElementById('new-username');
+    const newPasswordInput = document.getElementById('new-password');
+    const confirmNewPasswordInput = document.getElementById('confirm-new-password');
+
     const logoutButton = document.getElementById('logout');
+
+    const hasCustomSetupKey = Boolean(ADMIN_SETUP_KEY && ADMIN_SETUP_KEY !== 'change-this-setup-key');
+
+    const toHex = (buffer) =>
+      Array.from(buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer))
+        .map((byte) => byte.toString(16).padStart(2, '0'))
+        .join('');
+
+    const hashValue = async (value) => {
+      const encoded = new TextEncoder().encode(value);
+      const digest = await crypto.subtle.digest('SHA-256', encoded);
+      return toHex(digest);
+    };
+
+    const createSalt = () => {
+      const bytes = new Uint8Array(16);
+      crypto.getRandomValues(bytes);
+      return toHex(bytes);
+    };
+
+    const generateRandomHex = (byteLength = 16) => {
+      const bytes = new Uint8Array(byteLength);
+      crypto.getRandomValues(bytes);
+      return toHex(bytes);
+    };
 
     const getStoredJSON = (key) => {
       try {
@@ -447,7 +551,7 @@
       try {
         localStorage.setItem(key, JSON.stringify(value));
       } catch (error) {
-        /* Ignore storage failures */
+        /* ignore storage errors */
       }
     };
 
@@ -455,7 +559,7 @@
       try {
         localStorage.removeItem(key);
       } catch (error) {
-        /* Ignore storage failures */
+        /* ignore storage errors */
       }
     };
 
@@ -466,11 +570,92 @@
     const setStatusMessage = (element, message, type = 'info') => {
       if (!element) return;
       element.textContent = message || '';
+      element.dataset.status = type;
       element.classList.toggle('status--success', type === 'success');
       element.setAttribute('role', type === 'error' ? 'alert' : 'status');
     };
 
     const sanitize = (value) => value?.trim() ?? '';
+
+    let legacyCredentialsCleared = false;
+
+    const getStoredCredentials = () => {
+      const stored = getStoredJSON(storageKeys.credentials);
+      if (!stored) {
+        return null;
+      }
+
+      if (typeof stored.password !== 'undefined') {
+        removeStoredItem(storageKeys.credentials);
+        legacyCredentialsCleared = true;
+        return null;
+      }
+
+      const hasRequiredFields =
+        typeof stored.username === 'string' &&
+        typeof stored.passwordHash === 'string' &&
+        typeof stored.salt === 'string';
+
+      if (!hasRequiredFields) {
+        removeStoredItem(storageKeys.credentials);
+        return null;
+      }
+
+      return stored;
+    };
+
+    const storeCredentials = async (username, password) => {
+      const salt = createSalt();
+      const passwordHash = await hashValue(`${password}::${salt}`);
+      const record = {
+        username,
+        passwordHash,
+        salt,
+        updatedAt: new Date().toISOString()
+      };
+      setStoredJSON(storageKeys.credentials, record);
+      return record;
+    };
+
+    const verifyPassword = async (password, credentials) => {
+      if (!credentials) return false;
+      const candidateHash = await hashValue(`${password}::${credentials.salt}`);
+      return candidateHash === credentials.passwordHash;
+    };
+
+    const createSession = async (credentials) => {
+      if (!credentials) {
+        removeStoredItem(storageKeys.session);
+        return;
+      }
+
+      const token = generateRandomHex(32);
+      const signature = await hashValue(`${credentials.passwordHash}:${token}`);
+
+      setStoredJSON(storageKeys.session, {
+        username: credentials.username,
+        token,
+        signature,
+        issuedAt: new Date().toISOString()
+      });
+    };
+
+    const destroySession = () => {
+      removeStoredItem(storageKeys.session);
+    };
+
+    const validateSession = async (credentials) => {
+      if (!credentials) return false;
+      const session = getStoredJSON(storageKeys.session);
+      if (!session || session.username !== credentials.username) {
+        return false;
+      }
+      if (!session.token || !session.signature) {
+        return false;
+      }
+      const expectedSignature = await hashValue(`${credentials.passwordHash}:${session.token}`);
+      return expectedSignature === session.signature;
+    };
 
     let readingTimeSeconds = 0;
 
@@ -497,108 +682,78 @@
       try {
         localStorage.setItem(storageKeys.readingTime, String(Math.max(0, readingTimeSeconds)));
       } catch (error) {
-        /* Ignore storage failures */
+        /* ignore storage errors */
       }
     };
 
-    const applySession = (username) => {
-      if (!username) {
-        removeStoredItem(storageKeys.session);
-        return;
-      }
-      setStoredJSON(storageKeys.session, {
-        username,
-        signedInAt: new Date().toISOString()
-      });
-    };
-
-    const refreshView = () => {
-      const credentials = getStoredJSON(storageKeys.credentials);
-      const session = getStoredJSON(storageKeys.session);
+    const refreshView = async ({ focus = true } = {}) => {
+      const credentials = getStoredCredentials();
 
       if (!credentials) {
-        setPanelState(registrationPanel, true);
+        destroySession();
+        setPanelState(setupPanel, true);
         setPanelState(loginPanel, false);
         setPanelState(controlPanel, false);
-        setStatusMessage(loginStatus, '');
-        setStatusMessage(controlStatus, '');
         loginForm?.reset();
+        credentialUpdateForm?.reset();
+
+        if (!hasCustomSetupKey) {
+          setStatusMessage(
+            setupStatus,
+            'Update the ADMIN_SETUP_KEY constant in login.html to a private phrase before continuing.',
+            'warning'
+          );
+        } else if (legacyCredentialsCleared) {
+          setStatusMessage(
+            setupStatus,
+            'Legacy credentials were cleared. Use your setup key to create a new administrator login.',
+            'info'
+          );
+          legacyCredentialsCleared = false;
+        } else if (!setupStatus?.textContent) {
+          setStatusMessage(
+            setupStatus,
+            'Enter your private setup key along with a username and password to secure the portal.',
+            'info'
+          );
+        }
+
+        if (focus) {
+          setTimeout(() => setupKeyInput?.focus(), 60);
+        }
         return;
       }
 
-      setPanelState(registrationPanel, false);
+      legacyCredentialsCleared = false;
+      const sessionValid = await validateSession(credentials);
 
-      if (session?.username === credentials.username) {
+      setPanelState(setupPanel, false);
+
+      if (sessionValid) {
         setPanelState(loginPanel, false);
         setPanelState(controlPanel, true);
-        loadReadingTime();
-        setStatusMessage(loginStatus, '');
-        setStatusMessage(registrationStatus, '');
         loginForm?.reset();
-        setTimeout(() => adjustHours?.focus(), 50);
-      } else {
-        setPanelState(loginPanel, true);
-        setPanelState(controlPanel, false);
-        setStatusMessage(controlStatus, '');
-        setTimeout(() => loginUsername?.focus(), 50);
+        setStatusMessage(setupStatus, '');
+        loadReadingTime();
+
+        if (focus) {
+          setTimeout(() => adjustHours?.focus(), 60);
+        }
+        return;
+      }
+
+      destroySession();
+      setPanelState(loginPanel, true);
+      setPanelState(controlPanel, false);
+      loginPassword.value = '';
+      credentialUpdateForm?.reset();
+      setStatusMessage(controlStatus, '');
+      setStatusMessage(credentialStatus, '');
+
+      if (focus) {
+        setTimeout(() => loginUsername?.focus(), 60);
       }
     };
-
-    registrationForm?.addEventListener('submit', (event) => {
-      event.preventDefault();
-      const username = sanitize(registerUsername.value);
-      const password = sanitize(registerPassword.value);
-      const confirmPassword = sanitize(registerConfirm.value);
-
-      if (!username || !password) {
-        setStatusMessage(registrationStatus, 'Enter both a username and password to continue.', 'error');
-        return;
-      }
-
-      if (password.length < 6) {
-        setStatusMessage(registrationStatus, 'Choose a password with at least 6 characters for better security.', 'error');
-        return;
-      }
-
-      if (password !== confirmPassword) {
-        setStatusMessage(registrationStatus, 'The confirmation does not match your password.', 'error');
-        return;
-      }
-
-      setStoredJSON(storageKeys.credentials, { username, password });
-      applySession(username);
-      setStatusMessage(registrationStatus, 'Credentials saved! You are now signed in.', 'success');
-      registrationForm.reset();
-      refreshView();
-    });
-
-    loginForm?.addEventListener('submit', (event) => {
-      event.preventDefault();
-      const credentials = getStoredJSON(storageKeys.credentials);
-
-      if (!credentials) {
-        refreshView();
-        return;
-      }
-
-      const username = sanitize(loginUsername.value);
-      const password = sanitize(loginPassword.value);
-
-      if (!username || !password) {
-        setStatusMessage(loginStatus, 'Enter both your username and password to sign in.', 'error');
-        return;
-      }
-
-      if (username !== credentials.username || password !== credentials.password) {
-        setStatusMessage(loginStatus, 'Those credentials do not match what you registered. Try again.', 'error');
-        return;
-      }
-
-      applySession(username);
-      setStatusMessage(loginStatus, 'Login successful! Loading your control center…', 'success');
-      loginPassword.value = '';
-      refreshView();
-    });
 
     const getAdjustmentSeconds = () => {
       const hours = Math.max(0, Number.parseInt(adjustHours.value, 10) || 0);
@@ -613,66 +768,237 @@
       adjustSeconds.value = '0';
     };
 
-    addButton?.addEventListener('click', () => {
-      const adjustment = getAdjustmentSeconds();
-      if (adjustment <= 0) {
-        setStatusMessage(controlStatus, 'Add at least one second to update your reading time.', 'error');
-        return;
-      }
+    loadReadingTime();
 
-      readingTimeSeconds += adjustment;
-      persistReadingTime();
-      loadReadingTime();
-      clearAdjustmentInputs();
-      setStatusMessage(controlStatus, 'Reading time updated successfully.', 'success');
-    });
+    const cryptoSupported =
+      typeof window.crypto !== 'undefined' && typeof window.crypto.subtle !== 'undefined';
 
-    subtractButton?.addEventListener('click', () => {
-      const adjustment = getAdjustmentSeconds();
-      if (adjustment <= 0) {
-        setStatusMessage(controlStatus, 'Subtract at least one second to update your reading time.', 'error');
-        return;
-      }
+    if (!cryptoSupported) {
+      setStatusMessage(
+        setupStatus,
+        'Your browser does not support the security features required for this administrator portal. Please use a modern browser.',
+        'error'
+      );
 
-      readingTimeSeconds = Math.max(0, readingTimeSeconds - adjustment);
-      persistReadingTime();
-      loadReadingTime();
-      clearAdjustmentInputs();
-      setStatusMessage(controlStatus, 'Reading time reduced successfully.', 'success');
-    });
+      [setupForm, loginForm, credentialUpdateForm].forEach((form) => {
+        form
+          ?.querySelectorAll('input, button')
+          .forEach((element) => element.setAttribute('disabled', 'true'));
+      });
 
-    resetButton?.addEventListener('click', () => {
-      if (readingTimeSeconds === 0) {
-        setStatusMessage(controlStatus, 'Reading time is already at zero.', 'info');
-        return;
-      }
+      addButton?.setAttribute('disabled', 'true');
+      subtractButton?.setAttribute('disabled', 'true');
+      resetButton?.setAttribute('disabled', 'true');
+      logoutButton?.setAttribute('disabled', 'true');
+    } else {
+      setupForm?.addEventListener('submit', async (event) => {
+            event.preventDefault();
 
-      readingTimeSeconds = 0;
-      persistReadingTime();
-      loadReadingTime();
-      clearAdjustmentInputs();
-      setStatusMessage(controlStatus, 'Reading time reset to zero.', 'success');
-    });
+            if (!hasCustomSetupKey) {
+              setStatusMessage(
+                setupStatus,
+                'Update the ADMIN_SETUP_KEY constant in the page source before attempting setup.',
+                'error'
+              );
+              return;
+            }
 
-    replaceCredentialsButton?.addEventListener('click', () => {
-      removeStoredItem(storageKeys.credentials);
-      applySession('');
-      setStatusMessage(controlStatus, '');
-      registrationForm?.reset();
-      setStatusMessage(registrationStatus, 'Credentials cleared. Create a new username and password below.', 'info');
-      refreshView();
-      setPanelState(registrationPanel, true);
-      setTimeout(() => registerUsername?.focus(), 50);
-    });
+            const providedKey = sanitize(setupKeyInput.value);
+            const username = sanitize(setupUsername.value);
+            const password = setupPassword.value.trim();
+            const confirmPassword = setupConfirm.value.trim();
 
-    logoutButton?.addEventListener('click', () => {
-      applySession('');
-      setStatusMessage(loginStatus, 'You have been logged out.', 'info');
-      refreshView();
-      setTimeout(() => loginUsername?.focus(), 50);
-    });
+            if (providedKey !== ADMIN_SETUP_KEY) {
+              setStatusMessage(setupStatus, 'The setup key you entered is incorrect.', 'error');
+              setupKeyInput?.focus();
+              return;
+            }
 
-    refreshView();
+            if (!username) {
+              setStatusMessage(setupStatus, 'Choose a username for the administrator account.', 'error');
+              setupUsername?.focus();
+              return;
+            }
+
+            if (!password) {
+              setStatusMessage(setupStatus, 'Enter a password to secure the administrator account.', 'error');
+              setupPassword?.focus();
+              return;
+            }
+
+            if (password.length < 10) {
+              setStatusMessage(setupStatus, 'Use a password with at least 10 characters for stronger protection.', 'error');
+              setupPassword?.focus();
+              return;
+            }
+
+            if (password !== confirmPassword) {
+              setStatusMessage(setupStatus, 'The confirmation does not match your password.', 'error');
+              setupConfirm?.focus();
+              return;
+            }
+
+            try {
+              const newCredentials = await storeCredentials(username, password);
+              await createSession(newCredentials);
+              setupForm.reset();
+              setStatusMessage(setupStatus, 'Administrator credentials saved. You are now signed in.', 'success');
+              await refreshView();
+            } catch (error) {
+              console.error(error);
+              setStatusMessage(setupStatus, 'Unable to save credentials. Please try again.', 'error');
+            }
+          });
+
+          loginForm?.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            try {
+              const credentials = getStoredCredentials();
+              if (!credentials) {
+                await refreshView();
+                return;
+              }
+
+              const username = sanitize(loginUsername.value);
+              const password = loginPassword.value.trim();
+
+              if (!username || !password) {
+                setStatusMessage(loginStatus, 'Enter both your username and password to sign in.', 'error');
+                return;
+              }
+
+              if (username !== credentials.username) {
+                setStatusMessage(loginStatus, 'That username does not match the administrator account.', 'error');
+                return;
+              }
+
+              const passwordValid = await verifyPassword(password, credentials);
+
+              if (!passwordValid) {
+                setStatusMessage(loginStatus, 'Incorrect password. Try again.', 'error');
+                return;
+              }
+
+              await createSession(credentials);
+              loginPassword.value = '';
+              setStatusMessage(loginStatus, 'Login successful! Loading your control center…', 'success');
+              await refreshView();
+            } catch (error) {
+              console.error(error);
+              setStatusMessage(loginStatus, 'Unable to sign in due to an unexpected error.', 'error');
+            }
+          });
+
+          addButton?.addEventListener('click', () => {
+            const adjustment = getAdjustmentSeconds();
+            if (adjustment <= 0) {
+              setStatusMessage(controlStatus, 'Add at least one second to update your reading time.', 'error');
+              return;
+            }
+
+            readingTimeSeconds += adjustment;
+            persistReadingTime();
+            loadReadingTime();
+            clearAdjustmentInputs();
+            setStatusMessage(controlStatus, 'Reading time updated successfully.', 'success');
+          });
+
+          subtractButton?.addEventListener('click', () => {
+            const adjustment = getAdjustmentSeconds();
+            if (adjustment <= 0) {
+              setStatusMessage(controlStatus, 'Subtract at least one second to update your reading time.', 'error');
+              return;
+            }
+
+            readingTimeSeconds = Math.max(0, readingTimeSeconds - adjustment);
+            persistReadingTime();
+            loadReadingTime();
+            clearAdjustmentInputs();
+            setStatusMessage(controlStatus, 'Reading time reduced successfully.', 'success');
+          });
+
+          resetButton?.addEventListener('click', () => {
+            if (readingTimeSeconds === 0) {
+              setStatusMessage(controlStatus, 'Reading time is already at zero.', 'info');
+              return;
+            }
+
+            readingTimeSeconds = 0;
+            persistReadingTime();
+            loadReadingTime();
+            clearAdjustmentInputs();
+            setStatusMessage(controlStatus, 'Reading time reset to zero.', 'success');
+          });
+
+          credentialUpdateForm?.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            try {
+              const credentials = getStoredCredentials();
+              if (!credentials) {
+                await refreshView();
+                return;
+              }
+
+              const currentPassword = currentPasswordInput.value.trim();
+              const newUsername = sanitize(newUsernameInput.value) || credentials.username;
+              const newPassword = newPasswordInput.value.trim();
+              const confirmNewPassword = confirmNewPasswordInput.value.trim();
+
+              if (!currentPassword) {
+                setStatusMessage(credentialStatus, 'Enter your current password to authorize the change.', 'error');
+                currentPasswordInput?.focus();
+                return;
+              }
+
+              const currentPasswordValid = await verifyPassword(currentPassword, credentials);
+              if (!currentPasswordValid) {
+                setStatusMessage(credentialStatus, 'Current password is incorrect.', 'error');
+                currentPasswordInput?.focus();
+                return;
+              }
+
+              if (!newUsername) {
+                setStatusMessage(credentialStatus, 'Username cannot be left blank.', 'error');
+                newUsernameInput?.focus();
+                return;
+              }
+
+              if (newPassword || confirmNewPassword) {
+                if (newPassword.length < 10) {
+                  setStatusMessage(credentialStatus, 'New passwords must be at least 10 characters.', 'error');
+                  newPasswordInput?.focus();
+                  return;
+                }
+
+                if (newPassword !== confirmNewPassword) {
+                  setStatusMessage(credentialStatus, 'The new password confirmation does not match.', 'error');
+                  confirmNewPasswordInput?.focus();
+                  return;
+                }
+              }
+
+              const passwordToPersist = newPassword ? newPassword : currentPassword;
+              const updatedCredentials = await storeCredentials(newUsername, passwordToPersist);
+              await createSession(updatedCredentials);
+              credentialUpdateForm.reset();
+              setStatusMessage(credentialStatus, 'Credentials updated. You remain signed in.', 'success');
+              await refreshView({ focus: false });
+            } catch (error) {
+              console.error(error);
+              setStatusMessage(credentialStatus, 'Unable to update credentials. Please try again.', 'error');
+            }
+          });
+
+          logoutButton?.addEventListener('click', async () => {
+            destroySession();
+            setStatusMessage(loginStatus, 'You have been logged out.', 'info');
+            await refreshView();
+          });
+
+          refreshView();
+    }
   </script>
 </body>
 </html>
