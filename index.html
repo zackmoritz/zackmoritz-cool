@@ -87,6 +87,38 @@
       margin: 0;
     }
 
+    .reading-time {
+      z-index: 1;
+      background: var(--section-bg);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.04);
+    }
+
+    .reading-time-label {
+      font-size: 0.75rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(244, 247, 251, 0.68);
+    }
+
+    .reading-time-value {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: #ffd86b;
+      white-space: nowrap;
+    }
+
+    .reading-time[data-active="true"] .reading-time-value {
+      color: #7cf6c5;
+    }
+
     .portrait {
       position: relative;
       z-index: 1;
@@ -383,6 +415,7 @@
     .contact-menu__title { font-size: 0.86rem; }
     .contact-menu__hint { font-size: 0.72rem; color: rgba(244, 247, 251, 0.7); letter-spacing: 0.02em; }
 
+    .login-button,
     .inventory-button {
       z-index: 1;
       display: inline-flex;
@@ -400,6 +433,12 @@
       transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
     }
 
+    .login-button {
+      border-color: rgba(154, 215, 255, 0.55);
+      background: linear-gradient(135deg, rgba(154, 215, 255, 0.24), rgba(24, 36, 54, 0.92));
+      color: #f4f7fb;
+    }
+
     .inventory-button:hover,
     .inventory-button:focus-visible {
       outline: none;
@@ -409,6 +448,16 @@
       box-shadow: 0 8px 22px rgba(32, 174, 134, 0.25);
     }
 
+    .login-button:hover,
+    .login-button:focus-visible {
+      outline: none;
+      transform: translateY(-1px);
+      border-color: rgba(206, 235, 255, 0.85);
+      background: linear-gradient(135deg, rgba(206, 235, 255, 0.35), rgba(36, 52, 78, 0.96));
+      box-shadow: 0 8px 22px rgba(96, 162, 255, 0.25);
+    }
+
+    .login-button svg,
     .inventory-button svg { width: 18px; height: 18px; fill: currentColor; }
 
     .social-connect:hover,
@@ -453,6 +502,11 @@
         <h1 id="card-title" class="card-title">Zachary Moritz</h1>
         <p class="card-role">Creative Human</p>
       </header>
+
+      <div class="reading-time" id="reading-time-widget" aria-live="polite">
+        <span class="reading-time-label">Reading time</span>
+        <span class="reading-time-value" id="reading-time-value">0h 00m 00s</span>
+      </div>
 
       <figure class="portrait" data-portrait-slot>
         <img
@@ -643,6 +697,15 @@
 
       <!-- Keep ONLY the first set of buttons -->
       <div class="cta-stack" aria-label="Connect with Zack">
+        <a class="login-button" href="/login.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path
+              d="M12 2a5 5 0 0 1 5 5v1h1.5A2.5 2.5 0 0 1 21 10.5v8A2.5 2.5 0 0 1 18.5 21h-13A2.5 2.5 0 0 1 3 18.5v-8A2.5 2.5 0 0 1 5.5 8H7V7a5 5 0 0 1 5-5Zm0 2a3 3 0 0 0-3 3v1h6V7a3 3 0 0 0-3-3Zm6.5 6H5.5A.5.5 0 0 0 5 10.5v8a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-8a.5.5 0 0 0-.5-.5ZM12 12a2 2 0 1 1-2 2 2 2 0 0 1 2-2Z"
+            />
+          </svg>
+          <span>Member Login</span>
+        </a>
+
         <div class="contact-dropdown" data-open="false">
           <button
             type="button"
@@ -745,6 +808,39 @@
   </div>
 
   <script>
+    const readingTimeValue = document.getElementById('reading-time-value');
+    const readingTimeWidget = document.getElementById('reading-time-widget');
+    const readingTimeKey = 'zm-reading-time-seconds';
+
+    const formatReadingTime = (totalSeconds) => {
+      const seconds = Math.max(0, Number.isFinite(totalSeconds) ? Math.floor(totalSeconds) : 0);
+      const hrs = Math.floor(seconds / 3600);
+      const mins = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+      return `${hrs}h ${String(mins).padStart(2, '0')}m ${String(secs).padStart(2, '0')}s`;
+    };
+
+    const renderReadingTime = () => {
+      if (!readingTimeValue) return;
+      let stored = 0;
+      try {
+        stored = Number.parseInt(localStorage.getItem(readingTimeKey) || '0', 10);
+      } catch (error) {
+        stored = 0;
+      }
+      const safeValue = Number.isNaN(stored) || stored < 0 ? 0 : stored;
+      readingTimeValue.textContent = formatReadingTime(safeValue);
+      readingTimeWidget?.setAttribute('data-active', safeValue > 0 ? 'true' : 'false');
+    };
+
+    renderReadingTime();
+
+    window.addEventListener('storage', (event) => {
+      if (event.key === readingTimeKey) {
+        renderReadingTime();
+      }
+    });
+
     // Zodiac module
     const zodiacModule = document.querySelector('.zodiac-module');
     const zodiacRootButton = document.querySelector('.zodiac-root-button');
