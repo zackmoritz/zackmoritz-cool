@@ -476,8 +476,13 @@
     const storageKeys = {
       credentials: 'zm-member-credentials',
       session: 'zm-member-session',
-      readingTime: 'zm-reading-time-seconds'
+      readingTime: 'zm-reading-time-seconds',
+      readingTimePending: 'zm-reading-time-pending-sync'
     };
+
+    const readingTimeApiBaseUrl = 'https://zmreading.zackmoritz.workers.dev';
+    const readingTimeApiEndpoint = `${readingTimeApiBaseUrl.replace(/\/+$/, '')}/reading-time`;
+    const readingTimePendingSyncKey = storageKeys.readingTimePending;
 
     const setupPanel = document.getElementById('setup-panel');
     const setupForm = document.getElementById('setup-form');
@@ -667,22 +672,128 @@
       return `${hrs}h ${String(mins).padStart(2, '0')}m ${String(secs).padStart(2, '0')}s`;
     };
 
-    const loadReadingTime = () => {
-      let stored = 0;
-      try {
-        stored = Number.parseInt(localStorage.getItem(storageKeys.readingTime) || '0', 10);
-      } catch (error) {
-        stored = 0;
+    const sanitizeReadingTime = (value) => {
+      if (typeof value === 'number') {
+        return Math.max(0, Math.floor(Number.isFinite(value) ? value : 0));
       }
-      readingTimeSeconds = Number.isNaN(stored) || stored < 0 ? 0 : stored;
-      readingTimeDisplay.textContent = formatReadingTime(readingTimeSeconds);
+
+      const numeric = Number.parseInt(value, 10);
+      if (Number.isFinite(numeric)) {
+        return Math.max(0, Math.floor(numeric));
+      }
+
+      return 0;
     };
 
-    const persistReadingTime = () => {
+    const getPendingReadingTimeSync = () => {
       try {
-        localStorage.setItem(storageKeys.readingTime, String(Math.max(0, readingTimeSeconds)));
+        return localStorage.getItem(readingTimePendingSyncKey) === 'true';
+      } catch (error) {
+        return false;
+      }
+    };
+
+    const setPendingReadingTimeSync = (pending) => {
+      try {
+        if (pending) {
+          localStorage.setItem(readingTimePendingSyncKey, 'true');
+        } else {
+          localStorage.removeItem(readingTimePendingSyncKey);
+        }
       } catch (error) {
         /* ignore storage errors */
+      }
+    };
+
+    const getLocalReadingTime = () => {
+      try {
+        return sanitizeReadingTime(localStorage.getItem(storageKeys.readingTime) || '0');
+      } catch (error) {
+        return 0;
+      }
+    };
+
+    const setLocalReadingTime = (seconds) => {
+      try {
+        localStorage.setItem(storageKeys.readingTime, String(sanitizeReadingTime(seconds)));
+      } catch (error) {
+        /* ignore storage errors */
+      }
+    };
+
+    const updateReadingTimeDisplay = (seconds) => {
+      const safeSeconds = sanitizeReadingTime(seconds);
+      readingTimeSeconds = safeSeconds;
+      if (readingTimeDisplay) {
+        readingTimeDisplay.textContent = formatReadingTime(safeSeconds);
+      }
+    };
+
+    const loadReadingTime = async () => {
+      updateReadingTimeDisplay(getLocalReadingTime());
+
+      if (getPendingReadingTimeSync()) {
+        return;
+      }
+
+      try {
+        const response = await fetch(readingTimeApiEndpoint, {
+          method: 'GET',
+          headers: {
+            Accept: 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Reading time fetch failed with status ${response.status}`);
+        }
+
+        const payload = await response.json();
+        const remoteSeconds = sanitizeReadingTime(payload?.seconds);
+        setLocalReadingTime(remoteSeconds);
+        updateReadingTimeDisplay(remoteSeconds);
+      } catch (error) {
+        console.warn('Unable to load reading time from API.', error);
+      }
+    };
+
+    const persistReadingTime = async () => {
+      const safeSeconds = sanitizeReadingTime(readingTimeSeconds);
+      setLocalReadingTime(safeSeconds);
+      updateReadingTimeDisplay(safeSeconds);
+      setPendingReadingTimeSync(true);
+
+      try {
+        const response = await fetch(readingTimeApiEndpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ seconds: safeSeconds })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Reading time save failed with status ${response.status}`);
+        }
+
+        setPendingReadingTimeSync(false);
+      } catch (error) {
+        console.warn('Unable to persist reading time to API.', error);
+      }
+    };
+
+    const syncPendingReadingTime = async () => {
+      updateReadingTimeDisplay(getLocalReadingTime());
+
+      if (!getPendingReadingTimeSync()) {
+        await loadReadingTime();
+        return;
+      }
+
+      await persistReadingTime();
+
+      if (!getPendingReadingTimeSync()) {
+        await loadReadingTime();
       }
     };
 
@@ -734,7 +845,7 @@
         setPanelState(controlPanel, true);
         loginForm?.reset();
         setStatusMessage(setupStatus, '');
-        loadReadingTime();
+        await loadReadingTime();
 
         if (focus) {
           setTimeout(() => adjustHours?.focus(), 60);
@@ -768,7 +879,11 @@
       adjustSeconds.value = '0';
     };
 
-    loadReadingTime();
+    void syncPendingReadingTime();
+
+    window.addEventListener('online', () => {
+      void syncPendingReadingTime();
+    });
 
     const cryptoSupported =
       typeof window.crypto !== 'undefined' && typeof window.crypto.subtle !== 'undefined';
@@ -898,8 +1013,7 @@
             }
 
             readingTimeSeconds += adjustment;
-            persistReadingTime();
-            loadReadingTime();
+            void persistReadingTime();
             clearAdjustmentInputs();
             setStatusMessage(controlStatus, 'Reading time updated successfully.', 'success');
           });
@@ -912,8 +1026,7 @@
             }
 
             readingTimeSeconds = Math.max(0, readingTimeSeconds - adjustment);
-            persistReadingTime();
-            loadReadingTime();
+            void persistReadingTime();
             clearAdjustmentInputs();
             setStatusMessage(controlStatus, 'Reading time reduced successfully.', 'success');
           });
@@ -925,8 +1038,7 @@
             }
 
             readingTimeSeconds = 0;
-            persistReadingTime();
-            loadReadingTime();
+            void persistReadingTime();
             clearAdjustmentInputs();
             setStatusMessage(controlStatus, 'Reading time reset to zero.', 'success');
           });
