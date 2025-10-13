@@ -301,6 +301,24 @@
       transition: transform 160ms ease, box-shadow 160ms ease;
     }
 
+    .thumb.load-error {
+      background: repeating-linear-gradient(135deg, rgba(255, 96, 96, 0.35), rgba(255, 96, 96, 0.35) 12px, rgba(12, 15, 24, 0.9) 12px, rgba(12, 15, 24, 0.9) 24px);
+      color: rgba(255, 230, 230, 0.8);
+    }
+
+    .thumb.load-error img {
+      display: none;
+    }
+
+    .thumb.load-error::after {
+      content: 'Preview unavailable';
+      position: relative;
+      z-index: 1;
+      font-size: 0.8rem;
+      text-align: center;
+      padding: 0 8px;
+    }
+
     .card:hover .thumb img,
     .card:focus-within .thumb img {
       transform: scale(1.02);
@@ -982,9 +1000,9 @@
         const img = document.createElement('img');
         img.loading = 'lazy';
         img.decoding = 'async';
-        img.src = item.url;
         img.alt = item.file;
-        img.addEventListener('load', () => {
+
+        const applyOrientation = () => {
           const { naturalWidth: width, naturalHeight: height } = img;
           if (!width || !height) return;
           const orientation = Math.abs(width - height) <= 2
@@ -994,7 +1012,17 @@
               : 'portrait';
           button.classList.remove('landscape', 'portrait', 'square');
           button.classList.add(orientation);
+        };
+
+        img.addEventListener('load', applyOrientation);
+        img.addEventListener('error', () => {
+          button.classList.add('load-error');
         });
+
+        img.src = item.url;
+        if (img.complete) {
+          applyOrientation();
+        }
         button.appendChild(img);
         button.addEventListener('click', () => openLightbox(item));
         const body = document.createElement('div');
