@@ -270,17 +270,81 @@
 
     .thumb {
       aspect-ratio: 4 / 3;
-      background: rgba(6, 8, 14, 0.8);
+      background: radial-gradient(120% 120% at 50% 10%, rgba(95, 212, 255, 0.16), transparent 70%), rgba(6, 8, 14, 0.9);
       display: grid;
       place-items: center;
+      position: relative;
+      padding: 12px;
       overflow: hidden;
+      isolation: isolate;
+    }
+
+    .thumb::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      border: 1px solid rgba(95, 212, 255, 0.12);
+      pointer-events: none;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
     }
 
     .thumb img {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      display: block;
+      border-radius: 12px;
+      box-shadow: 0 22px 45px rgba(0, 0, 0, 0.32);
+      transition: transform 160ms ease, box-shadow 160ms ease;
+    }
+
+    .thumb.load-error {
+      background: repeating-linear-gradient(135deg, rgba(255, 96, 96, 0.35), rgba(255, 96, 96, 0.35) 12px, rgba(12, 15, 24, 0.9) 12px, rgba(12, 15, 24, 0.9) 24px);
+      color: rgba(255, 230, 230, 0.8);
+    }
+
+    .thumb.load-error img {
+      display: none;
+    }
+
+    .thumb.load-error::after {
+      content: 'Preview unavailable';
+      position: relative;
+      z-index: 1;
+      font-size: 0.8rem;
+      text-align: center;
+      padding: 0 8px;
+    }
+
+    .card:hover .thumb img,
+    .card:focus-within .thumb img {
+      transform: scale(1.02);
+      box-shadow: 0 32px 60px rgba(0, 0, 0, 0.38);
+    }
+
+    .thumb.landscape::before {
+      border-color: rgba(95, 212, 255, 0.16);
+    }
+
+    .thumb.portrait::before,
+    .thumb.square::before {
+      border-color: rgba(95, 212, 255, 0.25);
+    }
+
+    .thumb.landscape img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      display: block;
+    }
+
+    .thumb.portrait img,
+    .thumb.square img {
+      width: auto;
+      height: 100%;
+      object-fit: contain;
     }
 
     .card-body {
@@ -317,10 +381,20 @@
     }
 
     .folder-thumb {
+      padding: 18px;
       background: rgba(95, 212, 255, 0.14);
       display: grid;
       place-items: center;
       color: var(--accent);
+    }
+
+    .folder-thumb::before {
+      border-color: rgba(95, 212, 255, 0.18);
+    }
+
+    .folder-thumb svg {
+      width: clamp(36px, 5vw, 52px);
+      height: clamp(36px, 5vw, 52px);
     }
 
     .empty {
@@ -922,12 +996,33 @@
         card.className = 'card';
         const button = document.createElement('button');
         button.type = 'button';
-        button.className = 'thumb';
+        button.className = 'thumb landscape';
         const img = document.createElement('img');
         img.loading = 'lazy';
         img.decoding = 'async';
-        img.src = item.url;
         img.alt = item.file;
+
+        const applyOrientation = () => {
+          const { naturalWidth: width, naturalHeight: height } = img;
+          if (!width || !height) return;
+          const orientation = Math.abs(width - height) <= 2
+            ? 'square'
+            : width > height
+              ? 'landscape'
+              : 'portrait';
+          button.classList.remove('landscape', 'portrait', 'square');
+          button.classList.add(orientation);
+        };
+
+        img.addEventListener('load', applyOrientation);
+        img.addEventListener('error', () => {
+          button.classList.add('load-error');
+        });
+
+        img.src = item.url;
+        if (img.complete) {
+          applyOrientation();
+        }
         button.appendChild(img);
         button.addEventListener('click', () => openLightbox(item));
         const body = document.createElement('div');
