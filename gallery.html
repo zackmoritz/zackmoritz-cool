@@ -832,7 +832,10 @@
     const PAGE_SIZE = 25;
 
     function encodePath(parts) {
-      return parts.map(part => encodeURIComponent(part)).join('/');
+      return parts
+        .map(part => part.normalize('NFC'))
+        .map(encodeURIComponent)
+        .join('/');
     }
 
     function resolveRelativePath(item) {
@@ -853,7 +856,7 @@
 
     function buildFolderUrl(parts) {
       const path = ['Digital_Gratitude_List', ...parts];
-      return encodePath(path);
+      return `/${encodePath(path)}`;
     }
 
     function getNode(pathParts) {
