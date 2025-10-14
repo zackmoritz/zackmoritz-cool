@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Digital Gratitude List — Photo Explorer</title>
+  <title>Digital Gratitude List -- Photo Explorer</title>
   <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAZElEQVR42u3XwREAEBBD0XRgHNSnaf1QAXaMJUwOzv/dNhBiqjcfBHgKkEs1ve0Aa3gFAq+4FQHPuAUB7/gMgRPxEYIP4BXvIQQQQAAB+AC6BRTnmGKQUEwyilFKMcv1M/oa0AD36JLNg+KoVQAAAABJRU5ErkJggg==">
   <style>
     :root {
@@ -18,9 +18,7 @@
       font-family: "Inter", "Segoe UI", system-ui, sans-serif;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -31,22 +29,11 @@
       flex-direction: column;
     }
 
-    header {
-      padding: clamp(24px, 6vw, 48px) clamp(18px, 6vw, 48px) 16px;
-    }
+    header { padding: clamp(24px, 6vw, 48px) clamp(18px, 6vw, 48px) 16px; }
 
-    h1 {
-      margin: 0;
-      font-size: clamp(2rem, 4vw, 3rem);
-      letter-spacing: -0.02em;
-    }
+    h1 { margin: 0; font-size: clamp(2rem, 4vw, 3rem); letter-spacing: -0.02em; }
 
-    .intro {
-      margin: 12px 0 0;
-      color: var(--muted);
-      max-width: 72ch;
-      line-height: 1.6;
-    }
+    .intro { margin: 12px 0 0; color: var(--muted); max-width: 72ch; line-height: 1.6; }
 
     main {
       flex: 1;
@@ -63,7 +50,6 @@
         grid-template-columns: 1fr;
         grid-template-rows: auto 1fr;
       }
-
       aside {
         border-right: none !important;
         border-bottom: 1px solid rgba(255, 255, 255, 0.06);
@@ -87,17 +73,8 @@
       color: var(--muted);
     }
 
-    .tree {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: grid;
-      gap: 6px;
-    }
-
-    .tree-item {
-      display: block;
-    }
+    .tree { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+    .tree-item { display: block; }
 
     .tree-row {
       display: flex;
@@ -112,96 +89,35 @@
       text-decoration: none;
     }
 
-    .tree-row:hover,
-    .tree-row:focus-visible {
-      outline: none;
-      background: rgba(95, 212, 255, 0.12);
-    }
-
-    .tree-row.active {
-      background: rgba(95, 212, 255, 0.2);
-      color: #e9f7ff;
-    }
+    .tree-row:hover, .tree-row:focus-visible { outline: none; background: rgba(95, 212, 255, 0.12); }
+    .tree-row.active { background: rgba(95, 212, 255, 0.2); color: #e9f7ff; }
 
     .toggle {
-      border: none;
-      background: none;
-      display: grid;
-      place-items: center;
-      width: 20px;
-      height: 20px;
-      color: var(--muted);
-      cursor: pointer;
-      padding: 0;
+      border: none; background: none; display: grid; place-items: center;
+      width: 20px; height: 20px; color: var(--muted); cursor: pointer; padding: 0;
       margin-left: calc(var(--indent, 0px));
     }
+    .toggle svg { width: 14px; height: 14px; transition: transform 160ms ease; }
 
-    .toggle svg {
-      width: 14px;
-      height: 14px;
-      transition: transform 160ms ease;
-    }
+    .tree-item.collapsed > .children { display: none; }
+    .tree-item.collapsed > .tree-row .toggle svg { transform: rotate(-90deg); }
 
-    .tree-item.collapsed > .children {
-      display: none;
-    }
+    .tree-label { display: inline-flex; align-items: center; gap: 8px; flex: 1; }
+    .tree-label svg { width: 18px; height: 18px; color: var(--accent); }
 
-    .tree-item.collapsed > .tree-row .toggle svg {
-      transform: rotate(-90deg);
-    }
-
-    .tree-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      flex: 1;
-    }
-
-    .tree-label svg {
-      width: 18px;
-      height: 18px;
-      color: var(--accent);
-    }
-
-    section.gallery-view {
-      background: var(--panel-alt);
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-    }
+    section.gallery-view { background: var(--panel-alt); display: flex; flex-direction: column; min-height: 0; }
 
     .gallery-head {
       padding: 24px clamp(18px, 5vw, 36px) 10px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
+      display: flex; flex-direction: column; gap: 14px;
     }
 
-    .breadcrumbs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      font-size: 0.9rem;
-      color: var(--muted);
-    }
+    .breadcrumbs { display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.9rem; color: var(--muted); }
+    .breadcrumbs span { display: inline-flex; align-items: center; gap: 8px; }
+    .breadcrumbs span + span::before { content: '\u203A'; opacity: 0.65; font-size: 0.85rem; }
 
-    .breadcrumbs span {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .breadcrumbs span + span::before {
-      content: '\u203A';
-      opacity: 0.65;
-      font-size: 0.85rem;
-    }
-
-    .gallery-summary {
-      font-size: 0.95rem;
-      color: var(--muted);
-    }
+    .gallery-summary { font-size: 0.95rem; color: var(--muted); }
 
     .gallery-grid {
       padding: 24px clamp(18px, 5vw, 36px) 48px;
@@ -214,17 +130,9 @@
 
     .pagination {
       padding: 0 clamp(18px, 5vw, 36px) 32px;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 12px;
-      color: var(--muted);
+      display: flex; align-items: center; justify-content: flex-end; gap: 12px; color: var(--muted);
     }
-
-    .pagination[hidden] {
-      display: none;
-    }
-
+    .pagination[hidden] { display: none; }
     .pagination button {
       background: rgba(95, 212, 255, 0.12);
       border: 1px solid rgba(95, 212, 255, 0.35);
@@ -235,21 +143,11 @@
       cursor: pointer;
       transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
     }
-
-    .pagination button:disabled {
-      opacity: 0.45;
-      cursor: default;
-    }
-
+    .pagination button:disabled { opacity: 0.45; cursor: default; }
     .pagination button:not(:disabled):hover,
-    .pagination button:not(:disabled):focus-visible {
-      background: rgba(95, 212, 255, 0.2);
-      outline: none;
-    }
+    .pagination button:not(:disabled):focus-visible { background: rgba(95, 212, 255, 0.2); outline: none; }
 
-    .pagination-info {
-      font-size: 0.85rem;
-    }
+    .pagination-info { font-size: 0.85rem; }
 
     .card {
       background: rgba(12, 15, 24, 0.7);
@@ -260,32 +158,24 @@
       flex-direction: column;
       transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
     }
-
-    .card:hover,
-    .card:focus-within {
-      border-color: rgba(95, 212, 255, 0.5);
-      transform: translateY(-4px);
-      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
-    }
+    .card:hover, .card:focus-within { border-color: rgba(95,212,255,0.5); transform: translateY(-4px); box-shadow: 0 18px 40px rgba(0,0,0,0.35); }
 
     .thumb {
       aspect-ratio: 4 / 3;
       background: radial-gradient(120% 120% at 50% 10%, rgba(95, 212, 255, 0.16), transparent 70%), rgba(6, 8, 14, 0.9);
-      display: grid;
-      place-items: center;
       position: relative;
       padding: 12px;
       overflow: hidden;
       isolation: isolate;
+      /* ✅ Center the image perfectly */
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .thumb::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: 16px;
-      border: 1px solid rgba(95, 212, 255, 0.12);
-      pointer-events: none;
+      content: ''; position: absolute; inset: 0; border-radius: 16px;
+      border: 1px solid rgba(95, 212, 255, 0.12); pointer-events: none;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
     }
 
@@ -295,190 +185,71 @@
       width: auto;
       height: auto;
       object-fit: contain;
+      object-position: center center;
       display: block;
+      margin: auto; /* centers inside flex just in case */
       border-radius: 12px;
       box-shadow: 0 22px 45px rgba(0, 0, 0, 0.32);
       transition: transform 160ms ease, box-shadow 160ms ease;
     }
 
-    .thumb.load-error {
-      background: repeating-linear-gradient(135deg, rgba(255, 96, 96, 0.35), rgba(255, 96, 96, 0.35) 12px, rgba(12, 15, 24, 0.9) 12px, rgba(12, 15, 24, 0.9) 24px);
-      color: rgba(255, 230, 230, 0.8);
-    }
-
-    .thumb.load-error img {
-      display: none;
-    }
-
-    .thumb.load-error::after {
-      content: 'Preview unavailable';
-      position: relative;
-      z-index: 1;
-      font-size: 0.8rem;
-      text-align: center;
-      padding: 0 8px;
-    }
-
-    .card:hover .thumb img,
-    .card:focus-within .thumb img {
-      transform: scale(1.02);
-      box-shadow: 0 32px 60px rgba(0, 0, 0, 0.38);
-    }
-
-    .thumb.landscape::before {
-      border-color: rgba(95, 212, 255, 0.16);
-    }
-
-    .thumb.portrait::before,
-    .thumb.square::before {
-      border-color: rgba(95, 212, 255, 0.25);
-    }
-
-    .thumb.landscape img {
-      width: 100%;
-      height: 100%;
+    /* ✅ Make sure orientation classes never stretch off-center */
+    .thumb.landscape img,
+    .thumb.portrait img,
+    .thumb.square img {
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      max-height: 100%;
       object-fit: contain;
-      display: block;
-      border-radius: 12px;
-      box-shadow: 0 22px 45px rgba(0, 0, 0, 0.32);
-      transition: transform 160ms ease, box-shadow 160ms ease;
+      object-position: center center;
     }
 
     .thumb.load-error {
       background: repeating-linear-gradient(135deg, rgba(255, 96, 96, 0.35), rgba(255, 96, 96, 0.35) 12px, rgba(12, 15, 24, 0.9) 12px, rgba(12, 15, 24, 0.9) 24px);
       color: rgba(255, 230, 230, 0.8);
     }
-
-    .thumb.load-error img {
-      display: none;
-    }
-
+    .thumb.load-error img { display: none; }
     .thumb.load-error::after {
       content: 'Preview unavailable';
-      position: relative;
-      z-index: 1;
-      font-size: 0.8rem;
-      text-align: center;
-      padding: 0 8px;
+      position: relative; z-index: 1; font-size: 0.8rem; text-align: center; padding: 0 8px;
     }
 
-    .card:hover .thumb img,
-    .card:focus-within .thumb img {
-      transform: scale(1.02);
-      box-shadow: 0 32px 60px rgba(0, 0, 0, 0.38);
-    }
+    .card:hover .thumb img, .card:focus-within .thumb img { transform: scale(1.02); box-shadow: 0 32px 60px rgba(0, 0, 0, 0.38); }
 
-    .card-body {
-      padding: 14px 16px 18px;
-      display: grid;
-      gap: 6px;
-    }
+    .card-body { padding: 14px 16px 18px; display: grid; gap: 6px; }
+    .card-title { font-weight: 600; font-size: 0.95rem; line-height: 1.35; }
+    .card-meta { font-size: 0.8rem; color: var(--muted); }
 
-    .card-title {
-      font-weight: 600;
-      font-size: 0.95rem;
-      line-height: 1.35;
-    }
+    .card button, .card a { background: none; border: none; color: inherit; text-align: inherit; font: inherit; cursor: pointer; padding: 0; }
 
-    .card-meta {
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
-
-    .card button,
-    .card a {
-      background: none;
-      border: none;
-      color: inherit;
-      text-align: inherit;
-      font: inherit;
-      cursor: pointer;
-      padding: 0;
-    }
-
-    .folder-card {
-      align-items: center;
-      text-align: left;
-    }
-
-    .folder-thumb {
-      padding: 18px;
-      background: rgba(95, 212, 255, 0.14);
-      display: grid;
-      place-items: center;
-      color: var(--accent);
-    }
-
-    .folder-thumb::before {
-      border-color: rgba(95, 212, 255, 0.18);
-    }
-
-    .folder-thumb svg {
-      width: clamp(36px, 5vw, 52px);
-      height: clamp(36px, 5vw, 52px);
-    }
+    .folder-card { align-items: center; text-align: left; }
+    .folder-thumb { padding: 18px; background: rgba(95, 212, 255, 0.14); display: grid; place-items: center; color: var(--accent); }
+    .folder-thumb::before { border-color: rgba(95, 212, 255, 0.18); }
+    .folder-thumb svg { width: clamp(36px, 5vw, 52px); height: clamp(36px, 5vw, 52px); }
 
     .empty {
-      grid-column: 1 / -1;
-      text-align: center;
-      padding: 48px 24px;
-      border: 1px dashed rgba(255, 255, 255, 0.12);
-      border-radius: 16px;
-      color: var(--muted);
+      grid-column: 1 / -1; text-align: center; padding: 48px 24px;
+      border: 1px dashed rgba(255, 255, 255, 0.12); border-radius: 16px; color: var(--muted);
     }
 
     .lightbox {
-      position: fixed;
-      inset: 0;
-      background: rgba(8, 10, 16, 0.78);
-      backdrop-filter: blur(12px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      z-index: 40;
+      position: fixed; inset: 0; background: rgba(8, 10, 16, 0.78); backdrop-filter: blur(12px);
+      display: none; align-items: center; justify-content: center; padding: 24px; z-index: 40;
     }
-
-    .lightbox.open {
-      display: flex;
-    }
-
+    .lightbox.open { display: flex; }
     .lightbox figure {
-      background: rgba(12, 15, 24, 0.95);
-      border-radius: 20px;
-      max-width: min(1000px, 90vw);
-      max-height: 85vh;
-      padding: 18px 18px 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      border: 1px solid rgba(95, 212, 255, 0.3);
-      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
+      background: rgba(12, 15, 24, 0.95); border-radius: 20px; max-width: min(1000px, 90vw); max-height: 85vh;
+      padding: 18px 18px 24px; display: flex; flex-direction: column; gap: 12px;
+      border: 1px solid rgba(95, 212, 255, 0.3); box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
     }
-
-    .lightbox img {
-      max-width: 100%;
-      max-height: 70vh;
-      border-radius: 12px;
-    }
-
+    .lightbox img { max-width: 100%; max-height: 70vh; border-radius: 12px; }
     .lightbox .close-btn {
-      align-self: flex-end;
-      border: none;
-      border-radius: 999px;
-      padding: 8px 14px;
-      background: rgba(95, 212, 255, 0.16);
-      color: #e9f7ff;
-      cursor: pointer;
-      font-size: 0.85rem;
+      align-self: flex-end; border: none; border-radius: 999px; padding: 8px 14px;
+      background: rgba(95, 212, 255, 0.16); color: #e9f7ff; cursor: pointer; font-size: 0.85rem;
     }
 
-    footer {
-      padding: 18px;
-      text-align: center;
-      font-size: 0.8rem;
-      color: rgba(255, 255, 255, 0.45);
-    }
+    footer { padding: 18px; text-align: center; font-size: 0.8rem; color: rgba(255, 255, 255, 0.45); }
   </style>
 </head>
 <body>
@@ -529,7 +300,7 @@
           name: 'Garage',
           files: [
             '1-2_Inch_Drive_Ratchet.jpg',
-            '1-2“_Drive_Chrome_Vanadium_Evercraft_Ratchet.jpg',
+            '1-2"_Drive_Chrome_Vanadium_Evercraft_Ratchet.jpg',
             '4_Foot_Level.jpg',
             '4_Foot_Level_2.jpg',
             'Allway_Tools_Shingle_Remover.jpg',
@@ -682,7 +453,7 @@
                 'Sears Craftsman 10 Inch Circular Saw Blade Steel.jpg',
                 'Sears Craftsman Kromedge Thin Rim Saw Blade Molybdenum Steel.jpg',
                 'circular_saw_blade_rusted.jpg',
-                'freud 10” Fine Cut-Off Saw Blade.jpg'
+                'freud 10" Fine Cut-Off Saw Blade.jpg'
               ],
               dirs: []
             }
@@ -844,24 +615,14 @@
     const lightboxCaption = document.getElementById('lightboxCaption');
     const lightboxClose = document.getElementById('lightboxClose');
 
-    const state = {
-      currentPath: ['ALL'],
-      expanded: new Set(),
-      page: 1
-    };
-
+    const state = { currentPath: ['ALL'], expanded: new Set(), page: 1 };
     const PAGE_SIZE = 25;
 
     function encodePath(parts) {
-      return parts
-        .map(part => part.normalize('NFC'))
-        .map(encodeURIComponent)
-        .join('/');
+      return parts.map(part => part.normalize('NFC')).map(encodeURIComponent).join('/');
     }
 
-    function resolveRelativePath(item) {
-      return [...item.path, item.file].join('/');
-    }
+    function resolveRelativePath(item) { return [...item.path, item.file].join('/'); }
 
     function getCommitTimestamp(item) {
       const rel = resolveRelativePath(item);
@@ -894,11 +655,7 @@
     function collectFiles(node, basePath = []) {
       const items = [];
       for (const file of node.files || []) {
-        items.push({
-          file,
-          path: basePath,
-          url: buildFolderUrl([...basePath, file])
-        });
+        items.push({ file, path: basePath, url: buildFolderUrl([...basePath, file]) });
       }
       for (const dir of node.dirs || []) {
         items.push(...collectFiles(dir, [...basePath, dir.name]));
@@ -906,9 +663,7 @@
       return items;
     }
 
-    function formatCount(count) {
-      return new Intl.NumberFormat().format(count);
-    }
+    function formatCount(count) { return new Intl.NumberFormat().format(count); }
 
     function renderBreadcrumbs() {
       breadcrumbs.innerHTML = '';
@@ -924,10 +679,7 @@
         home.setAttribute('role', 'link');
         home.addEventListener('click', () => selectFolder([]));
         home.addEventListener('keydown', evt => {
-          if (evt.key === 'Enter' || evt.key === ' ') {
-            evt.preventDefault();
-            selectFolder([]);
-          }
+          if (evt.key === 'Enter' || evt.key === ' ') { evt.preventDefault(); selectFolder([]); }
         });
         frag.appendChild(home);
         let path = [];
@@ -945,20 +697,21 @@
       galleryGrid.innerHTML = '';
       pagination.innerHTML = '';
       pagination.hidden = true;
+
       let files = [];
       let node;
+
       if (state.currentPath[0] === 'ALL') {
         node = DATA;
         files = collectFiles(DATA, []);
       } else {
         node = getNode(state.currentPath);
         if (!node) return;
-        const baseFiles = node.files.map(file => ({
+        files = node.files.map(file => ({
           file,
           path: state.currentPath,
           url: buildFolderUrl([...state.currentPath, file])
         }));
-        files = baseFiles;
       }
 
       files.sort(sortByCommit);
@@ -986,9 +739,7 @@
 
       const totalFiles = files.length;
       const totalPages = totalFiles ? Math.ceil(totalFiles / PAGE_SIZE) : 1;
-      if (state.page > totalPages) {
-        state.page = totalPages;
-      }
+      if (state.page > totalPages) state.page = totalPages;
       const startIndex = totalFiles ? (state.page - 1) * PAGE_SIZE : 0;
       const endIndex = totalFiles ? Math.min(startIndex + PAGE_SIZE, totalFiles) : 0;
       const pagedFiles = files.slice(startIndex, endIndex);
@@ -1018,21 +769,34 @@
       for (const item of pagedFiles) {
         const card = document.createElement('article');
         card.className = 'card';
+
         const button = document.createElement('button');
         button.type = 'button';
-        button.className = 'thumb landscape';
+        button.className = 'thumb'; // start neutral; we'll add orientation on load
+
         const img = document.createElement('img');
         img.loading = 'lazy';
         img.decoding = 'async';
         img.alt = item.file;
 
-        img.addEventListener('error', () => {
-          button.classList.add('load-error');
-        });
+        // ✅ Orientation detection to apply class (portrait/square/landscape)
+        const applyOrientation = () => {
+          const w = img.naturalWidth, h = img.naturalHeight;
+          if (!w || !h) return;
+          const cls = Math.abs(w - h) <= 2 ? 'square' : (w > h ? 'landscape' : 'portrait');
+          button.classList.remove('landscape', 'portrait', 'square');
+          button.classList.add(cls);
+        };
+
+        img.addEventListener('load', applyOrientation);
+        img.addEventListener('error', () => { button.classList.add('load-error'); });
 
         img.src = item.url;
+        if (img.complete) applyOrientation();
+
         button.appendChild(img);
         button.addEventListener('click', () => openLightbox(item));
+
         const body = document.createElement('div');
         body.className = 'card-body';
         const title = document.createElement('div');
@@ -1040,11 +804,10 @@
         title.textContent = item.file;
         const meta = document.createElement('div');
         meta.className = 'card-meta';
-        if (state.currentPath[0] === 'ALL') {
-          meta.textContent = item.path.length ? item.path.join(' › ') : DATA.name;
-        } else {
-          meta.textContent = 'Photo';
-        }
+        meta.textContent = state.currentPath[0] === 'ALL'
+          ? (item.path.length ? item.path.join(' › ') : DATA.name)
+          : 'Photo';
+
         body.append(title, meta);
         card.append(button, body);
         galleryGrid.appendChild(card);
@@ -1053,32 +816,22 @@
       const fileCount = totalFiles;
       const displayStart = totalFiles ? startIndex + 1 : 0;
       const displayEnd = totalFiles ? startIndex + pagedFiles.length : 0;
-      const rangeText = totalFiles
-        ? ` — Showing ${formatCount(displayStart)}–${formatCount(displayEnd)}`
-        : '';
-      gallerySummary.textContent = `${locationLabel}: ${formatCount(fileCount)} photo${fileCount === 1 ? '' : 's'}${folderCount ? `, ${formatCount(folderCount)} folder${folderCount === 1 ? '' : 's'}` : ''}${rangeText}`;
+      const rangeText = totalFiles ? ` -- Showing ${formatCount(displayStart)}–${formatCount(displayEnd)}` : '';
+      gallerySummary.textContent =
+        `${locationLabel}: ${formatCount(fileCount)} photo${fileCount === 1 ? '' : 's'}${folderCount ? `, ${formatCount(folderCount)} folder${folderCount === 1 ? '' : 's'}` : ''}${rangeText}`;
 
       renderPagination(totalFiles, totalPages);
     }
 
     function renderPagination(totalFiles, totalPages) {
-      if (totalFiles <= PAGE_SIZE) {
-        pagination.hidden = true;
-        return;
-      }
-
+      if (totalFiles <= PAGE_SIZE) { pagination.hidden = true; return; }
       pagination.hidden = false;
 
       const prevButton = document.createElement('button');
       prevButton.type = 'button';
       prevButton.textContent = 'Previous';
       prevButton.disabled = state.page === 1;
-      prevButton.addEventListener('click', () => {
-        if (state.page > 1) {
-          state.page -= 1;
-          renderGallery();
-        }
-      });
+      prevButton.addEventListener('click', () => { if (state.page > 1) { state.page -= 1; renderGallery(); } });
 
       const info = document.createElement('span');
       info.className = 'pagination-info';
@@ -1088,12 +841,7 @@
       nextButton.type = 'button';
       nextButton.textContent = 'Next';
       nextButton.disabled = state.page === totalPages;
-      nextButton.addEventListener('click', () => {
-        if (state.page < totalPages) {
-          state.page += 1;
-          renderGallery();
-        }
-      });
+      nextButton.addEventListener('click', () => { if (state.page < totalPages) { state.page += 1; renderGallery(); } });
 
       pagination.append(prevButton, info, nextButton);
     }
@@ -1101,7 +849,7 @@
     function openLightbox(item) {
       lightboxImage.src = item.url;
       const pathLabel = item.path.length ? item.path.join(' › ') : DATA.name;
-      lightboxCaption.textContent = `${item.file} — ${pathLabel}`;
+      lightboxCaption.textContent = `${item.file} -- ${pathLabel}`;
       lightbox.classList.add('open');
       lightbox.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
@@ -1114,21 +862,14 @@
       document.body.style.overflow = '';
     }
 
-    lightbox.addEventListener('click', (evt) => {
-      if (evt.target === lightbox) {
-        closeLightbox();
-      }
-    });
+    lightbox.addEventListener('click', (evt) => { if (evt.target === lightbox) closeLightbox(); });
     lightboxClose.addEventListener('click', closeLightbox);
-    window.addEventListener('keydown', (evt) => {
-      if (evt.key === 'Escape' && lightbox.classList.contains('open')) {
-        closeLightbox();
-      }
-    });
+    window.addEventListener('keydown', (evt) => { if (evt.key === 'Escape' && lightbox.classList.contains('open')) closeLightbox(); });
 
     function buildTree(parent, node, path = []) {
       const item = document.createElement('li');
       item.className = 'tree-item';
+
       const row = document.createElement('div');
       row.className = 'tree-row';
       row.style.setProperty('--indent', `${path.length * 18}px`);
@@ -1138,10 +879,7 @@
       toggle.className = 'toggle';
       toggle.type = 'button';
       toggle.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="m9.17 5.17 6 6a1 1 0 0 1 0 1.41l-6 6A1 1 0 0 1 8 17.59V6.41a1 1 0 0 1 1.17-1.24Z"/></svg>';
-      toggle.addEventListener('click', (evt) => {
-        evt.stopPropagation();
-        item.classList.toggle('collapsed');
-      });
+      toggle.addEventListener('click', (evt) => { evt.stopPropagation(); item.classList.toggle('collapsed'); });
 
       const label = document.createElement('span');
       label.className = 'tree-label';
@@ -1153,10 +891,7 @@
       row.append(toggle, label);
       row.addEventListener('click', () => selectFolder(path));
       row.addEventListener('keydown', (evt) => {
-        if (evt.key === 'Enter' || evt.key === ' ') {
-          evt.preventDefault();
-          selectFolder(path);
-        }
+        if (evt.key === 'Enter' || evt.key === ' ') { evt.preventDefault(); selectFolder(path); }
       });
       row.tabIndex = 0;
 
@@ -1166,27 +901,22 @@
       item.append(row, children);
       parent.appendChild(item);
 
-      for (const dir of node.dirs) {
-        buildTree(children, dir, [...path, dir.name]);
-      }
+      for (const dir of node.dirs) buildTree(children, dir, [...path, dir.name]);
     }
 
     function buildExplorer() {
       treeRoot.innerHTML = '';
       const allItem = document.createElement('li');
       allItem.className = 'tree-item';
+
       const allRow = document.createElement('div');
       allRow.className = 'tree-row';
       allRow.dataset.path = '__all__';
       allRow.innerHTML = '<span class="tree-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 6a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V6Zm3-1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H8Z"/></svg><span>All Photos</span></span>';
       allRow.tabIndex = 0;
       allRow.addEventListener('click', () => selectFolder(['ALL']));
-      allRow.addEventListener('keydown', (evt) => {
-        if (evt.key === 'Enter' || evt.key === ' ') {
-          evt.preventDefault();
-          selectFolder(['ALL']);
-        }
-      });
+      allRow.addEventListener('keydown', (evt) => { if (evt.key === 'Enter' || evt.key === ' ') { evt.preventDefault(); selectFolder(['ALL']); } });
+
       allItem.appendChild(allRow);
       treeRoot.appendChild(allItem);
 
@@ -1211,17 +941,12 @@
       }
       const key = state.currentPath.length ? state.currentPath.join('|') : '__root__';
       const target = treeRoot.querySelector(`.tree-row[data-path="${CSS.escape(key)}"]`);
-      if (target) {
-        target.classList.add('active');
-      }
+      if (target) target.classList.add('active');
     }
 
     collapseAllBtn.addEventListener('click', () => {
       const items = treeRoot.querySelectorAll('.tree-item');
-      items.forEach((item, index) => {
-        if (index === 0) return; // Skip All Photos item
-        item.classList.toggle('collapsed');
-      });
+      items.forEach((item, index) => { if (index !== 0) item.classList.toggle('collapsed'); });
     });
 
     buildExplorer();
