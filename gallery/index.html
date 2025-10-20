@@ -210,6 +210,7 @@
       gap: 20px;
       overflow: auto;
       flex: 1;
+      align-content: start;
     }
 
     .pagination {
@@ -270,16 +271,17 @@
 
     .thumb {
       aspect-ratio: 4 / 3;
-      background: rgba(6, 8, 14, 0.8);
+      background: linear-gradient(135deg, rgba(6, 8, 14, 0.85), rgba(12, 16, 28, 0.85));
       display: grid;
       place-items: center;
       overflow: hidden;
+      position: relative;
     }
 
     .thumb img {
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: contain;
       display: block;
     }
 
@@ -323,13 +325,19 @@
       color: var(--accent);
     }
 
-    .empty {
+    .empty,
+    .error {
       grid-column: 1 / -1;
       text-align: center;
       padding: 48px 24px;
-      border: 1px dashed rgba(255, 255, 255, 0.12);
       border-radius: 16px;
       color: var(--muted);
+      border: 1px dashed rgba(255, 255, 255, 0.12);
+    }
+
+    .error {
+      border-color: rgba(255, 107, 107, 0.4);
+      color: #ffb5b5;
     }
 
     .lightbox {
@@ -365,6 +373,8 @@
       max-width: 100%;
       max-height: 70vh;
       border-radius: 12px;
+      object-fit: contain;
+      background: rgba(6, 8, 14, 0.8);
     }
 
     .lightbox .close-btn {
@@ -406,7 +416,7 @@
     <section class="gallery-view">
       <div class="gallery-head">
         <div class="breadcrumbs" id="breadcrumbs"></div>
-        <div class="gallery-summary" id="gallerySummary"></div>
+        <div class="gallery-summary" id="gallerySummary">Loading photos…</div>
       </div>
       <div class="gallery-grid" id="galleryGrid"></div>
       <div class="pagination" id="pagination" hidden></div>
@@ -426,317 +436,6 @@
   </footer>
 
   <script>
-    const DATA = {
-      name: 'Digital Gratitude List',
-      files: [],
-      dirs: [
-        {
-          name: 'Garage',
-          files: [
-            '1-2_Inch_Drive_Ratchet.jpg',
-            '1-2“_Drive_Chrome_Vanadium_Evercraft_Ratchet.jpg',
-            '4_Foot_Level.jpg',
-            '4_Foot_Level_2.jpg',
-            'Allway_Tools_Shingle_Remover.jpg',
-            'Bench Plane.jpg',
-            'Bent_Hay_Hook.jpg',
-            'Block Plane.jpg',
-            'Blue_Flat_Head_Screwdriver_.jpg',
-            'Chalk_Line_Reel.jpg',
-            'Corkscrew_Combo.jpg',
-            'Drywall_Knife.jpg',
-            'Extension_Cord.jpg',
-            'Extension_Cord_2.jpg',
-            'Groove_Joint_Pliers.jpg',
-            'Hacksaw.jpg',
-            'Hacksaw_2.jpg',
-            'Hacksaw_3.jpg',
-            'Hacksaw_4.jpg',
-            'Hammer.jpg',
-            'Hay_Hook.jpg',
-            'Husky_Paint_Scraper.jpg',
-            'Johnson Level.jpg',
-            'Johnson_Level_&_Tool_Level.jpg',
-            'Lufkin_25’_Tape_Measure.jpg',
-            'Metal_File.jpg',
-            'Nicholson Metal File 2.jpg',
-            'Nicholson Metal File.jpg',
-            'Performance_Tool_W1075_Hammer.jpg',
-            'Stanley 42-294 Level 2.jpg',
-            'Stanley 42-294 Level.jpg',
-            'Stanley_Flathead_Screwdriver.jpg',
-            'Steel Wire Brush.jpg',
-            'Surform Plane 2.jpg',
-            'Surform Plane.jpg',
-            'Voltage Tester.jpg',
-            'Wood_Chisel.jpg',
-            '⅜″_Drive_Metrinch_Ratchet.jpg'
-          ],
-          dirs: []
-        },
-        {
-          name: 'Workshop',
-          files: [
-            'Black Plastic Trough Bin.jpg',
-            'Blue Plastic Bucket.jpg',
-            'Brick Trowel.jpg',
-            'Carpet Seam Roller with Wooden Handle.jpg',
-            'Caulking Gun.jpg',
-            'Chicago Electric 18V Cordless Drill With Case And Charger.jpg',
-            'Chicago Electric Rotary Tool Kit With Accessories.jpg',
-            'Coca-Cola Bottle Crate.jpg',
-            'Concrete Finishing Trowel 2.jpg',
-            'Concrete Finishing Trowel.jpg',
-            'Concrete Float Wooden Handle.jpg',
-            'Concrete Float.jpg',
-            'Concrete Hand Float with Wooden Handle 2.jpg',
-            'Concrete Hand Float with Wooden Handle.jpg',
-            'Curved Pruning Saw Blade.jpg',
-            'Dayton Motor Run Capacitor.jpg',
-            'Drive Belt Large.jpg',
-            'Drive Belt.jpg',
-            'Fluorescent Light Fixture Housing.jpg',
-            'Foam Pipe Insulation.jpg',
-            'Generac XG8000E portable generator.jpg',
-            'Hacksaw Blade 12 Inch Metal Cutting.jpg',
-            'Hand Saw Blade.jpg',
-            'Leather Tool Belt Pouch.jpg',
-            'Marshalltown Brick Jointer No. 505.jpg',
-            'Masonry Float.jpg',
-            'MassAir 120V 150PSI AirCompressor Box.jpg',
-            'Metal Shims Stack (10).jpg',
-            'Plastic Funnel.jpg',
-            'Plastic Push Stick.jpg',
-            'Pointing Trowel 2.jpg',
-            'Pointing Trowel.jpg',
-            'Portable Halogen Work Light 2.jpg',
-            'Portable Halogen Work Light.jpg',
-            'Porter Cable Brad Nailer In Case.jpg',
-            'Propane Tank with Heater Attachment.jpg',
-            'Propane Tank-Top Heater Head.jpg',
-            'Ridgid 18V 2.5Ah Battery.jpg',
-            'Ridgid 18V Battery.jpg',
-            'Ridgid Grinding Wheel 7 Inch Metal Disc.jpg',
-            'Ridgid Rapid Max Battery Charger.jpg',
-            'Roofing Felt Roll.jpg',
-            'Rubber Grout Float.jpg',
-            'Rusted Metal Hand Float with Wooden Handle.jpg',
-            'Ryobi Corner Cat Sander With Case.jpg',
-            'Ryobi Miter Saw.jpg',
-            'Shut-Line Paint Pail.jpg',
-            'Small Rusted Hand Float with Wooden Handle.jpg',
-            'Stanley Coping Saw Blades 15-106A Pack.jpg',
-            'Stanley Electric Staple Gun.jpg',
-            'Table Saw Accessories Parts Kit.JPEG',
-            'Thermo Lite Winter Boots.jpg',
-            'Tile Cutter 13 Inch.jpg',
-            'Toastmaster Vintage Space Heater.jpg',
-            'american_flag_in_plastic_package.jpg',
-            'black_and_decker_finishing_sander.jpg',
-            'black_cargo_storage_nets.jpg',
-            'blue_finishing_sander.jpg',
-            'blue_safety_helmet_petzl.jpg',
-            'campbell_hausfeld_air_hammer.jpg',
-            'carrera_yellow_red_ski_goggles.jpg',
-            'chainsaw_safety_helmet_mesh_faceshield.jpg',
-            'ice_scraper_snow_brush.jpg',
-            'leather_tool_belt.jpg',
-            'metal_frame_hacksaw.jpg',
-            'oakley_goggles.jpg',
-            'propane_camping_stove.jpg',
-            'shower_curtain_and_bed_skirt_in_storage_bag.jpg',
-            'smith_orange_lens_goggles.jpg',
-            'thermogrip_hot_glue_gun.jpg',
-            'wire_brush_wood_handle.jpg',
-            'work_light_tripod_halogen.jpg',
-            'work_light_tripod_stand.jpg'
-          ],
-          dirs: [
-            {
-              name: 'PVC Pipe Parts',
-              files: [
-                'PVC Pipe Cap Open.jpg',
-                'PVC Pipe Cap Side.jpg',
-                'PVC Pipe Cap Small.jpg',
-                'PVC Pipe Cap.jpg',
-                'pvc_90_degree_elbow_fitting.jpg',
-                'pvc_electrical_junction_box_cover.jpg'
-              ],
-              dirs: []
-            },
-            {
-              name: 'Saw_Blades',
-              files: [
-                '12 Inch Circular Saw Blade Yellow Tip Teeth Clean.jpg',
-                '12 Inch Circular Saw Blade Yellow Tip Teeth Rusted.jpg',
-                'Avanti Pro 10 Inch Fine Finish 60T Circular Saw Blade Blue Rim.jpg',
-                'Black And Decker 10 Inch Chrome Crosscut Saw Blade.jpg',
-                'Carbide Circular Saw Blade Rusted.jpg',
-                'Circular Saw Blade 6.5 Inch Yellow.jpg',
-                'Circular Saw Blade Crosscut.jpg',
-                'Circular Saw Blade Rusted.jpg',
-                'DeWalt Construction 12 Inch Fine Finish 60T Circular Saw Blade Yellow Rim.jpg',
-                'Diamond Masonry Tile Blade 10 Inch Blue Center.jpg',
-                'Diamond Masonry Tile Blade 10 Inch Blue Label.jpg',
-                'Kromedge Hollow Ground Planer Blade Chrome Nickel Steel.jpg',
-                'Los Angeles Diamond Tools Masonry Blade 10 Inch.jpg',
-                'Oldham 10 Inch Steel Saw Blade.jpg',
-                'Oldham Circular Saw Blade 7.25 Inch 16 Tooth.jpg',
-                'Oldham Steel Circular Saw Blade Made in USA.jpg',
-                'Oldham Steel Saw Blade 10 Inch.jpg',
-                'Sears Craftsman 10 Inch Circular Saw Blade Steel.jpg',
-                'Sears Craftsman Kromedge Thin Rim Saw Blade Molybdenum Steel.jpg',
-                'circular_saw_blade_rusted.jpg',
-                'freud 10” Fine Cut-Off Saw Blade.jpg'
-              ],
-              dirs: []
-            }
-          ]
-        }
-      ]
-    };
-
-    const FILE_COMMITS = {
-      "Garage/1-2_Inch_Drive_Ratchet.jpg": 1758823481,
-      "Garage/1-2\u201c_Drive_Chrome_Vanadium_Evercraft_Ratchet.jpg": 1758823503,
-      "Garage/4_Foot_Level.jpg": 1756216110,
-      "Garage/4_Foot_Level_2.jpg": 1756216110,
-      "Garage/Allway_Tools_Shingle_Remover.jpg": 1756216110,
-      "Garage/Bench Plane.jpg": 1756216110,
-      "Garage/Bent_Hay_Hook.jpg": 1756216110,
-      "Garage/Block Plane.jpg": 1756216110,
-      "Garage/Blue_Flat_Head_Screwdriver_.jpg": 1756216110,
-      "Garage/Chalk_Line_Reel.jpg": 1756216110,
-      "Garage/Corkscrew_Combo.jpg": 1756216110,
-      "Garage/Drywall_Knife.jpg": 1756216110,
-      "Garage/Extension_Cord.jpg": 1756216110,
-      "Garage/Extension_Cord_2.jpg": 1756216110,
-      "Garage/Groove_Joint_Pliers.jpg": 1756216110,
-      "Garage/Hacksaw.jpg": 1756216110,
-      "Garage/Hacksaw_2.jpg": 1756216110,
-      "Garage/Hacksaw_3.jpg": 1756216110,
-      "Garage/Hacksaw_4.jpg": 1756216110,
-      "Garage/Hammer.jpg": 1756216110,
-      "Garage/Hay_Hook.jpg": 1756216110,
-      "Garage/Husky_Paint_Scraper.jpg": 1756216110,
-      "Garage/Johnson Level.jpg": 1756216110,
-      "Garage/Johnson_Level_&_Tool_Level.jpg": 1756216110,
-      "Garage/Lufkin_25\u2019_Tape_Measure.jpg": 1756216110,
-      "Garage/Metal_File.jpg": 1756216110,
-      "Garage/Nicholson Metal File 2.jpg": 1756216110,
-      "Garage/Nicholson Metal File.jpg": 1756216110,
-      "Garage/Performance_Tool_W1075_Hammer.jpg": 1756216110,
-      "Garage/Stanley 42-294 Level 2.jpg": 1756216110,
-      "Garage/Stanley 42-294 Level.jpg": 1756216110,
-      "Garage/Stanley_Flathead_Screwdriver.jpg": 1756216110,
-      "Garage/Steel Wire Brush.jpg": 1756216110,
-      "Garage/Surform Plane 2.jpg": 1756216110,
-      "Garage/Surform Plane.jpg": 1756216110,
-      "Garage/Voltage Tester.jpg": 1756216110,
-      "Garage/Wood_Chisel.jpg": 1756216110,
-      "Garage/\u215c\u2033_Drive_Metrinch_Ratchet.jpg": 1756216110,
-      "Workshop/Black Plastic Trough Bin.jpg": 1756682086,
-      "Workshop/Blue Plastic Bucket.jpg": 1756682086,
-      "Workshop/Brick Trowel.jpg": 1757905938,
-      "Workshop/Carpet Seam Roller with Wooden Handle.jpg": 1757905938,
-      "Workshop/Caulking Gun.jpg": 1757905938,
-      "Workshop/Chicago Electric 18V Cordless Drill With Case And Charger.jpg": 1756608828,
-      "Workshop/Chicago Electric Rotary Tool Kit With Accessories.jpg": 1756608828,
-      "Workshop/Coca-Cola Bottle Crate.jpg": 1757905938,
-      "Workshop/Concrete Finishing Trowel 2.jpg": 1757905938,
-      "Workshop/Concrete Finishing Trowel.jpg": 1757905938,
-      "Workshop/Concrete Float Wooden Handle.jpg": 1757905938,
-      "Workshop/Concrete Float.jpg": 1757905938,
-      "Workshop/Concrete Hand Float with Wooden Handle 2.jpg": 1757905938,
-      "Workshop/Concrete Hand Float with Wooden Handle.jpg": 1757905938,
-      "Workshop/Curved Pruning Saw Blade.jpg": 1756608828,
-      "Workshop/Dayton Motor Run Capacitor.jpg": 1756682086,
-      "Workshop/Drive Belt Large.jpg": 1756682086,
-      "Workshop/Drive Belt.jpg": 1756682086,
-      "Workshop/Fluorescent Light Fixture Housing.jpg": 1757905938,
-      "Workshop/Foam Pipe Insulation.jpg": 1756682086,
-      "Workshop/Generac XG8000E portable generator.jpg": 1757905938,
-      "Workshop/Hacksaw Blade 12 Inch Metal Cutting.jpg": 1756608828,
-      "Workshop/Hand Saw Blade.jpg": 1756682086,
-      "Workshop/Leather Tool Belt Pouch.jpg": 1756819671,
-      "Workshop/Marshalltown Brick Jointer No. 505.jpg": 1757905938,
-      "Workshop/Masonry Float.jpg": 1757905938,
-      "Workshop/MassAir 120V 150PSI AirCompressor Box.jpg": 1756608828,
-      "Workshop/Metal Shims Stack (10).jpg": 1756682086,
-      "Workshop/PVC Pipe Parts/PVC Pipe Cap Open.jpg": 1756341090,
-      "Workshop/PVC Pipe Parts/PVC Pipe Cap Side.jpg": 1756341090,
-      "Workshop/PVC Pipe Parts/PVC Pipe Cap Small.jpg": 1756341090,
-      "Workshop/PVC Pipe Parts/PVC Pipe Cap.jpg": 1756341090,
-      "Workshop/PVC Pipe Parts/pvc_90_degree_elbow_fitting.jpg": 1756341090,
-      "Workshop/PVC Pipe Parts/pvc_electrical_junction_box_cover.jpg": 1756341090,
-      "Workshop/Plastic Funnel.jpg": 1756608828,
-      "Workshop/Plastic Push Stick.jpg": 1756682086,
-      "Workshop/Pointing Trowel 2.jpg": 1757905938,
-      "Workshop/Pointing Trowel.jpg": 1757905938,
-      "Workshop/Portable Halogen Work Light 2.jpg": 1756223301,
-      "Workshop/Portable Halogen Work Light.jpg": 1756223301,
-      "Workshop/Porter Cable Brad Nailer In Case.jpg": 1756608828,
-      "Workshop/Propane Tank with Heater Attachment.jpg": 1756819671,
-      "Workshop/Propane Tank-Top Heater Head.jpg": 1757905938,
-      "Workshop/Ridgid 18V 2.5Ah Battery.jpg": 1756682086,
-      "Workshop/Ridgid 18V Battery.jpg": 1756682086,
-      "Workshop/Ridgid Grinding Wheel 7 Inch Metal Disc.jpg": 1756609554,
-      "Workshop/Ridgid Rapid Max Battery Charger.jpg": 1756682086,
-      "Workshop/Roofing Felt Roll.jpg": 1757905938,
-      "Workshop/Rubber Grout Float.jpg": 1757905938,
-      "Workshop/Rusted Metal Hand Float with Wooden Handle.jpg": 1757905938,
-      "Workshop/Ryobi Corner Cat Sander With Case.jpg": 1756608828,
-      "Workshop/Ryobi Miter Saw.jpg": 1756216519,
-      "Workshop/Saw_Blades/12 Inch Circular Saw Blade Yellow Tip Teeth Clean.jpg": 1756341090,
-      "Workshop/Saw_Blades/12 Inch Circular Saw Blade Yellow Tip Teeth Rusted.jpg": 1756341090,
-      "Workshop/Saw_Blades/Avanti Pro 10 Inch Fine Finish 60T Circular Saw Blade Blue Rim.jpg": 1756341090,
-      "Workshop/Saw_Blades/Black And Decker 10 Inch Chrome Crosscut Saw Blade.jpg": 1756341090,
-      "Workshop/Saw_Blades/Carbide Circular Saw Blade Rusted.jpg": 1756341090,
-      "Workshop/Saw_Blades/Circular Saw Blade 6.5 Inch Yellow.jpg": 1756341090,
-      "Workshop/Saw_Blades/Circular Saw Blade Crosscut.jpg": 1756341090,
-      "Workshop/Saw_Blades/Circular Saw Blade Rusted.jpg": 1756341090,
-      "Workshop/Saw_Blades/DeWalt Construction 12 Inch Fine Finish 60T Circular Saw Blade Yellow Rim.jpg": 1756341090,
-      "Workshop/Saw_Blades/Diamond Masonry Tile Blade 10 Inch Blue Center.jpg": 1756341090,
-      "Workshop/Saw_Blades/Diamond Masonry Tile Blade 10 Inch Blue Label.jpg": 1756341090,
-      "Workshop/Saw_Blades/Kromedge Hollow Ground Planer Blade Chrome Nickel Steel.jpg": 1756341090,
-      "Workshop/Saw_Blades/Los Angeles Diamond Tools Masonry Blade 10 Inch.jpg": 1756341090,
-      "Workshop/Saw_Blades/Oldham 10 Inch Steel Saw Blade.jpg": 1756341090,
-      "Workshop/Saw_Blades/Oldham Circular Saw Blade 7.25 Inch 16 Tooth.jpg": 1756341090,
-      "Workshop/Saw_Blades/Oldham Steel Circular Saw Blade Made in USA.jpg": 1756341090,
-      "Workshop/Saw_Blades/Oldham Steel Saw Blade 10 Inch.jpg": 1756341090,
-      "Workshop/Saw_Blades/Sears Craftsman 10 Inch Circular Saw Blade Steel.jpg": 1756341090,
-      "Workshop/Saw_Blades/Sears Craftsman Kromedge Thin Rim Saw Blade Molybdenum Steel.jpg": 1756341090,
-      "Workshop/Saw_Blades/circular_saw_blade_rusted.jpg": 1756223966,
-      "Workshop/Saw_Blades/freud 10\u201d Fine Cut-Off Saw Blade.jpg": 1756341090,
-      "Workshop/Shut-Line Paint Pail.jpg": 1756223301,
-      "Workshop/Small Rusted Hand Float with Wooden Handle.jpg": 1757905938,
-      "Workshop/Stanley Coping Saw Blades 15-106A Pack.jpg": 1756608828,
-      "Workshop/Stanley Electric Staple Gun.jpg": 1756341090,
-      "Workshop/Table Saw Accessories Parts Kit.JPEG": 1756608828,
-      "Workshop/Thermo Lite Winter Boots.jpg": 1756341090,
-      "Workshop/Tile Cutter 13 Inch.jpg": 1756341090,
-      "Workshop/Toastmaster Vintage Space Heater.jpg": 1756341090,
-      "Workshop/american_flag_in_plastic_package.jpg": 1756223301,
-      "Workshop/black_and_decker_finishing_sander.jpg": 1756223301,
-      "Workshop/black_cargo_storage_nets.jpg": 1756223301,
-      "Workshop/blue_finishing_sander.jpg": 1756223301,
-      "Workshop/blue_safety_helmet_petzl.jpg": 1756223301,
-      "Workshop/campbell_hausfeld_air_hammer.jpg": 1756223301,
-      "Workshop/carrera_yellow_red_ski_goggles.jpg": 1756223301,
-      "Workshop/chainsaw_safety_helmet_mesh_faceshield.jpg": 1756341090,
-      "Workshop/ice_scraper_snow_brush.jpg": 1756223301,
-      "Workshop/leather_tool_belt.jpg": 1756223301,
-      "Workshop/metal_frame_hacksaw.jpg": 1756223301,
-      "Workshop/oakley_goggles.jpg": 1756223301,
-      "Workshop/propane_camping_stove.jpg": 1756608828,
-      "Workshop/shower_curtain_and_bed_skirt_in_storage_bag.jpg": 1756223301,
-      "Workshop/smith_orange_lens_goggles.jpg": 1756223301,
-      "Workshop/thermogrip_hot_glue_gun.jpg": 1756223301,
-      "Workshop/wire_brush_wood_handle.jpg": 1756223301,
-      "Workshop/work_light_tripod_halogen.jpg": 1756223301,
-      "Workshop/work_light_tripod_stand.jpg": 1756223301
-    };
-
     const treeRoot = document.getElementById('treeRoot');
     const breadcrumbs = document.getElementById('breadcrumbs');
     const galleryGrid = document.getElementById('galleryGrid');
@@ -749,67 +448,73 @@
     const lightboxCaption = document.getElementById('lightboxCaption');
     const lightboxClose = document.getElementById('lightboxClose');
 
+    const PAGE_SIZE = 25;
     const state = {
+      data: null,
       currentPath: ['ALL'],
-      expanded: new Set(),
       page: 1
     };
 
-    const PAGE_SIZE = 25;
-
-    function encodePath(parts) {
-      return parts.map(part => encodeURIComponent(part)).join('/');
+    async function loadManifest() {
+      try {
+        const response = await fetch('manifest.json', { cache: 'no-store' });
+        if (!response.ok) throw new Error('Manifest not found');
+        const manifest = await response.json();
+        state.data = manifest;
+        buildExplorer();
+        selectFolder(['ALL']);
+      } catch (error) {
+        galleryGrid.innerHTML = '';
+        const message = document.createElement('div');
+        message.className = 'error';
+        message.textContent = 'Unable to load the gallery manifest. Please try refreshing the page.';
+        galleryGrid.appendChild(message);
+        gallerySummary.textContent = 'Failed to load photos.';
+        console.error('Failed to load manifest', error);
+      }
     }
 
-    function resolveRelativePath(item) {
-      return [...item.path, item.file].join('/');
-    }
-
-    function getCommitTimestamp(item) {
-      const rel = resolveRelativePath(item);
-      const value = FILE_COMMITS[rel];
-      return typeof value === 'number' ? value : Number.MAX_SAFE_INTEGER;
-    }
-
-    function sortByCommit(a, b) {
-      const diff = getCommitTimestamp(a) - getCommitTimestamp(b);
-      if (diff !== 0) return diff;
-      return a.file.localeCompare(b.file, undefined, { numeric: true, sensitivity: 'base' });
-    }
-
-    function buildFolderUrl(parts) {
-      const path = ['Digital_Gratitude_List', ...parts];
-      return encodePath(path);
-    }
-
-    function getNode(pathParts) {
-      if (!pathParts.length) return DATA;
-      let node = DATA;
-      for (const segment of pathParts) {
-        const next = node.dirs.find(d => d.name === segment);
+    function getNode(pathSegments) {
+      if (!state.data) return null;
+      if (!pathSegments.length) return state.data;
+      let node = state.data;
+      for (const segment of pathSegments) {
+        const next = node.dirs.find(dir => dir.name === segment);
         if (!next) return null;
         node = next;
       }
       return node;
     }
 
-    function collectFiles(node, basePath = []) {
-      const items = [];
-      for (const file of node.files || []) {
-        items.push({
-          file,
-          path: basePath,
-          url: buildFolderUrl([...basePath, file])
-        });
-      }
-      for (const dir of node.dirs || []) {
-        items.push(...collectFiles(dir, [...basePath, dir.name]));
-      }
-      return items;
+    function buildFileUrl(file) {
+      const parts = [state.data.rootDir, ...file.segments];
+      return parts.map(encodeURIComponent).join('/');
     }
 
-    function formatCount(count) {
-      return new Intl.NumberFormat().format(count);
+    function collectFiles(node, path = []) {
+      const results = [];
+      for (const file of node.files) {
+        results.push({
+          file: file.name,
+          path,
+          url: buildFileUrl(file),
+          modified: file.modified || 0
+        });
+      }
+      for (const dir of node.dirs) {
+        results.push(...collectFiles(dir, [...path, dir.name]));
+      }
+      return results;
+    }
+
+    function sortFiles(a, b) {
+      const delta = (b.modified || 0) - (a.modified || 0);
+      if (delta !== 0) return delta;
+      return a.file.localeCompare(b.file, undefined, { numeric: true, sensitivity: 'base' });
+    }
+
+    function formatCount(value) {
+      return new Intl.NumberFormat().format(value);
     }
 
     function renderBreadcrumbs() {
@@ -821,22 +526,18 @@
         frag.appendChild(span);
       } else {
         const home = document.createElement('span');
-        home.textContent = DATA.name;
-        home.tabIndex = 0;
-        home.setAttribute('role', 'link');
+        home.textContent = state.data.name;
+        home.className = 'crumb-home';
         home.addEventListener('click', () => selectFolder([]));
-        home.addEventListener('keydown', evt => {
-          if (evt.key === 'Enter' || evt.key === ' ') {
-            evt.preventDefault();
-            selectFolder([]);
-          }
-        });
+        home.style.cursor = 'pointer';
         frag.appendChild(home);
-        let path = [];
+        let current = [];
         for (const segment of state.currentPath) {
+          current = [...current, segment];
           const span = document.createElement('span');
-          path = [...path, segment];
           span.textContent = segment;
+          span.style.cursor = 'pointer';
+          span.addEventListener('click', () => selectFolder(current));
           frag.appendChild(span);
         }
       }
@@ -844,29 +545,40 @@
     }
 
     function renderGallery() {
+      if (!state.data) return;
+
       galleryGrid.innerHTML = '';
       pagination.innerHTML = '';
       pagination.hidden = true;
+
       let files = [];
       let node;
+
       if (state.currentPath[0] === 'ALL') {
-        node = DATA;
-        files = collectFiles(DATA, []);
+        node = state.data;
+        files = collectFiles(state.data, []);
       } else {
         node = getNode(state.currentPath);
-        if (!node) return;
-        const baseFiles = node.files.map(file => ({
-          file,
+        if (!node) {
+          const message = document.createElement('div');
+          message.className = 'error';
+          message.textContent = 'The selected folder could not be found.';
+          galleryGrid.appendChild(message);
+          gallerySummary.textContent = 'Folder not found.';
+          return;
+        }
+        files = node.files.map(file => ({
+          file: file.name,
           path: state.currentPath,
-          url: buildFolderUrl([...state.currentPath, file])
+          url: buildFileUrl(file),
+          modified: file.modified || 0
         }));
-        files = baseFiles;
       }
 
-      files.sort(sortByCommit);
+      files.sort(sortFiles);
 
       const folderItems = [];
-      if (state.currentPath[0] !== 'ALL') {
+      if (state.currentPath[0] !== 'ALL' && node) {
         for (const dir of node.dirs) {
           folderItems.push({ dir, path: [...state.currentPath, dir.name] });
         }
@@ -875,7 +587,7 @@
       const folderCount = folderItems.length;
       const locationLabel = state.currentPath[0] === 'ALL'
         ? 'All folders'
-        : (state.currentPath.length ? state.currentPath.join(' › ') : DATA.name);
+        : (state.currentPath.length ? state.currentPath.join(' › ') : state.data.name);
 
       if (state.currentPath[0] !== 'ALL' && !folderCount && !files.length) {
         const empty = document.createElement('div');
@@ -938,7 +650,7 @@
         const meta = document.createElement('div');
         meta.className = 'card-meta';
         if (state.currentPath[0] === 'ALL') {
-          meta.textContent = item.path.length ? item.path.join(' › ') : DATA.name;
+          meta.textContent = item.path.length ? item.path.join(' › ') : state.data.name;
         } else {
           meta.textContent = 'Photo';
         }
@@ -997,7 +709,7 @@
 
     function openLightbox(item) {
       lightboxImage.src = item.url;
-      const pathLabel = item.path.length ? item.path.join(' › ') : DATA.name;
+      const pathLabel = item.path.length ? item.path.join(' › ') : state.data.name;
       lightboxCaption.textContent = `${item.file} — ${pathLabel}`;
       lightbox.classList.add('open');
       lightbox.setAttribute('aria-hidden', 'false');
@@ -1087,10 +799,11 @@
       allItem.appendChild(allRow);
       treeRoot.appendChild(allItem);
 
-      buildTree(treeRoot, DATA, []);
+      buildTree(treeRoot, state.data, []);
     }
 
     function selectFolder(path) {
+      if (!state.data) return;
       state.currentPath = path.length && path[0] === 'ALL' ? ['ALL'] : path;
       state.page = 1;
       highlightSelection();
@@ -1116,13 +829,12 @@
     collapseAllBtn.addEventListener('click', () => {
       const items = treeRoot.querySelectorAll('.tree-item');
       items.forEach((item, index) => {
-        if (index === 0) return; // Skip All Photos item
+        if (index === 0) return;
         item.classList.toggle('collapsed');
       });
     });
 
-    buildExplorer();
-    selectFolder(['ALL']);
+    loadManifest();
   </script>
 </body>
 </html>
