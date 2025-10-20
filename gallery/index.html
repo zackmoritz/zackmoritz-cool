@@ -488,7 +488,13 @@
 
     function buildFileUrl(file) {
       const parts = [state.data.rootDir, ...file.segments];
-      return parts.map(encodeURIComponent).join('/');
+      // The gallery page lives in a subfolder (`/gallery`), but the image files are
+      // stored at the repository root. Constructing a URL without a leading
+      // `../` causes the browser to look for `/gallery/Digital_Gratitude_List/...`,
+      // which does not exist. Prefix the joined path with `../` so that the
+      // request goes up one directory and finds the correct file. Alternatively,
+      // an absolute root slash (`/`) could be used here if hosting permits.
+      return '../' + parts.map(encodeURIComponent).join('/');
     }
 
     function collectFiles(node, path = []) {
