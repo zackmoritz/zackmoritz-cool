@@ -270,7 +270,8 @@
     }
 
     .thumb {
-      aspect-ratio: 4 / 3;
+      --thumb-aspect: 4 / 3;
+      aspect-ratio: var(--thumb-aspect);
       background: linear-gradient(135deg, rgba(6, 8, 14, 0.85), rgba(12, 16, 28, 0.85));
       display: grid;
       place-items: center;
@@ -278,11 +279,24 @@
       position: relative;
     }
 
+    .thumb.portrait {
+      --thumb-aspect: 3 / 4;
+    }
+
+    .thumb.square {
+      --thumb-aspect: 1 / 1;
+    }
+
     .thumb img {
       width: 100%;
       height: 100%;
       object-fit: contain;
       display: block;
+    }
+
+    .thumb.portrait img {
+      width: auto;
+      height: 100%;
     }
 
     .card-body {
@@ -519,6 +533,25 @@
       return a.file.localeCompare(b.file, undefined, { numeric: true, sensitivity: 'base' });
     }
 
+    function applyThumbOrientation(container, img) {
+      if (!img.naturalWidth || !img.naturalHeight) {
+        return;
+      }
+
+      container.classList.remove('portrait', 'square');
+
+      const ratio = img.naturalWidth / img.naturalHeight;
+      if (!Number.isFinite(ratio) || ratio <= 0) {
+        return;
+      }
+
+      if (Math.abs(ratio - 1) <= 0.05) {
+        container.classList.add('square');
+      } else if (ratio < 1) {
+        container.classList.add('portrait');
+      }
+    }
+
     function formatCount(value) {
       return new Intl.NumberFormat().format(value);
     }
@@ -646,6 +679,10 @@
         img.decoding = 'async';
         img.src = item.url;
         img.alt = item.file;
+        img.addEventListener('load', () => applyThumbOrientation(button, img));
+        if (img.complete && img.naturalWidth && img.naturalHeight) {
+          applyThumbOrientation(button, img);
+        }
         button.appendChild(img);
         button.addEventListener('click', () => openLightbox(item));
         const body = document.createElement('div');
