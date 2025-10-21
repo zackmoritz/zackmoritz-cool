@@ -11,6 +11,9 @@
   figcaption{font-size:12px;padding:6px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   input[type="search"]{padding:8px 10px;min-width:220px}
   .meta{color:#666;font-size:14px}
+  nav.breadcrumbs{font-size:14px;color:#666;word-break:break-all}
+  .folders{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin:8px 0}
+  .folders a{display:block;padding:14px;border:1px solid #e5e5e5;border-radius:8px;background:#fafafa;text-decoration:none;color:inherit}
 </style>
 <header>
   <strong id="count">Loading…</strong>
@@ -20,112 +23,130 @@
 <div id="grid" class="grid" aria-live="polite"></div>
 <script>
 (async () => {
-  // 1) Always load the manifest from /gallery/
-  const res = await fetch('/gallery/photos.json', { cache: 'no-store' });
-  if (!res.ok) { document.getElementById('count').textContent = 'No manifest found.'; return; }
-  const data = await res.json();
-
-  // Guard + normalize paths to be relative to gallery root (no leading slash)
-  const entries = (data.files || [])
-    .filter(f => f && f.path)
-    .map(f => ({ ...f, path: f.path.replace(/^\/+/, '') }));
-
-  // 2) Current folder prefix from URL, relative to /gallery/
-  const pathAfterGallery = location.pathname.replace(/^\/?gallery\/?/, '');
-  const currentPrefix = pathAfterGallery.endsWith('/') || pathAfterGallery === '' 
-    ? pathAfterGallery 
-    : pathAfterGallery + '/';
-
-  // Build lists
-  const subfolders = new Set();
-  const filesHere = [];
-  for (const f of entries) {
-    if (!f.path.startsWith(currentPrefix)) continue;
-    const rest = f.path.slice(currentPrefix.length);
-    const slash = rest.indexOf('/');
-    if (slash === -1) {
-      filesHere.push(f); // direct child
-    } else {
-      subfolders.add(rest.slice(0, slash+1)); // immediate subfolder (keep trailing /)
-    }
-  }
-
-  // DOM helpers
+  const countEl = document.getElementById('count');
   const grid = document.getElementById('grid');
-  const count = document.getElementById('count');
-  const sort = document.getElementById('sort');
+  const sortEl = document.getElementById('sort');
   const q = document.getElementById('q');
 
-  // Breadcrumbs
-  const headerEl = document.querySelector('header');
-  const crumbs = document.createElement('nav');
-  crumbs.style.fontSize = '14px';
-  crumbs.style.color = '#666';
-  crumbs.style.wordBreak = 'break-all';
-
-  const parts = currentPrefix ? currentPrefix.split('/').filter(Boolean) : [];
-  let acc = '';
-  const links = ['<a href="/gallery">/gallery</a>'];
-  for (const p of parts) {
-    acc += p + '/';
-    links.push(`<a href="/gallery/${encodeURI(acc)}">${p}</a>`);
+  function fail(msg){
+    console.error(msg);
+    countEl.textContent = msg;
   }
-  crumbs.innerHTML = links.join(' ▸ ');
-  headerEl.appendChild(crumbs);
 
-  // Folder tiles
-  const foldersDiv = document.createElement('div');
-  foldersDiv.className = 'folders';
-  foldersDiv.style.display = 'grid';
-  foldersDiv.style.gridTemplateColumns = 'repeat(auto-fill,minmax(160px,1fr))';
-  foldersDiv.style.gap = '12px';
-  foldersDiv.style.margin = '8px 0 8px 0';
+  // Try multiple locations for photos.json to survive routing/subpath configs
+  async function loadManifest() {
+    const candidates = [
+      '/gallery/photos.json',                    // absolute from site root
+      new URL('photos.json', location.pathname).toString(), // relative to current folder
+      '/photos.json'                             // site root (in case you placed it there)
+    ];
+    const tried = [];
+    for (const url of candidates) {
+      try {
+        const res = await fetch(url, { cache: 'no-store' });
+        tried.push(`${url} → ${res.status}`);
+        if (!res.ok) continue;
 
-  if (subfolders.size) {
-    for (const folder of Array.from(subfolders).sort()) {
-      const a = document.createElement('a');
-      a.href = '/gallery/' + encodeURI(currentPrefix + folder);
-      a.style.display = 'block';
-      a.style.padding = '14px';
-      a.style.border = '1px solid #e5e5e5';
-      a.style.borderRadius = '8px';
-      a.style.background = '#fafafa';
-      a.style.textDecoration = 'none';
-      a.style.color = 'inherit';
-      a.innerHTML = `📁 ${folder.replace(/\/$/, '')}`;
-      foldersDiv.appendChild(a);
+        // Ensure it’s JSON (not an HTML fallback page)
+        const text = await res.text();
+        try {
+          const json = JSON.parse(text);
+          return { json, used: url, tried };
+        } catch (e) {
+          tried.push(`${url} parse error: ${e.message}`);
+          continue;
+        }
+      } catch (e) {
+        tried.push(`${url} fetch error: ${e.message}`);
+      }
     }
-    grid.before(foldersDiv);
+    throw new Error('Could not load a valid photos.json.\nTried:\n' + tried.join('\n'));
   }
 
-  // Render files in this folder (not recursive)
-  const safeURL = (p) => encodeURI(p);
-  function render(list){
-    grid.innerHTML = '';
-    for (const f of list) {
-      const name = f.path; // relative to gallery root
-      const t = f.t ? new Date(f.t).toISOString().slice(0,16).replace('T',' ') : '';
-      // 3) Prefix all file URLs with /gallery/
-      const url = '/gallery/' + safeURL(name);
-      const fig = document.createElement('figure');
-      fig.dataset.name = name.toLowerCase();
-      fig.innerHTML = `<a href="${url}" target="_blank" rel="noopener">
-        <img loading="lazy" decoding="async" src="${url}" alt="${name}">
-      </a>
-      <figcaption>${name.split('/').pop()}${t ? `<br><small>${t}</small>`:''}</figcaption>`;
-      grid.appendChild(fig);
+  try {
+    const { json: data, used, tried } = await loadManifest();
+
+    // Normalize entries
+    const entries = (data.files || [])
+      .filter(f => f && f.path)
+      .map(f => ({ ...f, path: String(f.path).replace(/^\/+/, '') })); // no leading slash
+
+    // Determine current folder prefix relative to /gallery/
+    const pathAfterGallery = location.pathname.replace(/^\/?gallery\/?/, '');
+    const currentPrefix = pathAfterGallery.endsWith('/') || pathAfterGallery === '' 
+      ? pathAfterGallery 
+      : pathAfterGallery + '/';
+
+    // Build lists
+    const subfolders = new Set();
+    const filesHere = [];
+    for (const f of entries) {
+      if (!f.path.startsWith(currentPrefix)) continue;
+      const rest = f.path.slice(currentPrefix.length);
+      const slash = rest.indexOf('/');
+      if (slash === -1) {
+        filesHere.push(f); // direct child
+      } else {
+        subfolders.add(rest.slice(0, slash+1)); // immediate subfolder
+      }
     }
-    count.textContent = `${list.length} file${list.length!==1?'s':''}` + (currentPrefix ? ` in ${currentPrefix}` : '');
-    if (sort) sort.textContent = data.sort ? `Sorted: ${data.sort}` : '';
+
+    // Breadcrumbs
+    const headerEl = document.querySelector('header');
+    const crumbs = document.createElement('nav');
+    crumbs.className = 'breadcrumbs';
+    const parts = currentPrefix ? currentPrefix.split('/').filter(Boolean) : [];
+    let acc = '';
+    const links = ['<a href="/gallery">/gallery</a>'];
+    for (const p of parts) {
+      acc += p + '/';
+      links.push(`<a href="/gallery/${encodeURI(acc)}">${p}</a>`);
+    }
+    crumbs.innerHTML = links.join(' ▸ ');
+    headerEl.appendChild(crumbs);
+
+    // Folder tiles
+    if (subfolders.size) {
+      const foldersDiv = document.createElement('div');
+      foldersDiv.className = 'folders';
+      for (const folder of Array.from(subfolders).sort()) {
+        const a = document.createElement('a');
+        a.href = '/gallery/' + encodeURI(currentPrefix + folder);
+        a.innerHTML = `📁 ${folder.replace(/\/$/, '')}`;
+        foldersDiv.appendChild(a);
+      }
+      grid.before(foldersDiv);
+    }
+
+    // Render files (not recursive)
+    const safeURL = (p) => encodeURI(p);
+    function render(list){
+      grid.innerHTML = '';
+      for (const f of list) {
+        const name = f.path;             // relative to gallery root
+        const t = f.t ? new Date(f.t).toISOString().slice(0,16).replace('T',' ') : '';
+        const url = '/gallery/' + safeURL(name); // always anchor at /gallery/
+        const fig = document.createElement('figure');
+        fig.dataset.name = name.toLowerCase();
+        fig.innerHTML = `<a href="${url}" target="_blank" rel="noopener">
+          <img loading="lazy" decoding="async" src="${url}" alt="${name}">
+        </a>
+        <figcaption>${name.split('/').pop()}${t ? `<br><small>${t}</small>`:''}</figcaption>`;
+        grid.appendChild(fig);
+      }
+      countEl.textContent = `${list.length} file${list.length!==1?'s':''}` + (currentPrefix ? ` in ${currentPrefix}` : '');
+      if (sortEl) sortEl.textContent = data.sort ? `Sorted: ${data.sort} • manifest: ${used}` : `manifest: ${used}`;
+    }
+
+    const filesHereSorted = filesHere; // assumed newest→oldest from manifest
+    q.addEventListener('input', () => {
+      const needle = q.value.trim().toLowerCase();
+      render(filesHereSorted.filter(f => f.path.toLowerCase().includes(needle)));
+    });
+
+    render(filesHereSorted);
+  } catch (e) {
+    fail('Error: ' + e.message);
   }
-
-  // Filtering within the current folder
-  const filesHereSorted = filesHere; // already newest→oldest from manifest
-  q.addEventListener('input', () => {
-    const needle = q.value.trim().toLowerCase();
-    render(filesHereSorted.filter(f => f.path.toLowerCase().includes(needle)));
-  });
-
-  render(filesHereSorted);
 })();
 </script>
