@@ -21,7 +21,10 @@
 <script>
 (async () => {
   const res = await fetch('photos.json', { cache: 'no-store' });
-  if (!res.ok) { document.getElementById('count').textContent = 'No manifest found.'; return; }
+  if (!res.ok) {
+    document.getElementById('count').textContent = 'No manifest found.';
+    return;
+  }
   const data = await res.json();
 
   const grid = document.getElementById('grid');
@@ -29,15 +32,19 @@
   const q = document.getElementById('q');
   const files = (data.files || []).filter(f => f && f.path);
 
+  // Helper that preserves slashes in subfolders
+  const safeURL = (p) => encodeURI(p);
+
   function render(list){
     grid.innerHTML = '';
     for (const f of list) {
-      const name = f.path;
+      const name = f.path; // e.g. "2025/pic.jpg"
       const t = f.t ? new Date(f.t).toISOString().slice(0,16).replace('T',' ') : '';
+      const url = safeURL(name);
       const fig = document.createElement('figure');
       fig.dataset.name = name.toLowerCase();
-      fig.innerHTML = `<a href="${encodeURIComponent(name)}" target="_blank" rel="noopener">
-        <img loading="lazy" decoding="async" src="${encodeURIComponent(name)}" alt="${name}">
+      fig.innerHTML = `<a href="${url}" target="_blank" rel="noopener">
+        <img loading="lazy" decoding="async" src="${url}" alt="${name}">
       </a>
       <figcaption>${name}${t ? `<br><small>${t}</small>`:''}</figcaption>`;
       grid.appendChild(fig);
