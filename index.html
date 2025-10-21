@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Zachary Moritz — Character Card</title>
+  <title>Zachary Moritz -- Character Card</title>
   <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAZElEQVR42u3XwREAEBBD0XRgHNSnaf1QAXaMJUwOzv/dNhBiqjcfBHgKkEs1ve0Aa3gFAq+4FQHPuAUB7/gMgRPxEYIP4BXvIQQQQAAB+AC6BRTnmGKQUEwyilFKMcv1M/oa0AD36JLNg+KoVQAAAABJRU5ErkJggg==">
   <style>
     :root {
@@ -87,6 +87,38 @@
       margin: 0;
     }
 
+    .reading-time {
+      z-index: 1;
+      background: var(--section-bg);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.04);
+    }
+
+    .reading-time-label {
+      font-size: 0.75rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(244, 247, 251, 0.68);
+    }
+
+    .reading-time-value {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: #ffd86b;
+      white-space: nowrap;
+    }
+
+    .reading-time[data-active="true"] .reading-time-value {
+      color: #7cf6c5;
+    }
+
     .portrait {
       position: relative;
       z-index: 1;
@@ -134,13 +166,8 @@
       letter-spacing: 0.05em;
     }
 
-    .portrait--missing img {
-      display: none;
-    }
-
-    .portrait--missing .portrait-placeholder {
-      display: flex;
-    }
+    .portrait--missing img { display: none; }
+    .portrait--missing .portrait-placeholder { display: flex; }
 
     .card-text {
       z-index: 1;
@@ -156,34 +183,297 @@
       letter-spacing: 0.04em;
     }
 
-    .stat-grid {
+    .zodiac-module {
       z-index: 1;
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-    }
-
-    .stat-block {
       background: var(--section-bg);
       border-radius: 10px;
-      padding: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      font-size: 0.9rem;
+      padding: 16px;
+      box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
 
-    .stat-block h3 {
-      margin: 0 0 8px;
-      font-size: 0.8rem;
-      letter-spacing: 0.12em;
+    .zodiac-module[data-open="false"] .zodiac-panel { display: none; }
+
+    .zodiac-root-button {
+      width: 100%;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: linear-gradient(90deg, rgba(18, 24, 42, 0.75), rgba(32, 38, 58, 0.9));
+      color: #f4f7fb;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.6);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: border-color 0.2s ease, transform 0.2s ease;
     }
 
-    .stat-value {
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: #9ad7ff;
+    .zodiac-root-button:hover,
+    .zodiac-root-button:focus-visible {
+      outline: none;
+      border-color: rgba(255, 216, 107, 0.6);
+      transform: translateY(-1px);
+    }
+
+    .zodiac-root-button[aria-expanded="true"] .zodiac-chevron { transform: rotate(90deg); }
+
+    .zodiac-panel { display: grid; gap: 14px; }
+
+    .zodiac-intro {
+      margin: 0;
+      font-size: 0.85rem;
+      color: rgba(244, 247, 251, 0.75);
+      line-height: 1.6;
+    }
+
+    .zodiac-list { display: grid; gap: 12px; }
+
+    .zodiac-item {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      background: rgba(18, 24, 42, 0.72);
+      overflow: hidden;
+    }
+
+    .zodiac-item button {
+      width: 100%;
+      text-align: left;
+      border: none;
+      background: transparent;
+      color: #f4f7fb;
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.95rem;
       letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .zodiac-item button:hover,
+    .zodiac-item button:focus-visible {
+      outline: none;
+      background: rgba(255, 216, 107, 0.14);
+    }
+
+    .zodiac-item-label { display: flex; flex-direction: column; gap: 4px; }
+    .zodiac-item-label strong {
+      font-size: 0.92rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #ffd86b;
+    }
+    .zodiac-item-label span { font-size: 0.78rem; color: rgba(244, 247, 251, 0.7); }
+
+    .zodiac-item-content {
+      padding: 0 16px 16px;
+      font-size: 0.86rem;
+      line-height: 1.6;
+      color: rgba(244, 247, 251, 0.82);
+    }
+
+    .zodiac-chevron { font-size: 1.2rem; transition: transform 0.2s ease; }
+    .zodiac-item button[aria-expanded="true"] .zodiac-chevron { transform: rotate(90deg); }
+
+    .social-connect {
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(59, 89, 152, 0.45);
+      background: linear-gradient(135deg, rgba(59, 89, 152, 0.28), rgba(24, 33, 62, 0.9));
+      color: #f4f7fb;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-decoration: none;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .cta-stack { z-index: 1; display: flex; flex-direction: column; gap: 16px; }
+
+    .contact-dropdown { display: flex; flex-direction: column; gap: 10px; width: 100%; position: relative; }
+
+    .contact-primary {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 12px 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 216, 107, 0.45);
+      background: linear-gradient(135deg, rgba(255, 216, 107, 0.24), rgba(24, 33, 62, 0.85));
+      color: #fdf6dc;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-decoration: none;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+      cursor: pointer;
+      font: inherit;
+      text-align: left;
+      border-width: 1px;
+      border-style: solid;
+    }
+
+    .contact-primary,
+    .inventory-button,
+    .social-connect { position: relative; overflow: hidden; isolation: isolate; }
+
+    .contact-primary:hover,
+    .contact-primary:focus-visible {
+      outline: none;
+      transform: translateY(-1px);
+      border-color: rgba(255, 231, 158, 0.85);
+      background: linear-gradient(135deg, rgba(255, 231, 158, 0.32), rgba(32, 44, 82, 0.92));
+    }
+
+    .contact-primary svg { width: 18px; height: 18px; fill: currentColor; }
+    .contact-primary-label { display: inline-flex; align-items: center; gap: 8px; }
+
+    .contact-chevron { margin-left: auto; width: 14px; height: 14px; opacity: 0.8; transition: transform 0.2s ease; }
+    .contact-dropdown[data-open="true"] .contact-chevron { transform: rotate(180deg); }
+
+    .contact-dropdown[data-open="true"] .contact-primary {
+      border-color: rgba(255, 231, 158, 0.85);
+      background: linear-gradient(135deg, rgba(255, 231, 158, 0.32), rgba(32, 44, 82, 0.92));
+    }
+
+    .contact-primary::after,
+    .inventory-button::after,
+    .social-connect::after {
+      content: "";
+      position: absolute;
+      inset: -140% -40%;
+      background: linear-gradient(120deg, rgba(255, 255, 255, 0) 20%, rgba(255, 255, 255, 0.7) 50%, rgba(255, 255, 255, 0) 80%);
+      transform: translateX(-120%);
+      animation: button-shimmer 6s ease-in-out infinite;
+      pointer-events: none;
+      opacity: 0.65;
+      mix-blend-mode: screen;
+    }
+
+    .contact-primary:hover::after,
+    .contact-primary:focus-visible::after,
+    .inventory-button:hover::after,
+    .inventory-button:focus-visible::after,
+    .social-connect:hover::after,
+    .social-connect:focus-visible::after {
+      animation-duration: 3s;
+      opacity: 0.8;
+    }
+
+    .contact-menu {
+      list-style: none;
+      padding: 12px;
+      margin: 0;
+      margin-top: 2px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-radius: 14px;
+      border: 1px solid rgba(154, 215, 255, 0.28);
+      background: linear-gradient(150deg, rgba(18, 24, 42, 0.96), rgba(36, 48, 76, 0.92));
+      box-shadow: 0 18px 32px rgba(3, 6, 22, 0.45);
+    }
+
+    .contact-menu[hidden] { display: none; }
+    .contact-menu li { margin: 0; }
+
+    .contact-menu a {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      color: rgba(244, 247, 251, 0.95);
+      text-decoration: none;
+      letter-spacing: 0.03em;
+      transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+      border: 1px solid transparent;
+    }
+
+    .contact-menu a:hover,
+    .contact-menu a:focus-visible {
+      outline: none;
+      transform: translateY(-1px);
+      border-color: rgba(154, 215, 255, 0.5);
+      background: linear-gradient(135deg, rgba(154, 215, 255, 0.16), rgba(32, 44, 82, 0.9));
+    }
+
+    .contact-menu svg { width: 16px; height: 16px; fill: currentColor; margin-top: 2px; }
+
+    .contact-menu__text { display: flex; flex-direction: column; gap: 2px; }
+    .contact-menu__title { font-size: 0.86rem; }
+    .contact-menu__hint { font-size: 0.72rem; color: rgba(244, 247, 251, 0.7); letter-spacing: 0.02em; }
+
+    .login-button,
+    .inventory-button {
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(132, 255, 219, 0.45);
+      background: linear-gradient(135deg, rgba(132, 255, 219, 0.2), rgba(24, 36, 54, 0.9));
+      color: #ecfff8;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-decoration: none;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .login-button {
+      border-color: rgba(154, 215, 255, 0.55);
+      background: linear-gradient(135deg, rgba(154, 215, 255, 0.24), rgba(24, 36, 54, 0.92));
+      color: #f4f7fb;
+    }
+
+    .inventory-button:hover,
+    .inventory-button:focus-visible {
+      outline: none;
+      transform: translateY(-1px);
+      border-color: rgba(168, 255, 234, 0.75);
+      background: linear-gradient(135deg, rgba(168, 255, 234, 0.3), rgba(32, 48, 72, 0.95));
+      box-shadow: 0 8px 22px rgba(32, 174, 134, 0.25);
+    }
+
+    .login-button:hover,
+    .login-button:focus-visible {
+      outline: none;
+      transform: translateY(-1px);
+      border-color: rgba(206, 235, 255, 0.85);
+      background: linear-gradient(135deg, rgba(206, 235, 255, 0.35), rgba(36, 52, 78, 0.96));
+      box-shadow: 0 8px 22px rgba(96, 162, 255, 0.25);
+    }
+
+    .login-button svg,
+    .inventory-button svg { width: 18px; height: 18px; fill: currentColor; }
+
+    .social-connect:hover,
+    .social-connect:focus-visible {
+      outline: none;
+      transform: translateY(-1px);
+      border-color: rgba(88, 122, 196, 0.75);
+      background: linear-gradient(135deg, rgba(88, 122, 196, 0.4), rgba(32, 44, 82, 0.95));
+    }
+
+    .social-connect svg { width: 18px; height: 18px; fill: currentColor; }
+
+    @keyframes button-shimmer {
+      0% { transform: translateX(-120%); }
+      20% { transform: translateX(120%); }
+      100% { transform: translateX(120%); }
     }
 
     .footer-banner {
@@ -200,12 +490,8 @@
     }
 
     @media (max-width: 420px) {
-      .card-title {
-        font-size: 1.6rem;
-      }
-      .card {
-        padding: 18px 16px 22px;
-      }
+      .card-title { font-size: 1.6rem; }
+      .card { padding: 18px 16px 22px; }
     }
   </style>
 </head>
@@ -217,15 +503,22 @@
         <p class="card-role">Creative Human</p>
       </header>
 
+      <div class="reading-time" id="reading-time-widget" aria-live="polite">
+        <span class="reading-time-label">Reading time</span>
+        <span class="reading-time-value" id="reading-time-value">0h 00m 00s</span>
+      </div>
+
       <figure class="portrait" data-portrait-slot>
-        <img src="images/IMG_2455.jpg"
-             alt="Portrait of Zachary Moritz"
-             loading="lazy"
-             onload="this.closest('.portrait').classList.remove('portrait--missing')"
-             onerror="this.closest('.portrait').classList.add('portrait--missing')">
+        <img
+          src="/images/Suit.jpg"
+          alt="Portrait of Zachary Moritz"
+          loading="lazy"
+          onload="this.closest('.portrait').classList.remove('portrait--missing')"
+          onerror="this.closest('.portrait').classList.add('portrait--missing')"
+        >
         <div class="portrait-placeholder" aria-hidden="true">
           <strong>Portrait Missing</strong>
-          <span>Add images/IMG_2455.jpg to display Zachary's photo.</span>
+          <span>Place Suit.jpg in the /images folder at the site root.</span>
         </div>
       </figure>
 
@@ -233,33 +526,438 @@
         <p><strong>Origin Story:</strong> Zachary channels curiosity, compassion, and a dash of cosmic wonder into everything he touches. This legendary card celebrates the person beyond the stats.</p>
       </section>
 
-      <section class="stat-grid" aria-label="Core stats">
-        <div class="stat-block">
-          <h3>Energy</h3>
-          <div class="stat-value">92</div>
-          <p>Fueled by movement, music, and meaningful connection.</p>
-        </div>
-        <div class="stat-block">
-          <h3>Focus</h3>
-          <div class="stat-value">88</div>
-          <p>Locks onto the signal within the noise, crafting clarity.</p>
-        </div>
-        <div class="stat-block">
-          <h3>Empathy</h3>
-          <div class="stat-value">99</div>
-          <p>Always ready to hold space for the people who matter.</p>
-        </div>
-        <div class="stat-block">
-          <h3>Improv</h3>
-          <div class="stat-value">95</div>
-          <p>Quick on the draw with ideas, jokes, and creative pivots.</p>
+      <section class="zodiac-module" aria-label="Zodiac placements menu" data-open="false">
+        <button class="zodiac-root-button" type="button" aria-expanded="false" aria-controls="zodiac-panel">
+          <span>Zodiac Signs</span>
+          <span class="zodiac-chevron" aria-hidden="true">›</span>
+        </button>
+        <div id="zodiac-panel" class="zodiac-panel" hidden>
+          <p class="zodiac-intro">Tap any placement to see the key takeaway from your Cafe Astrology natal chart report.</p>
+          <div class="zodiac-list">
+            <!-- zodiac items (unchanged) -->
+            <section class="zodiac-item">
+              <button type="button" aria-expanded="false" aria-controls="zodiac-sun">
+                <span class="zodiac-item-label">
+                  <strong>Sun · Pisces</strong>
+                  <span>25°26′ · 3rd House</span>
+                </span>
+                <span class="zodiac-chevron" aria-hidden="true">›</span>
+              </button>
+              <div id="zodiac-sun" class="zodiac-item-content" hidden>
+                Your Pisces Sun lends you adaptable, compassionate energy with a poetic streak. You intuitively understand many viewpoints and channel that empathy into creative communication and storytelling.
+              </div>
+            </section>
+            <section class="zodiac-item">
+              <button type="button" aria-expanded="false" aria-controls="zodiac-moon">
+                <span class="zodiac-item-label">
+                  <strong>Moon · Taurus</strong>
+                  <span>8°38′ · 5th House</span>
+                </span>
+                <span class="zodiac-chevron" aria-hidden="true">›</span>
+              </button>
+              <div id="zodiac-moon" class="zodiac-item-content" hidden>
+                A Taurus Moon seeks familiar comforts and steady rhythms. You ground yourself through sensory pleasures, loyal bonds, and creative play that feels safe yet indulgent.
+              </div>
+            </section>
+            <section class="zodiac-item">
+              <button type="button" aria-expanded="false" aria-controls="zodiac-mercury">
+                <span class="zodiac-item-label">
+                  <strong>Mercury · Aquarius</strong>
+                  <span>27°56′ · 3rd House</span>
+                </span>
+                <span class="zodiac-chevron" aria-hidden="true">›</span>
+              </button>
+              <div id="zodiac-mercury" class="zodiac-item-content" hidden>
+                Mercury in Aquarius gives you quirky insight and a love of debate. You notice patterns others miss and enjoy swapping fresh ideas, keeping multiple conversations and curiosities in motion.
+              </div>
+            </section>
+            <section class="zodiac-item">
+              <button type="button" aria-expanded="false" aria-controls="zodiac-venus">
+                <span class="zodiac-item-label">
+                  <strong>Venus · Aries</strong>
+                  <span>9°31′ · 4th House</span>
+                </span>
+                <span class="zodiac-chevron" aria-hidden="true">›</span>
+              </button>
+              <div id="zodiac-venus" class="zodiac-item-content" hidden>
+                Venus in Aries flirts boldly and thrives on spontaneity. You keep relationships exciting, leading with passion, playfulness, and a craving for action-packed love.
+              </div>
+            </section>
+            <section class="zodiac-item">
+              <button type="button" aria-expanded="false" aria-controls="zodiac-mars">
+                <span class="zodiac-item-label">
+                  <strong>Mars · Pisces</strong>
+                  <span>6°56′ · 3rd House</span>
+                </span>
+                <span class="zodiac-chevron" aria-hidden="true">›</span>
+              </button>
+              <div id="zodiac-mars" class="zodiac-item-content" hidden>
+                With Mars in Pisces, your drive is compassionate and adaptive. You act through intuition, channeling energy into creative expression and gentle yet persistent problem solving.
+              </div>
+            </section>
+            <section class="zodiac-item">
+              <button type="button" aria-expanded="false" aria-controls="zodiac-jupiter">
+                <span class="zodiac-item-label">
+                  <strong>Jupiter · Scorpio</strong>
+                  <span>14°16′ · 11th House</span>
+                </span>
+                <span class="zodiac-chevron" aria-hidden="true">›</span>
+              </button>
+              <div id="zodiac-jupiter" class="zodiac-item-content" hidden>
+                Jupiter in Scorpio rewards your all-or-nothing focus. You grow through deep research, healing collaborations, and committing fully to causes that transform communities.
+              </div>
+            </section>
+            <section class="zodiac-item">
+              <button type="button" aria-expanded="false" aria-controls="zodiac-saturn">
+                <span class="zodiac-item-label">
+                  <strong>Saturn · Pisces</strong>
+                  <span>5°33′ · 3rd House</span>
+                </span>
+                <span class="zodiac-chevron" aria-hidden="true">›</span>
+              </button>
+              <div id="zodiac-saturn" class="zodiac-item-content" hidden>
+                Saturn in Pisces invites boundaries around compassion. You take communication seriously, preferring thoughtful, focused learning and conversations that honor sincerity.
+              </div>
+            </section>
+            <section class="zodiac-item">
+              <button type="button" aria-expanded="false" aria-controls="zodiac-uranus">
+                <span class="zodiac-item-label">
+                  <strong>Uranus · Capricorn</strong>
+                  <span>25°29′ · 2nd House</span>
+                </span>
+                <span class="zodiac-chevron" aria-hidden="true">›</span>
+              </button>
+              <div id="zodiac-uranus" class="zodiac-item-content" hidden>
+                Uranus in Capricorn rebels through strategy. You’re driven to redefine success on your own terms and shine when your work allows unconventional approaches and constant evolution.
+              </div>
+            </section>
+            <section class="zodiac-item">
+              <button type="button" aria-expanded="false" aria-controls="zodiac-neptune">
+                <span class="zodiac-item-label">
+                  <strong>Neptune · Capricorn</strong>
+                  <span>22°55′ · 2nd House</span>
+                </span>
+                <span class="zodiac-chevron" aria-hidden="true">›</span>
+              </button>
+              <div id="zodiac-neptune" class="zodiac-item-content" hidden>
+                Neptune in Capricorn blends vision with pragmatism. You’re discerning with dreams, yet need grounded financial plans so creative pursuits and idealism can flourish responsibly.
+              </div>
+            </section>
+            <section class="zodiac-item">
+              <button type="button" aria-expanded="false" aria-controls="zodiac-pluto">
+                <span class="zodiac-item-label">
+                  <strong>Pluto · Scorpio</strong>
+                  <span>28°01′ · 12th House</span>
+                </span>
+                <span class="zodiac-chevron" aria-hidden="true">›</span>
+              </button>
+              <div id="zodiac-pluto" class="zodiac-item-content" hidden>
+                Pluto in Scorpio fuels potent transformation. You possess magnetic willpower and can channel it into healing, leadership, and reshaping systems with depth and integrity.
+              </div>
+            </section>
+            <section class="zodiac-item">
+              <button type="button" aria-expanded="false" aria-controls="zodiac-ascendant">
+                <span class="zodiac-item-label">
+                  <strong>Ascendant · Sagittarius</strong>
+                  <span>7°53′</span>
+                </span>
+                <span class="zodiac-chevron" aria-hidden="true">›</span>
+              </button>
+              <div id="zodiac-ascendant" class="zodiac-item-content" hidden>
+                Sagittarius rising greets life with optimism and candor. You radiate curiosity, keep the mood light with humor, and inspire others through hopeful big-picture perspectives.
+              </div>
+            </section>
+            <section class="zodiac-item">
+              <button type="button" aria-expanded="false" aria-controls="zodiac-midheaven">
+                <span class="zodiac-item-label">
+                  <strong>Midheaven · Virgo</strong>
+                  <span>26°45′</span>
+                </span>
+                <span class="zodiac-chevron" aria-hidden="true">›</span>
+              </button>
+              <div id="zodiac-midheaven" class="zodiac-item-content" hidden>
+                A Virgo Midheaven points to purposeful service. You’re drawn to careers that merge precision, care, and tangible support--health, wellness, and social impact paths all resonate.
+              </div>
+            </section>
+            <section class="zodiac-item">
+              <button type="button" aria-expanded="false" aria-controls="zodiac-node">
+                <span class="zodiac-item-label">
+                  <strong>North Node · Scorpio</strong>
+                  <span>25°57′ · 12th House</span>
+                </span>
+                <span class="zodiac-chevron" aria-hidden="true">›</span>
+              </button>
+              <div id="zodiac-node" class="zodiac-item-content" hidden>
+                Your Scorpio North Node in the twelfth house asks you to share power, embrace transformation, and trust your intuition. Growth comes from vulnerability, spiritual practice, and going all in with healing work.
+              </div>
+            </section>
+          </div>
         </div>
       </section>
 
+      <!-- Keep ONLY the first set of buttons -->
+      <div class="cta-stack" aria-label="Connect with Zack">
+        <a class="login-button" href="/login.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path
+              d="M12 2a5 5 0 0 1 5 5v1h1.5A2.5 2.5 0 0 1 21 10.5v8A2.5 2.5 0 0 1 18.5 21h-13A2.5 2.5 0 0 1 3 18.5v-8A2.5 2.5 0 0 1 5.5 8H7V7a5 5 0 0 1 5-5Zm0 2a3 3 0 0 0-3 3v1h6V7a3 3 0 0 0-3-3Zm6.5 6H5.5A.5.5 0 0 0 5 10.5v8a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-8a.5.5 0 0 0-.5-.5ZM12 12a2 2 0 1 1-2 2 2 2 0 0 1 2-2Z"
+            />
+          </svg>
+          <span>Member Login</span>
+        </a>
+
+        <div class="contact-dropdown" data-open="false">
+          <button
+            type="button"
+            class="contact-primary contact-primary__trigger"
+            aria-expanded="false"
+            aria-controls="contact-menu"
+            aria-haspopup="true"
+          >
+            <span class="contact-primary-label">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M20.5 4h-17A1.5 1.5 0 0 0 2 5.5v13A1.5 1.5 0 0 0 3.5 20h17a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 20.5 4Zm-.4 2L12 10.88 3.9 6Zm.4 11.5h-17V7.62l8.3 4.7a1 1 0 0 0 1 0l8.3-4.7Z" />
+              </svg>
+              <span>Compose a message</span>
+            </span>
+            <svg class="contact-chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M6.12 8.47a1 1 0 0 1 1.41 0L12 12.94l4.47-4.47a1 1 0 1 1 1.41 1.41l-5.18 5.18a1 1 0 0 1-1.41 0L6.12 9.88a1 1 0 0 1 0-1.41Z" />
+            </svg>
+          </button>
+          <ul id="contact-menu" class="contact-menu" role="menu" aria-label="Email options" hidden>
+            <li>
+              <a role="menuitem" href="mailto:zack@zackmoritz.cool">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M20.5 4h-17A1.5 1.5 0 0 0 2 5.5v13A1.5 1.5 0 0 0 3.5 20h17a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 20.5 4Zm-.4 2L12 10.88 3.9 6Zm.4 11.5h-17V7.62l8.3 4.7a1 1 0 0 0 1 0l8.3-4.7Z" />
+                </svg>
+                <span class="contact-menu__text">
+                  <span class="contact-menu__title">Start a blank email</span>
+                  <span class="contact-menu__hint">Open a fresh draft addressed to Zack.</span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a
+                role="menuitem"
+                href="mailto:zack@zackmoritz.cool?subject=Schedule%20a%20coaching%20session&body=Hi%20Zack%2C%0D%0A%0D%0AI%E2%80%99m%20ready%20for%20a%20coaching%20session%20and%20would%20love%20support%20with%3A%0D%0A"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2Zm3.71 8.29-4 4a1 1 0 0 1-1.42 0l-2-2a1 1 0 1 1 1.42-1.42L11 12.17l3.29-3.3a1 1 0 0 1 1.42 1.42Z" />
+                </svg>
+                <span class="contact-menu__text">
+                  <span class="contact-menu__title">Schedule a coaching session</span>
+                  <span class="contact-menu__hint">Share what you’d like guidance on and ideal timing.</span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a
+                role="menuitem"
+                href="mailto:zack@zackmoritz.cool?subject=Design%20a%20mentorship%20plan&body=Hi%20Zack%2C%0D%0A%0D%0AI%E2%80%99d%20love%20your%20insight%20on%20creating%20a%20mentorship%20plan%20for%3A%0D%0A"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M19 3h-1V1h-2v2H8V1H6v2H5a3 3 0 0 0-3 3v13a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3Zm1 16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10h16Zm0-11H4V6a1 1 0 0 1 1-1h1v2h2V5h8v2h2V5h1a1 1 0 0 1 1 1Z" />
+                </svg>
+                <span class="contact-menu__text">
+                  <span class="contact-menu__title">Design a mentorship plan</span>
+                  <span class="contact-menu__hint">Outline who you’re supporting and the outcomes you need.</span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a
+                role="menuitem"
+                href="mailto:zack@zackmoritz.cool?subject=Share%20a%20success%20story&body=Hi%20Zack%2C%0D%0A%0D%0AI%20wanted%20to%20let%20you%20know%20about%20this%20breakthrough%20since%20we%20worked%20together%3A%0D%0A"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Zm0 14H5.17L4 17.17V4h16Z" />
+                </svg>
+                <span class="contact-menu__text">
+                  <span class="contact-menu__title">Share a success story</span>
+                  <span class="contact-menu__hint">Celebrate a win and highlight what’s working.</span>
+                </span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <a class="inventory-button" href="https://zackmoritz.cool/gallery.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M12 2C7.03 2 3 3.79 3 6v12c0 2.21 4.03 4 9 4s9-1.79 9-4V6c0-2.21-4.03-4-9-4Zm0 2c4.03 0 7 1.37 7 2s-2.97 2-7 2-7-1.37-7-2 2.97-2 7-2Zm0 16c-4.03 0-7-1.37-7-2v-2.43C6.3 17.27 8.95 18 12 18s5.7-.73 7-2.43V18c0 .63-2.97 2-7 2Zm0-4c-4.03 0-7-1.37-7-2v-2.43C6.3 13.27 8.95 14 12 14s5.7-.73 7-2.43V14c0 .63-2.97 2-7 2Z" />
+          </svg>
+          <span>Virtual Inventory Database</span>
+        </a>
+
+        <a
+          class="social-connect"
+          href="https://www.facebook.com/zackmoritz"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M22 12.07C22 6.51 17.52 2 12 2S2 6.51 2 12.07c0 5 3.66 9.14 8.44 9.93v-7.03H8.08v-2.9h2.36V9.64c0-2.33 1.39-3.62 3.52-3.62 1.02 0 2.09.18 2.09.18v2.3h-1.18c-1.17 0-1.54.73-1.54 1.49v1.79h2.62l-.42 2.9h-2.2V22c4.78-.79 8.44-4.93 8.44-9.93Z" />
+          </svg>
+          <span>Connect on Facebook</span>
+        </a>
+      </div>
+
       <footer class="footer-banner">
-        Future add-ons incoming: natal chart, contact info, and real-time stats.
+        Quick menu pulled from your Cafe Astrology natal chart--more cosmic modules coming soon.
       </footer>
     </article>
   </div>
+
+  <script>
+    const readingTimeValue = document.getElementById('reading-time-value');
+    const readingTimeWidget = document.getElementById('reading-time-widget');
+    const readingTimeKey = 'zm-reading-time-seconds';
+
+    const formatReadingTime = (totalSeconds) => {
+      const seconds = Math.max(0, Number.isFinite(totalSeconds) ? Math.floor(totalSeconds) : 0);
+      const hrs = Math.floor(seconds / 3600);
+      const mins = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+      return `${hrs}h ${String(mins).padStart(2, '0')}m ${String(secs).padStart(2, '0')}s`;
+    };
+
+    const renderReadingTime = () => {
+      if (!readingTimeValue) return;
+      let stored = 0;
+      try {
+        stored = Number.parseInt(localStorage.getItem(readingTimeKey) || '0', 10);
+      } catch (error) {
+        stored = 0;
+      }
+      const safeValue = Number.isNaN(stored) || stored < 0 ? 0 : stored;
+      readingTimeValue.textContent = formatReadingTime(safeValue);
+      readingTimeWidget?.setAttribute('data-active', safeValue > 0 ? 'true' : 'false');
+    };
+
+    renderReadingTime();
+
+    window.addEventListener('storage', (event) => {
+      if (event.key === readingTimeKey) {
+        renderReadingTime();
+      }
+    });
+
+    // Zodiac module
+    const zodiacModule = document.querySelector('.zodiac-module');
+    const zodiacRootButton = document.querySelector('.zodiac-root-button');
+    const zodiacPanel = document.getElementById('zodiac-panel');
+    const zodiacItemButtons = zodiacPanel ? Array.from(zodiacPanel.querySelectorAll('.zodiac-item button')) : [];
+
+    if (zodiacModule && zodiacRootButton && zodiacPanel) {
+      zodiacModule.setAttribute('data-open', 'false');
+      zodiacRootButton.setAttribute('aria-expanded', 'false');
+      zodiacPanel.hidden = true;
+
+      zodiacRootButton.addEventListener('click', () => {
+        const expanded = zodiacRootButton.getAttribute('aria-expanded') === 'true';
+        const nextState = !expanded;
+
+        zodiacRootButton.setAttribute('aria-expanded', String(nextState));
+        zodiacModule.setAttribute('data-open', String(nextState));
+        zodiacPanel.hidden = !nextState;
+
+        if (!nextState) {
+          zodiacItemButtons.forEach((button) => {
+            button.setAttribute('aria-expanded', 'false');
+            const content = document.getElementById(button.getAttribute('aria-controls') || '');
+            if (content) content.hidden = true;
+          });
+        }
+      });
+    }
+
+    zodiacItemButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const expanded = button.getAttribute('aria-expanded') === 'true';
+        const contentId = button.getAttribute('aria-controls') || '';
+        const content = document.getElementById(contentId);
+
+        if (!expanded) {
+          zodiacItemButtons.forEach((other) => {
+            if (other !== button) {
+              other.setAttribute('aria-expanded', 'false');
+              const otherContent = document.getElementById(other.getAttribute('aria-controls') || '');
+              if (otherContent) otherContent.hidden = true;
+            }
+          });
+        }
+
+        button.setAttribute('aria-expanded', String(!expanded));
+        if (content) content.hidden = expanded;
+      });
+    });
+
+    // Single contact dropdown (only the first set)
+    const contactDropdown = document.querySelector('.contact-dropdown');
+    if (contactDropdown) {
+      const trigger = contactDropdown.querySelector('.contact-primary__trigger');
+      const menu = contactDropdown.querySelector('.contact-menu');
+      const menuItems = menu ? Array.from(menu.querySelectorAll('a')) : [];
+
+      const setDropdownState = (open) => {
+        contactDropdown.setAttribute('data-open', String(open));
+        if (trigger) trigger.setAttribute('aria-expanded', String(open));
+        if (menu) menu.hidden = !open;
+      };
+
+      const isOpen = () => contactDropdown.getAttribute('data-open') === 'true';
+      setDropdownState(false);
+
+      const focusMenuItem = (index) => { if (menuItems[index]) menuItems[index].focus(); };
+
+      trigger?.addEventListener('click', () => {
+        const nextState = !isOpen();
+        setDropdownState(nextState);
+        if (nextState) requestAnimationFrame(() => focusMenuItem(0));
+      });
+
+      trigger?.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          if (!isOpen()) setDropdownState(true);
+          focusMenuItem(0);
+        } else if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          if (!isOpen()) setDropdownState(true);
+          focusMenuItem(menuItems.length - 1);
+        } else if (event.key === 'Escape' && isOpen()) {
+          event.preventDefault();
+          setDropdownState(false);
+        }
+      });
+
+      menuItems.forEach((item, index) => {
+        item.setAttribute('role', 'menuitem');
+        item.addEventListener('keydown', (event) => {
+          if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            focusMenuItem((index + 1) % menuItems.length);
+          } else if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            focusMenuItem((index - 1 + menuItems.length) % menuItems.length);
+          } else if (event.key === 'Home') {
+            event.preventDefault();
+            focusMenuItem(0);
+          } else if (event.key === 'End') {
+            event.preventDefault();
+            focusMenuItem(menuItems.length - 1);
+          } else if (event.key === 'Escape') {
+            event.preventDefault();
+            setDropdownState(false);
+            trigger?.focus();
+          }
+        });
+        item.addEventListener('click', () => setDropdownState(false));
+      });
+
+      document.addEventListener('click', (event) => {
+        if (isOpen() && !contactDropdown.contains(event.target)) setDropdownState(false);
+      });
+    }
+  </script>
 </body>
 </html>
