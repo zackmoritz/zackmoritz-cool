@@ -20,25 +20,89 @@
 <div id="grid" class="grid" aria-live="polite"></div>
 <script>
 (async () => {
+  // Load manifest (keeps your newest→oldest order)
   const res = await fetch('photos.json', { cache: 'no-store' });
-  if (!res.ok) {
-    document.getElementById('count').textContent = 'No manifest found.';
-    return;
-  }
+  if (!res.ok) { document.getElementById('count').textContent = 'No manifest found.'; return; }
   const data = await res.json();
+  const entries = (data.files || []).filter(f => f && f.path);
 
+  // Current folder prefix from URL, e.g. /gallery/2025/trip/ -> "2025/trip/"
+  const pathAfterGallery = location.pathname.replace(/^\/?gallery\/?/, '');
+  const currentPrefix = pathAfterGallery.endsWith('/') || pathAfterGallery === '' 
+    ? pathAfterGallery 
+    : pathAfterGallery + '/';
+
+  // Build lists
+  const subfolders = new Set();
+  const filesHere = [];
+  for (const f of entries) {
+    if (!f.path.startsWith(currentPrefix)) continue;
+    const rest = f.path.slice(currentPrefix.length);
+    const slash = rest.indexOf('/');
+    if (slash === -1) {
+      // direct child file in this folder
+      filesHere.push(f);
+    } else {
+      // immediate subfolder
+      subfolders.add(rest.slice(0, slash+1)); // keep trailing /
+    }
+  }
+
+  // DOM helpers
   const grid = document.getElementById('grid');
   const count = document.getElementById('count');
+  const sort = document.getElementById('sort');
   const q = document.getElementById('q');
-  const files = (data.files || []).filter(f => f && f.path);
 
-  // Helper that preserves slashes in subfolders
+  // Insert breadcrumbs + folder list UI
+  const header = document.querySelector('header');
+  const crumbs = document.createElement('nav');
+  crumbs.style.fontSize = '14px';
+  crumbs.style.color = '#666';
+  crumbs.style.wordBreak = 'break-all';
+
+  // Build breadcrumbs
+  const parts = currentPrefix ? currentPrefix.split('/').filter(Boolean) : [];
+  let acc = '';
+  const links = ['<a href="/gallery">/gallery</a>'];
+  for (const p of parts) {
+    acc += p + '/';
+    links.push(`<a href="/gallery/${encodeURI(acc)}">${p}</a>`);
+  }
+  crumbs.innerHTML = links.join(' ▸ ');
+  header.appendChild(crumbs);
+
+  // Folder tiles
+  const foldersDiv = document.createElement('div');
+  foldersDiv.className = 'folders';
+  foldersDiv.style.display = 'grid';
+  foldersDiv.style.gridTemplateColumns = 'repeat(auto-fill,minmax(160px,1fr))';
+  foldersDiv.style.gap = '12px';
+  foldersDiv.style.margin = '8px 0 8px 0';
+
+  if (subfolders.size) {
+    for (const folder of Array.from(subfolders).sort()) {
+      const a = document.createElement('a');
+      a.href = '/gallery/' + encodeURI(currentPrefix + folder);
+      a.style.display = 'block';
+      a.style.padding = '14px';
+      a.style.border = '1px solid #e5e5e5';
+      a.style.borderRadius = '8px';
+      a.style.background = '#fafafa';
+      a.style.textDecoration = 'none';
+      a.style.color = 'inherit';
+      a.innerHTML = `📁 ${folder.replace(/\/$/, '')}`;
+      foldersDiv.appendChild(a);
+    }
+    grid.before(foldersDiv);
+  }
+
+  // Render files in this folder (not recursive)
   const safeURL = (p) => encodeURI(p);
-
   function render(list){
     grid.innerHTML = '';
     for (const f of list) {
-      const name = f.path; // e.g. "2025/pic.jpg"
+      const name = f.path; // relative to /gallery/
       const t = f.t ? new Date(f.t).toISOString().slice(0,16).replace('T',' ') : '';
       const url = safeURL(name);
       const fig = document.createElement('figure');
@@ -46,18 +110,20 @@
       fig.innerHTML = `<a href="${url}" target="_blank" rel="noopener">
         <img loading="lazy" decoding="async" src="${url}" alt="${name}">
       </a>
-      <figcaption>${name}${t ? `<br><small>${t}</small>`:''}</figcaption>`;
+      <figcaption>${name.split('/').pop()}${t ? `<br><small>${t}</small>`:''}</figcaption>`;
       grid.appendChild(fig);
     }
-    count.textContent = `${list.length} image${list.length!==1?'s':''}`;
-    document.getElementById('sort').textContent = data.sort ? `Sorted: ${data.sort}` : '';
+    count.textContent = `${list.length} file${list.length!==1?'s':''}` + (currentPrefix ? ` in ${currentPrefix}` : '');
+    if (sort) sort.textContent = data.sort ? `Sorted: ${data.sort}` : '';
   }
 
+  // Filtering within the current folder
+  const filesHereSorted = filesHere; // already newest→oldest from manifest
   q.addEventListener('input', () => {
     const needle = q.value.trim().toLowerCase();
-    render(files.filter(f => f.path.toLowerCase().includes(needle)));
+    render(filesHereSorted.filter(f => f.path.toLowerCase().includes(needle)));
   });
 
-  render(files);
+  render(filesHereSorted);
 })();
 </script>
