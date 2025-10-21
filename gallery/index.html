@@ -20,13 +20,17 @@
 <div id="grid" class="grid" aria-live="polite"></div>
 <script>
 (async () => {
-  // Load manifest (keeps your newest→oldest order)
-  const res = await fetch('photos.json', { cache: 'no-store' });
+  // 1) Always load the manifest from /gallery/
+  const res = await fetch('/gallery/photos.json', { cache: 'no-store' });
   if (!res.ok) { document.getElementById('count').textContent = 'No manifest found.'; return; }
   const data = await res.json();
-  const entries = (data.files || []).filter(f => f && f.path);
 
-  // Current folder prefix from URL, e.g. /gallery/2025/trip/ -> "2025/trip/"
+  // Guard + normalize paths to be relative to gallery root (no leading slash)
+  const entries = (data.files || [])
+    .filter(f => f && f.path)
+    .map(f => ({ ...f, path: f.path.replace(/^\/+/, '') }));
+
+  // 2) Current folder prefix from URL, relative to /gallery/
   const pathAfterGallery = location.pathname.replace(/^\/?gallery\/?/, '');
   const currentPrefix = pathAfterGallery.endsWith('/') || pathAfterGallery === '' 
     ? pathAfterGallery 
@@ -40,11 +44,9 @@
     const rest = f.path.slice(currentPrefix.length);
     const slash = rest.indexOf('/');
     if (slash === -1) {
-      // direct child file in this folder
-      filesHere.push(f);
+      filesHere.push(f); // direct child
     } else {
-      // immediate subfolder
-      subfolders.add(rest.slice(0, slash+1)); // keep trailing /
+      subfolders.add(rest.slice(0, slash+1)); // immediate subfolder (keep trailing /)
     }
   }
 
@@ -54,14 +56,13 @@
   const sort = document.getElementById('sort');
   const q = document.getElementById('q');
 
-  // Insert breadcrumbs + folder list UI
-  const header = document.querySelector('header');
+  // Breadcrumbs
+  const headerEl = document.querySelector('header');
   const crumbs = document.createElement('nav');
   crumbs.style.fontSize = '14px';
   crumbs.style.color = '#666';
   crumbs.style.wordBreak = 'break-all';
 
-  // Build breadcrumbs
   const parts = currentPrefix ? currentPrefix.split('/').filter(Boolean) : [];
   let acc = '';
   const links = ['<a href="/gallery">/gallery</a>'];
@@ -70,7 +71,7 @@
     links.push(`<a href="/gallery/${encodeURI(acc)}">${p}</a>`);
   }
   crumbs.innerHTML = links.join(' ▸ ');
-  header.appendChild(crumbs);
+  headerEl.appendChild(crumbs);
 
   // Folder tiles
   const foldersDiv = document.createElement('div');
@@ -102,9 +103,10 @@
   function render(list){
     grid.innerHTML = '';
     for (const f of list) {
-      const name = f.path; // relative to /gallery/
+      const name = f.path; // relative to gallery root
       const t = f.t ? new Date(f.t).toISOString().slice(0,16).replace('T',' ') : '';
-      const url = safeURL(name);
+      // 3) Prefix all file URLs with /gallery/
+      const url = '/gallery/' + safeURL(name);
       const fig = document.createElement('figure');
       fig.dataset.name = name.toLowerCase();
       fig.innerHTML = `<a href="${url}" target="_blank" rel="noopener">
