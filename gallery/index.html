@@ -33,13 +33,20 @@
     countEl.textContent = msg;
   }
 
-  // Try multiple locations for photos.json to survive routing/subpath configs
+  // Safe helpers (no exceptions at construction time)
+  const abs = (u) => {
+    try { return new URL(u, window.location.href).toString(); }
+    catch { return null; }
+  };
+
   async function loadManifest() {
+    const relHere = abs('photos.json');              // relative to current page (safe)
     const candidates = [
-      '/gallery/photos.json',                    // absolute from site root
-      new URL('photos.json', location.pathname).toString(), // relative to current folder
-      '/photos.json'                             // site root (in case you placed it there)
-    ];
+      '/gallery/photos.json',                        // absolute from site root (gallery)
+      relHere,                                       // relative to current page/folder
+      '/photos.json'                                 // site root fallback
+    ].filter(Boolean);
+
     const tried = [];
     for (const url of candidates) {
       try {
@@ -47,7 +54,6 @@
         tried.push(`${url} → ${res.status}`);
         if (!res.ok) continue;
 
-        // Ensure it’s JSON (not an HTML fallback page)
         const text = await res.text();
         try {
           const json = JSON.parse(text);
@@ -64,7 +70,7 @@
   }
 
   try {
-    const { json: data, used, tried } = await loadManifest();
+    const { json: data, used } = await loadManifest();
 
     // Normalize entries
     const entries = (data.files || [])
