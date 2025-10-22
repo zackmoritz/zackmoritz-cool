@@ -5,83 +5,81 @@
 <style>
   body{margin:24px;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
   header{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+  nav{font-size:14px;color:#666;word-break:break-all;margin-bottom:8px}
   .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
-  figure{position:relative;margin:0;background:#f7f7f7;border:1px solid #e5e5e5;border-radius:8px;overflow:hidden}
+  figure{margin:0;background:#f7f7f7;border:1px solid #e5e5e5;border-radius:8px;overflow:hidden}
   img{width:100%;height:160px;object-fit:cover;display:block;background:#fff}
   figcaption{font-size:12px;padding:6px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   input[type="search"]{padding:8px 10px;min-width:220px}
-  .meta{color:#666;font-size:14px}
-  .badge{position:absolute;top:6px;left:6px;background:#d61f1f;color:#fff;font-size:11px;padding:2px 6px;border-radius:4px;display:none}
-  figure.err .badge{display:inline-block}
+  .folders{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin:12px 0}
+  .folders a{display:block;padding:14px;border:1px solid #e5e5e5;border-radius:8px;background:#fafafa;text-decoration:none;color:inherit}
 </style>
+
 <header>
   <strong id="count">Loading…</strong>
   <input id="q" type="search" placeholder="Filter by filename…">
   <span id="sort" class="meta"></span>
 </header>
 <div id="grid" class="grid" aria-live="polite"></div>
+
 <script>
 (async () => {
-  const $ = id => document.getElementById(id);
-  const count = $('count'), sort = $('sort'), grid = $('grid'), q = $('q');
+  const res = await fetch('/gallery/photos.json',{cache:'no-store'});
+  const data = await res.json();
+  const entries = data.files || [];
 
-  const encodeSegs = p => p.split('/').map(encodeURIComponent).join('/');
+  // current folder prefix after /gallery/
+  const prefix = location.pathname.replace(/^\/?gallery\/?/, '').replace(/\/?$/, '/');
+  const parts = prefix.split('/').filter(Boolean);
 
-  function fail(msg){ console.error(msg); count.textContent = msg; }
+  // breadcrumbs
+  const nav = document.createElement('nav');
+  let acc = '';
+  const crumbs = ['<a href="/gallery">/gallery</a>'];
+  for (const p of parts) { acc += p + '/'; crumbs.push(`<a href="/gallery/${acc}">${p}</a>`); }
+  nav.innerHTML = crumbs.join(' ▸ ');
+  document.body.prepend(nav);
 
-  try {
-    // Flat view expects photos.json right next to this file
-    const res = await fetch('/gallery/photos.json', { cache: 'no-store' });
-    if (!res.ok) return fail(`photos.json ${res.status} — is it at /gallery/photos.json?`);
-    const text = await res.text();
-    let data;
-    try { data = JSON.parse(text); }
-    catch { return fail('photos.json parse error — did routing return HTML?'); }
-
-    const entries = (data.files || [])
-      .filter(f => f && f.path)
-      .map(f => ({ ...f, path: String(f.path).replace(/^\/+/, '') })); // no leading slash
-
-    // Render flat list (no subfolders)
-    const failures = [];
-    function render(list){
-      grid.innerHTML = '';
-      for (const f of list) {
-        const file = f.path;               // filename only in flat mode
-        const t = f.t ? new Date(f.t).toISOString().slice(0,16).replace('T',' ') : '';
-        const url = '/gallery/' + encodeSegs(file);
-
-        const fig = document.createElement('figure');
-        fig.dataset.name = file.toLowerCase();
-        fig.innerHTML = `<span class="badge"></span>
-          <a href="${url}" target="_blank" rel="noopener">
-            <img loading="lazy" decoding="async" alt="${file}">
-          </a>
-          <figcaption>${file}${t ? `<br><small>${t}</small>`:''}</figcaption>`;
-
-        const img = fig.querySelector('img');
-        img.onerror = () => {
-          failures.push(url);
-          fig.classList.add('err');
-          fig.querySelector('.badge').textContent = '404';
-        };
-        img.src = url;
-
-        grid.appendChild(fig);
-      }
-      count.textContent = `${list.length} file${list.length!==1?'s':''}`;
-      sort.textContent = data.sort ? `Sorted: ${data.sort}` : '';
-    }
-
-    const sorted = entries; // trust manifest order (newest-first, etc.)
-    q.addEventListener('input', () => {
-      const needle = q.value.trim().toLowerCase();
-      render(sorted.filter(f => f.path.toLowerCase().includes(needle)));
-    });
-
-    render(sorted);
-  } catch (e) {
-    fail('Fetch failed: ' + e.message);
+  // separate subfolders & files
+  const subs = new Set(), here = [];
+  for (const f of entries) {
+    if (!f.path.startsWith(prefix)) continue;
+    const rest = f.path.slice(prefix.length);
+    const slash = rest.indexOf('/');
+    if (slash === -1) here.push(f);
+    else subs.add(rest.slice(0, slash+1));
   }
+
+  // folders grid
+  if (subs.size) {
+    const div = document.createElement('div');
+    div.className='folders';
+    for (const s of Array.from(subs).sort()) {
+      const a = document.createElement('a');
+      a.href = '/gallery/' + encodeURIComponent(prefix + s);
+      a.textContent = '📁 ' + s.replace(/\/$/, '');
+      div.append(a);
+    }
+    document.querySelector('header').after(div);
+  }
+
+  // file grid
+  const grid = document.getElementById('grid');
+  const q = document.getElementById('q');
+  const count = document.getElementById('count');
+  const render = list => {
+    grid.innerHTML='';
+    for (const f of list) {
+      const url = '/gallery/' + encodeURIComponent(f.path);
+      const fig=document.createElement('figure');
+      fig.innerHTML=`<a href="${url}" target="_blank"><img src="${url}" alt="${f.path}"></a>
+      <figcaption>${f.path.split('/').pop()}</figcaption>`;
+      grid.append(fig);
+    }
+    count.textContent=`${list.length} file${list.length!==1?'s':''}${prefix!=='/'?' in '+prefix:''}`;
+  };
+  render(here);
+
+  q.oninput=()=>render(here.filter(f=>f.path.toLowerCase().includes(q.value.toLowerCase())));
 })();
 </script>
