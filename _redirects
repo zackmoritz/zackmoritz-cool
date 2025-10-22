@@ -1,3 +1,2 @@
 /gallery/photos.json   /gallery/photos.json   200
 /gallery/*             /gallery/:splat        200
-/*                     /index.html            200
