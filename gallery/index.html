@@ -1,72 +1,105 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zack’s Gallery</title>
+<style>
+  body{margin:24px;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  header{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+  nav{font-size:14px;color:#666;word-break:break-all;margin-bottom:8px}
+  .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+  figure{margin:0;background:#f7f7f7;border:1px solid #e5e5e5;border-radius:8px;overflow:hidden}
+  img{width:100%;height:160px;object-fit:cover;display:block;background:#fff}
+  figcaption{font-size:12px;padding:6px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  input[type="search"]{padding:8px 10px;min-width:220px}
+  .folders{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin:12px 0}
+  .folders a{display:block;padding:14px;border:1px solid #e5e5e5;border-radius:8px;background:#fafafa;text-decoration:none;color:inherit}
+</style>
+
+<header>
+  <strong id="count">Loading…</strong>
+  <input id="q" type="search" placeholder="Filter by filename…">
+  <span id="sort" class="meta"></span>
+</header>
+<div id="grid" class="grid" aria-live="polite"></div>
+
 <script>
 (async () => {
-  const res = await fetch('/gallery/photos.json',{cache:'no-store'});
-  const data = await res.json();
-  const entries = data.files || [];
-
-  // prefix after /gallery
-  const after = location.pathname.replace(/^\/?gallery\/?/, '');
-  const prefix = after === '' ? '' : (after.endsWith('/') ? after : after + '/');
-  const parts = prefix.split('/').filter(Boolean);
-
-  // breadcrumbs
-  const nav = document.createElement('nav');
-  let acc = '';
-  const crumbs = ['<a href="/gallery">/gallery</a>'];
-  for (const p of parts) { acc += p + '/'; crumbs.push(`<a href="/gallery/${acc}">${p}</a>`); }
-  nav.innerHTML = crumbs.join(' ▸ ');
-  document.body.prepend(nav);
-
-  // build folder/file lists
-  const subs = new Set(), here = [];
-  for (const f of entries) {
-    const p = String(f.path).replace(/^\/?gallery\//, '');
-    if (!p.startsWith(prefix)) continue;
-    const rest = p.slice(prefix.length);
-    const slash = rest.indexOf('/');
-    if (slash === -1) here.push({ ...f, path: p });
-    else subs.add(rest.slice(0, slash + 1));
-  }
-
-  // segment-safe encoder
-  const enc = (p) => p.split('/').map(encodeURIComponent).join('/');
-
-  // folders grid
-  if (subs.size) {
-    const div = document.createElement('div');
-    div.className='folders';
-    for (const s of Array.from(subs).sort()) {
-      const a = document.createElement('a');
-      a.href = '/gallery/' + enc(prefix + s); // encode segments, keep slashes
-      a.textContent = '📁 ' + s.replace(/\/$/, '');
-      div.append(a);
-    }
-    document.querySelector('header').after(div);
-  }
-
-  // file grid
-  const grid = document.getElementById('grid');
-  const q = document.getElementById('q');
   const count = document.getElementById('count');
+  const grid  = document.getElementById('grid');
+  const q     = document.getElementById('q');
 
-  const render = list => {
-    grid.innerHTML='';
-    for (const f of list) {
-      const url = '/gallery/' + enc(f.path); // encode segments
-      const fig=document.createElement('figure');
-      fig.innerHTML=`<a href="${url}" target="_blank" rel="noopener">
-        <img src="${url}" alt="${f.path}">
-      </a>
-      <figcaption>${f.path.split('/').pop()}</figcaption>`;
-      grid.append(fig);
+  const enc = p => p.split('/').map(encodeURIComponent).join('/');             // keep slashes
+  const norm = p => String(p).replace(/^\/+/, '').replace(/^gallery\//, '');   // strip leading "/" or "gallery/"
+
+  const fail = (msg) => { console.error(msg); count.textContent = msg; };
+
+  try {
+    // Load manifest
+    const res = await fetch('/gallery/photos.json', { cache: 'no-store' });
+    if (!res.ok) return fail(`photos.json ${res.status}`);
+    const data = await res.json();
+    const entries = (data.files || [])
+      .filter(f => f && f.path)
+      .map(f => ({ ...f, path: norm(f.path) })); // paths like "2025/trip/IMG.jpg"
+
+    // Compute current folder prefix relative to /gallery/
+    const after  = location.pathname.replace(/^\/?gallery\/?/, '');
+    const prefix = after === '' ? '' : (after.endsWith('/') ? after : after + '/');
+    const parts  = prefix.split('/').filter(Boolean);
+
+    // Breadcrumbs
+    const nav = document.createElement('nav');
+    let acc = '';
+    const crumbs = ['<a href="/gallery">/gallery</a>'];
+    for (const p of parts) { acc += p + '/'; crumbs.push(`<a href="/gallery/${enc(acc)}">${p}</a>`); }
+    nav.innerHTML = crumbs.join(' ▸ ');
+    document.body.insertBefore(nav, document.querySelector('header').nextSibling);
+
+    // Separate subfolders & files for current folder
+    const subs = new Set(), here = [];
+    for (const f of entries) {
+      if (!f.path.startsWith(prefix)) continue;
+      const rest = f.path.slice(prefix.length);
+      const slash = rest.indexOf('/');
+      if (slash === -1) here.push(f);
+      else subs.add(rest.slice(0, slash + 1)); // keep trailing '/'
     }
-    count.textContent = `${list.length} file${list.length!==1?'s':''}` + (prefix ? ` in ${prefix}` : '');
-  };
 
-  render(here);
-  q.oninput = () => {
-    const needle = q.value.trim().toLowerCase();
-    render(here.filter(f => f.path.toLowerCase().includes(needle)));
-  };
+    // Folders grid
+    if (subs.size) {
+      const div = document.createElement('div');
+      div.className = 'folders';
+      for (const s of Array.from(subs).sort()) {
+        const a = document.createElement('a');
+        a.href = '/gallery/' + enc(prefix + s);
+        a.textContent = '📁 ' + s.replace(/\/$/, '');
+        div.appendChild(a);
+      }
+      document.querySelector('header').after(div);
+    }
+
+    // Files grid
+    function render(list){
+      grid.innerHTML = '';
+      for (const f of list) {
+        const url = '/gallery/' + enc(f.path);
+        const fig = document.createElement('figure');
+        fig.innerHTML = `<a href="${url}" target="_blank" rel="noopener">
+            <img loading="lazy" decoding="async" src="${url}" alt="${f.path}">
+          </a>
+          <figcaption>${f.path.split('/').pop()}</figcaption>`;
+        grid.appendChild(fig);
+      }
+      count.textContent = `${list.length} file${list.length!==1?'s':''}` + (prefix ? ` in ${prefix}` : '');
+    }
+
+    render(here);
+    q.addEventListener('input', () => {
+      const needle = q.value.trim().toLowerCase();
+      render(here.filter(f => f.path.toLowerCase().includes(needle)));
+    });
+  } catch (e) {
+    fail('Error: ' + e.message);
+  }
 })();
 </script>
