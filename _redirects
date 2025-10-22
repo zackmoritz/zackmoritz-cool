@@ -1,2 +1,3 @@
 /gallery/photos.json   /gallery/photos.json   200
-/gallery/*             /gallery/:splat        200
+/gallery/*.*           /gallery/:splat        200   # serve real image files
+/gallery/*             /gallery/index.html    200   # SPA fallback for subfolders
