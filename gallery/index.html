@@ -43,7 +43,8 @@
   // separate subfolders & files
   const subs = new Set(), here = [];
   for (const f of entries) {
-    if (!f.path.startsWith(prefix)) continue;
+  const p = f.path.replace(/^\/?gallery\//, ''); // strip leading "gallery/"
+  if (!p.startsWith(prefix)) continue;
     const rest = f.path.slice(prefix.length);
     const slash = rest.indexOf('/');
     if (slash === -1) here.push(f);
