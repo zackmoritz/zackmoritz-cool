@@ -6,14 +6,13 @@
   body{margin:24px;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
   header{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
   .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
-  figure{margin:0;background:#f7f7f7;border:1px solid #e5e5e5;border-radius:8px;overflow:hidden}
-  img{width:100%;height:160px;object-fit:cover;display:block}
+  figure{position:relative;margin:0;background:#f7f7f7;border:1px solid #e5e5e5;border-radius:8px;overflow:hidden}
+  img{width:100%;height:160px;object-fit:cover;display:block;background:#fff}
   figcaption{font-size:12px;padding:6px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   input[type="search"]{padding:8px 10px;min-width:220px}
   .meta{color:#666;font-size:14px}
-  nav.breadcrumbs{font-size:14px;color:#666;word-break:break-all}
-  .folders{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin:8px 0}
-  .folders a{display:block;padding:14px;border:1px solid #e5e5e5;border-radius:8px;background:#fafafa;text-decoration:none;color:inherit}
+  .badge{position:absolute;top:6px;left:6px;background:#d61f1f;color:#fff;font-size:11px;padding:2px 6px;border-radius:4px;display:none}
+  figure.err .badge{display:inline-block}
 </style>
 <header>
   <strong id="count">Loading…</strong>
@@ -23,136 +22,66 @@
 <div id="grid" class="grid" aria-live="polite"></div>
 <script>
 (async () => {
-  const countEl = document.getElementById('count');
-  const grid = document.getElementById('grid');
-  const sortEl = document.getElementById('sort');
-  const q = document.getElementById('q');
+  const $ = id => document.getElementById(id);
+  const count = $('count'), sort = $('sort'), grid = $('grid'), q = $('q');
 
-  function fail(msg){
-    console.error(msg);
-    countEl.textContent = msg;
-  }
+  const encodeSegs = p => p.split('/').map(encodeURIComponent).join('/');
 
-  // Safe helpers (no exceptions at construction time)
-  const abs = (u) => {
-    try { return new URL(u, window.location.href).toString(); }
-    catch { return null; }
-  };
-
-  async function loadManifest() {
-    const relHere = abs('photos.json');              // relative to current page (safe)
-    const candidates = [
-      '/gallery/photos.json',                        // absolute from site root (gallery)
-      relHere,                                       // relative to current page/folder
-      '/photos.json'                                 // site root fallback
-    ].filter(Boolean);
-
-    const tried = [];
-    for (const url of candidates) {
-      try {
-        const res = await fetch(url, { cache: 'no-store' });
-        tried.push(`${url} → ${res.status}`);
-        if (!res.ok) continue;
-
-        const text = await res.text();
-        try {
-          const json = JSON.parse(text);
-          return { json, used: url, tried };
-        } catch (e) {
-          tried.push(`${url} parse error: ${e.message}`);
-          continue;
-        }
-      } catch (e) {
-        tried.push(`${url} fetch error: ${e.message}`);
-      }
-    }
-    throw new Error('Could not load a valid photos.json.\nTried:\n' + tried.join('\n'));
-  }
+  function fail(msg){ console.error(msg); count.textContent = msg; }
 
   try {
-    const { json: data, used } = await loadManifest();
+    // Flat view expects photos.json right next to this file
+    const res = await fetch('/gallery/photos.json', { cache: 'no-store' });
+    if (!res.ok) return fail(`photos.json ${res.status} — is it at /gallery/photos.json?`);
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); }
+    catch { return fail('photos.json parse error — did routing return HTML?'); }
 
-    // Normalize entries
     const entries = (data.files || [])
       .filter(f => f && f.path)
       .map(f => ({ ...f, path: String(f.path).replace(/^\/+/, '') })); // no leading slash
 
-    // Determine current folder prefix relative to /gallery/
-    const pathAfterGallery = location.pathname.replace(/^\/?gallery\/?/, '');
-    const currentPrefix = pathAfterGallery.endsWith('/') || pathAfterGallery === '' 
-      ? pathAfterGallery 
-      : pathAfterGallery + '/';
-
-    // Build lists
-    const subfolders = new Set();
-    const filesHere = [];
-    for (const f of entries) {
-      if (!f.path.startsWith(currentPrefix)) continue;
-      const rest = f.path.slice(currentPrefix.length);
-      const slash = rest.indexOf('/');
-      if (slash === -1) {
-        filesHere.push(f); // direct child
-      } else {
-        subfolders.add(rest.slice(0, slash+1)); // immediate subfolder
-      }
-    }
-
-    // Breadcrumbs
-    const headerEl = document.querySelector('header');
-    const crumbs = document.createElement('nav');
-    crumbs.className = 'breadcrumbs';
-    const parts = currentPrefix ? currentPrefix.split('/').filter(Boolean) : [];
-    let acc = '';
-    const links = ['<a href="/gallery">/gallery</a>'];
-    for (const p of parts) {
-      acc += p + '/';
-      links.push(`<a href="/gallery/${encodeURI(acc)}">${p}</a>`);
-    }
-    crumbs.innerHTML = links.join(' ▸ ');
-    headerEl.appendChild(crumbs);
-
-    // Folder tiles
-    if (subfolders.size) {
-      const foldersDiv = document.createElement('div');
-      foldersDiv.className = 'folders';
-      for (const folder of Array.from(subfolders).sort()) {
-        const a = document.createElement('a');
-        a.href = '/gallery/' + encodeURI(currentPrefix + folder);
-        a.innerHTML = `📁 ${folder.replace(/\/$/, '')}`;
-        foldersDiv.appendChild(a);
-      }
-      grid.before(foldersDiv);
-    }
-
-    // Render files (not recursive)
-    const safeURL = (p) => encodeURI(p);
+    // Render flat list (no subfolders)
+    const failures = [];
     function render(list){
       grid.innerHTML = '';
       for (const f of list) {
-        const name = f.path;             // relative to gallery root
+        const file = f.path;               // filename only in flat mode
         const t = f.t ? new Date(f.t).toISOString().slice(0,16).replace('T',' ') : '';
-        const url = '/gallery/' + safeURL(name); // always anchor at /gallery/
+        const url = '/gallery/' + encodeSegs(file);
+
         const fig = document.createElement('figure');
-        fig.dataset.name = name.toLowerCase();
-        fig.innerHTML = `<a href="${url}" target="_blank" rel="noopener">
-          <img loading="lazy" decoding="async" src="${url}" alt="${name}">
-        </a>
-        <figcaption>${name.split('/').pop()}${t ? `<br><small>${t}</small>`:''}</figcaption>`;
+        fig.dataset.name = file.toLowerCase();
+        fig.innerHTML = `<span class="badge"></span>
+          <a href="${url}" target="_blank" rel="noopener">
+            <img loading="lazy" decoding="async" alt="${file}">
+          </a>
+          <figcaption>${file}${t ? `<br><small>${t}</small>`:''}</figcaption>`;
+
+        const img = fig.querySelector('img');
+        img.onerror = () => {
+          failures.push(url);
+          fig.classList.add('err');
+          fig.querySelector('.badge').textContent = '404';
+        };
+        img.src = url;
+
         grid.appendChild(fig);
       }
-      countEl.textContent = `${list.length} file${list.length!==1?'s':''}` + (currentPrefix ? ` in ${currentPrefix}` : '');
-      if (sortEl) sortEl.textContent = data.sort ? `Sorted: ${data.sort} • manifest: ${used}` : `manifest: ${used}`;
+      count.textContent = `${list.length} file${list.length!==1?'s':''}`;
+      sort.textContent = data.sort ? `Sorted: ${data.sort}` : '';
     }
 
-    const filesHereSorted = filesHere; // assumed newest→oldest from manifest
+    const sorted = entries; // trust manifest order (newest-first, etc.)
     q.addEventListener('input', () => {
       const needle = q.value.trim().toLowerCase();
-      render(filesHereSorted.filter(f => f.path.toLowerCase().includes(needle)));
+      render(sorted.filter(f => f.path.toLowerCase().includes(needle)));
     });
 
-    render(filesHereSorted);
+    render(sorted);
   } catch (e) {
-    fail('Error: ' + e.message);
+    fail('Fetch failed: ' + e.message);
   }
 })();
 </script>

@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "include": ["/*"],
+  "exclude": [
+    "/gallery/photos.json",
+    "/gallery/*.*"          // lets /gallery/*.jpg|png|webp|gif etc. be served as files
+  ]
+}
