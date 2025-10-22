@@ -3,6 +3,11 @@
   "include": ["/*"],
   "exclude": [
     "/gallery/photos.json",
-    "/gallery/*.*"          // lets /gallery/*.jpg|png|webp|gif etc. be served as files
+    "/gallery/*.*",
+    "/gallery/**/*.jpg",
+    "/gallery/**/*.jpeg",
+    "/gallery/**/*.png",
+    "/gallery/**/*.webp",
+    "/gallery/**/*.gif"
   ]
 }
