@@ -71,7 +71,7 @@
       div.className = 'folders';
       for (const s of Array.from(subs).sort()) {
         const a = document.createElement('a');
-        a.href = '/gallery/' + enc(prefix + s);
+        a.href = location.origin + '/gallery/' + enc(prefix + s);
         a.textContent = '📁 ' + s.replace(/\/$/, '');
         div.appendChild(a);
       }
@@ -90,7 +90,7 @@
           <figcaption>${f.path.split('/').pop()}</figcaption>`;
         grid.appendChild(fig);
       }
-      count.textContent = `${list.length} file${list.length!==1?'s':''}` + (prefix ? ` in ${prefix}` : '');
+      count.textContent = `${data.count || data.files.length} total file${(data.count || data.files.length)!==1?'s':''}`;
     }
 
     render(here);
