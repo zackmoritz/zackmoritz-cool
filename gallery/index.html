@@ -29,7 +29,8 @@
   const entries = data.files || [];
 
   // current folder prefix after /gallery/
-  const prefix = location.pathname.replace(/^\/?gallery\/?/, '').replace(/\/?$/, '/');
+  const after = location.pathname.replace(/^\/?gallery\/?/, '');
+  const prefix = after === '' ? '' : (after.endsWith('/') ? after : after + '/');
   const parts = prefix.split('/').filter(Boolean);
 
   // breadcrumbs
@@ -43,13 +44,15 @@
   // separate subfolders & files
   const subs = new Set(), here = [];
   for (const f of entries) {
-  const p = f.path.replace(/^\/?gallery\//, ''); // strip leading "gallery/"
+  // Normalize paths so it works whether "gallery/" is included or not
+  const p = String(f.path).replace(/^\/?gallery\//, '');
   if (!p.startsWith(prefix)) continue;
-    const rest = f.path.slice(prefix.length);
-    const slash = rest.indexOf('/');
-    if (slash === -1) here.push(f);
-    else subs.add(rest.slice(0, slash+1));
-  }
+
+  const rest = p.slice(prefix.length);
+  const slash = rest.indexOf('/');
+  if (slash === -1) here.push({ ...f, path: p });
+  else subs.add(rest.slice(0, slash + 1));
+}
 
   // folders grid
   if (subs.size) {
