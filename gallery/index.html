@@ -39,8 +39,8 @@
     grid:  document.getElementById('grid'),
   };
 
-  const enc = (p) => p.split('/').map(encodeURIComponent).join('/');                 // keep slashes
-  const normPath = (p) => String(p).replace(/^\/+/, '').replace(/^gallery\//, '');  // strip leading "/" or "gallery/"
+  const enc = (p) => p.split('/').map(encodeURIComponent).join('/');
+  const normPath = (p) => String(p).replace(/^\/+/, '').replace(/^gallery\//, '');
   const forwardSlashes = (p) => p.split('\\').join('/');
 
   function getPrefixFromPath(pathname = location.pathname){
@@ -49,14 +49,11 @@
   }
 
   function setCount(total, prefix, foldersCount, visibleCount){
-    // Show total files overall + current folder context + visible filtered count (if filtered)
     const pieces = [];
     pieces.push(`${total} total file${total!==1?'s':''}`);
     if (prefix) pieces.push(`in ${prefix}`);
-    if (typeof visibleCount === 'number' && visibleCount !== undefined) {
-      pieces.push(`• showing ${visibleCount}`);
-    }
     if (foldersCount) pieces.push(`• ${foldersCount} folder${foldersCount!==1?'s':''}`);
+    if (typeof visibleCount === 'number') pieces.push(`• showing ${visibleCount}`);
     el.count.textContent = pieces.join(' ');
   }
 
@@ -74,12 +71,12 @@
   function splitFolder(entries, prefix){
     const subs = new Set(), here = [];
     for (const raw of entries) {
-      const f = { ...raw, path: normPath(forwardSlashes(raw.path)) }; // "2025/trip/IMG.jpg"
+      const f = { ...raw, path: normPath(forwardSlashes(raw.path)) };
       if (!f.path.startsWith(prefix)) continue;
       const rest = f.path.slice(prefix.length);
       const slash = rest.indexOf('/');
       if (slash === -1) here.push(f);
-      else subs.add(rest.slice(0, slash + 1)); // keep trailing '/'
+      else subs.add(rest.slice(0, slash + 1));
     }
     return { subs: Array.from(subs).sort(), here };
   }
@@ -90,8 +87,8 @@
     el.folders.innerHTML = '';
     for (const s of subs) {
       const a = document.createElement('a');
-      a.href = '/gallery/' + enc(prefix + s);   // pretty URL
-      a.dataset.nav = prefix + s;               // SPA hook
+      a.href = '/gallery/' + enc(prefix + s);
+      a.dataset.nav = prefix + s;
       a.textContent = '📁 ' + s.replace(/\/$/, '');
       el.folders.appendChild(a);
     }
@@ -101,18 +98,19 @@
     el.grid.innerHTML = '';
     for (const f of list) {
       const url = '/gallery/' + enc(f.path);
+      const date = f.t ? new Date(f.t).toISOString().slice(0,10) : '';
       const fig = document.createElement('figure');
       fig.innerHTML = `<a href="${url}" target="_blank" rel="noopener">
           <img loading="lazy" decoding="async" src="${url}" alt="${f.path}">
         </a>
-        <figcaption>${f.path.split('/').pop()}</figcaption>`;
+        <figcaption>${f.path.split('/').pop()}${date?`<br><small>${date}</small>`:''}</figcaption>`;
       el.grid.appendChild(fig);
     }
   }
 
   function navigateTo(newPrefix){
     const url = '/gallery/' + newPrefix;
-    history.pushState({ prefix: newPrefix }, '', url); // SPA (no reload)
+    history.pushState({ prefix: newPrefix }, '', url);
     renderFolder(newPrefix);
   }
 
@@ -129,13 +127,11 @@
     navigateTo(a.dataset.nav || '');
   });
 
-  // --- Load manifest once ---
   try {
     const res = await fetch('/gallery/photos.json', { cache: 'no-store' });
     if (!res.ok) throw new Error(`photos.json ${res.status}`);
     const data = await res.json();
 
-    // Normalize all entry paths; keep order from manifest (already newest→oldest)
     const all = (data.files || [])
       .filter(f => f && f.path)
       .map(f => ({ ...f, path: normPath(forwardSlashes(f.path)) }));
@@ -146,20 +142,22 @@
     function renderFolder(prefix){
       renderCrumbs(prefix);
       const { subs, here } = splitFolder(all, prefix);
-      renderFolders(prefix, subs);
-      renderFiles(here);
-      setCount(TOTAL, prefix, subs.length, here.length);
 
-      // folder-scoped search
+      // Sort newest → oldest by timestamp
+      const hereSorted = [...here].sort((a,b) => (b.t ?? 0) - (a.t ?? 0) || a.path.localeCompare(b.path));
+
+      renderFolders(prefix, subs);
+      renderFiles(hereSorted);
+      setCount(TOTAL, prefix, subs.length, hereSorted.length);
+
       el.q.oninput = () => {
         const needle = el.q.value.trim().toLowerCase();
-        const filtered = here.filter(f => f.path.toLowerCase().includes(needle));
+        const filtered = hereSorted.filter(f => f.path.toLowerCase().includes(needle));
         renderFiles(filtered);
         setCount(TOTAL, prefix, subs.length, filtered.length);
       };
     }
 
-    // Initial render (supports deep links if _redirects sends /gallery/* → index.html)
     renderFolder(getPrefixFromPath());
 
   } catch (err) {
