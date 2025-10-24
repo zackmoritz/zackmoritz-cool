@@ -1,9 +1,8 @@
-// build-manifest.mjs — writes /gallery/photos.json with real per-photo timestamps
+// build-manifest.mjs (diagnostic: shows where each t came from)
 import { promises as fs } from "node:fs";
 import { execSync } from "node:child_process";
 import * as path from "node:path";
-import * as crypto from "node:crypto";
-import * as exifr from "exifr"; // npm i exifr
+import * as exifr from "exifr";            // EXIF reader
 
 const GALLERY_DIR = "gallery";
 const exts = /\.(jpe?g|png|gif|webp|avif|bmp|heic|tiff?)$/i;
@@ -29,38 +28,43 @@ function gitTimeOrNull(file) {
 }
 
 function filenameTimeOrNull(name) {
-  // Try common patterns like 2025-10-24, 20251024_153012, 2025-10-24 15.30.12, etc.
-  const s = name;
-  const m1 = s.match(/(20\d{2})[-_\.]?(0[1-9]|1[0-2])[-_\.]?(0[1-9]|[12]\d|3[01])[ T_-]?(?:([01]\d|2[0-3])[:\-\.]?([0-5]\d)[:\-\.]?([0-5]\d))?/);
-  if (!m1) return null;
-  const [ , Y, M, D, h="00", m="00", sec="00" ] = m1;
-  const iso = `${Y}-${M}-${D}T${h}:${m}:${sec}Z`;
-  const t = Date.parse(iso);
+  // 2025-10-24 21.24.00, 20251024_212400, 2025-10-24, etc.
+  const m = name.match(/(20\d{2})[-_.]?(0[1-9]|1[0-2])[-_.]?(0[1-9]|[12]\d|3[01])[ T_-]?((?:[01]\d|2[0-3]))?[.:-]?([0-5]\d)?[.:-]?([0-5]\d)?/);
+  if (!m) return null;
+  const [ , Y,M,D,h="00",m2="00",s2="00"] = m;
+  const t = Date.parse(`${Y}-${M}-${D}T${h}:${m2}:${s2}Z`);
   return Number.isFinite(t) ? t : null;
 }
 
 async function exifTimeOrNull(file) {
   try {
+    // Read only the date fields to keep it fast
     const meta = await exifr.parse(file, { pick: ["DateTimeOriginal","CreateDate"] });
     const d = meta?.DateTimeOriginal || meta?.CreateDate;
-    return d ? +d : null;
+    return d ? +d : null; // epoch ms
   } catch { return null; }
 }
 
 function statTime(file, st) {
-  // prefer birthtime if present; else mtime
-  return st.birthtimeMs && st.birthtimeMs > 0 ? st.birthtimeMs : (st.mtimeMs || Date.now());
-}
-
-function stableTiebreakNumber(file) {
-  // deterministic small number to keep order stable even if times tie
-  const h = crypto.createHash("md5").update(file).digest();
-  return h.readUInt32BE(0); // 0..2^32-1
+  return (st.birthtimeMs && st.birthtimeMs > 0) ? st.birthtimeMs : (st.mtimeMs || Date.now());
 }
 
 function toUrlRel(file) {
-  // "gallery/a/b.jpg" -> "a/b.jpg" with forward slashes
   return path.relative(GALLERY_DIR, file).split(path.sep).join("/");
+}
+
+async function bestTime(file) {
+  const st = await fs.stat(file);
+  const byExif = await exifTimeOrNull(file);
+  if (byExif) return { t: byExif, dsrc: "exif" };
+
+  const byName = filenameTimeOrNull(path.basename(file));
+  if (byName) return { t: byName, dsrc: "filename" };
+
+  const byGit = gitTimeOrNull(file);
+  if (byGit) return { t: byGit, dsrc: "git" };
+
+  return { t: statTime(file, st), dsrc: "stat" };
 }
 
 async function main() {
@@ -68,37 +72,33 @@ async function main() {
   const files = await walk(GALLERY_DIR);
 
   const rows = [];
+  let counts = { exif:0, filename:0, git:0, stat:0 };
   for (const file of files) {
-    const st = await fs.stat(file);
-
-    // choose best timestamp: EXIF > filename > git > stat
-    const tExif  = await exifTimeOrNull(file);
-    const tName  = filenameTimeOrNull(path.basename(file));
-    const tGit   = gitTimeOrNull(file);
-    const tStat  = statTime(file, st);
-    const tBest  = tExif ?? tName ?? tGit ?? tStat;
+    const { t, dsrc } = await bestTime(file);
+    counts[dsrc]++;
 
     rows.push({
       name: path.basename(file),
       path: toUrlRel(file),
-      t: tBest,
-      // optional extra to ensure final strict ordering if many share same second:
-      tb: stableTiebreakNumber(file)
+      t,
+      dsrc
     });
   }
 
-  // newest → oldest; break ties by tb, then path for determinism
-  rows.sort((a,b) => (b.t ?? 0) - (a.t ?? 0) || (b.tb - a.tb) || a.path.localeCompare(b.path));
+  // newest → oldest; tie-break by path
+  rows.sort((a,b) => (b.t ?? 0) - (a.t ?? 0) || a.path.localeCompare(b.path));
 
   const manifest = {
     generatedAt: nowISO,
     count: rows.length,
-    sort: "date-desc (EXIF/filename/git/stat)",
-    files: rows.map(({tb, ...rest}) => rest) // don’t expose tb
+    sort: "date-desc (prefers EXIF)",
+    files: rows
   };
 
   await fs.writeFile(path.join(GALLERY_DIR, "photos.json"), JSON.stringify(manifest, null, 2), "utf8");
+
   console.log(`Wrote gallery/photos.json with ${rows.length} items.`);
+  console.log(`Date sources → exif:${counts.exif} filename:${counts.filename} git:${counts.git} stat:${counts.stat}`);
 }
 
 main().catch(err => { console.error("[manifest] build failed:", err); process.exit(1); });
