@@ -144,7 +144,8 @@
       const { subs, here } = splitFolder(all, prefix);
 
       // Sort newest → oldest by timestamp
-      const hereSorted = [...here].sort((a,b) => (b.t ?? 0) - (a.t ?? 0) || a.path.localeCompare(b.path));
+      const ts = v => (typeof v === 'number' ? v : (typeof v === 'string' ? Number(v) : 0));
+	  const hereSorted = [...here].sort((a,b) => ts(b.t) - ts(a.t) || a.path.localeCompare(b.path));
 
       renderFolders(prefix, subs);
       renderFiles(hereSorted);
