@@ -1,9 +1,9 @@
-// build-manifest.mjs — generates /gallery/photos.json sorted by true photo date (EXIF > filename > git > stat)
+// build-manifest.mjs — EXIF (default import) + fallbacks
 
 import { promises as fs } from "node:fs";
 import { execSync } from "node:child_process";
 import * as path from "node:path";
-import * as exifr from "exifr"; // npm install exifr
+import exifr from "exifr";                // <-- default import
 
 const GALLERY_DIR = "gallery";
 const exts = /\.(jpe?g|png|gif|webp|avif|bmp|heic|tiff?)$/i;
@@ -23,16 +23,12 @@ async function walk(dir) {
 function gitTimeOrNull(file) {
   try {
     const s = execSync(`git log -1 --format=%ct -- "${file}"`, { stdio: ["ignore","pipe","ignore"] })
-      .toString()
-      .trim();
+      .toString().trim();
     return s ? Number(s) * 1000 : null;
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
 function filenameTimeOrNull(name) {
-  // Parse dates like 2025-10-24_1520 or 20251024_152000
   const m = name.match(/(20\d{2})[-_.]?(0[1-9]|1[0-2])[-_.]?(0[1-9]|[12]\d|3[01])[ T_-]?((?:[01]\d|2[0-3]))?[.:-]?([0-5]\d)?[.:-]?([0-5]\d)?/);
   if (!m) return null;
   const [ , Y,M,D,h="00",m2="00",s2="00"] = m;
@@ -40,21 +36,19 @@ function filenameTimeOrNull(name) {
   return Number.isFinite(t) ? t : null;
 }
 
-// ✅ Read EXIF timestamp properly from JPG/HEIC/PNG metadata
 async function exifTimeOrNull(file) {
   try {
-    const buf = await fs.readFile(file); // read file as buffer
-    const meta = await exifr.parse(buf, {
-      pick: ["DateTimeOriginal", "CreateDate", "ModifyDate"],
-    });
+    const buf = await fs.readFile(file);        // pass Buffer
+    const meta = await exifr.parse(buf, { pick: ["DateTimeOriginal","CreateDate","ModifyDate"] });
     const d = meta?.DateTimeOriginal || meta?.CreateDate || meta?.ModifyDate;
     return d ? +d : null;
-  } catch {
+  } catch (e) {
+    // Uncomment to debug: console.error("EXIF fail:", file, e.message);
     return null;
   }
 }
 
-function statTime(file, st) {
+function statTime(st) {
   return st.birthtimeMs && st.birthtimeMs > 0 ? st.birthtimeMs : (st.mtimeMs || Date.now());
 }
 
@@ -66,14 +60,11 @@ async function bestTime(file) {
   const st = await fs.stat(file);
   const byExif = await exifTimeOrNull(file);
   if (byExif) return { t: byExif, dsrc: "exif" };
-
   const byName = filenameTimeOrNull(path.basename(file));
   if (byName) return { t: byName, dsrc: "filename" };
-
   const byGit = gitTimeOrNull(file);
   if (byGit) return { t: byGit, dsrc: "git" };
-
-  return { t: statTime(file, st), dsrc: "stat" };
+  return { t: statTime(st), dsrc: "stat" };
 }
 
 async function main() {
@@ -81,40 +72,21 @@ async function main() {
   const files = await walk(GALLERY_DIR);
 
   const rows = [];
-  let counts = { exif:0, filename:0, git:0, stat:0 };
+  const counts = { exif:0, filename:0, git:0, stat:0 };
 
   for (const file of files) {
     const { t, dsrc } = await bestTime(file);
     counts[dsrc]++;
-    rows.push({
-      name: path.basename(file),
-      path: toUrlRel(file),
-      t,
-      dsrc
-    });
+    rows.push({ name: path.basename(file), path: toUrlRel(file), t, dsrc });
   }
 
-  // Sort newest → oldest
   rows.sort((a,b) => (b.t ?? 0) - (a.t ?? 0) || a.path.localeCompare(b.path));
 
-  const manifest = {
-    generatedAt: nowISO,
-    count: rows.length,
-    sort: "date-desc (EXIF preferred)",
-    files: rows
-  };
-
-  await fs.writeFile(
-    path.join(GALLERY_DIR, "photos.json"),
-    JSON.stringify(manifest, null, 2),
-    "utf8"
-  );
+  const manifest = { generatedAt: nowISO, count: rows.length, sort: "date-desc (EXIF preferred)", files: rows };
+  await fs.writeFile(path.join(GALLERY_DIR, "photos.json"), JSON.stringify(manifest, null, 2), "utf8");
 
   console.log(`Wrote gallery/photos.json with ${rows.length} items.`);
   console.log(`Date sources → exif:${counts.exif} filename:${counts.filename} git:${counts.git} stat:${counts.stat}`);
 }
 
-main().catch(err => {
-  console.error("[manifest] build failed:", err);
-  process.exit(1);
-});
+main().catch(err => { console.error("[manifest] build failed:", err); process.exit(1); });
