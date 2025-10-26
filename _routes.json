@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "include": ["/*"],
+  "exclude": [
+    "/gallery/photos.json",
+    "/gallery/*.*",
+    "/gallery/**/*.jpg",
+    "/gallery/**/*.jpeg",
+    "/gallery/**/*.png",
+    "/gallery/**/*.webp",
+    "/gallery/**/*.gif"
+  ]
+}

@@ -1,0 +1,2 @@
+/gallery/photos.json /gallery/photos.json 200
+/gallery/* /gallery/index.html 200

@@ -1,0 +1,7 @@
+{
+  "name": "zackmoritz-cool",
+  "private": true,
+  "scripts": {
+    "build": "node build-manifest.mjs"
+  }
+}

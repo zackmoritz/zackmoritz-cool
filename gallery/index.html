@@ -1,883 +1,170 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Digital Gratitude List — Photo Explorer</title>
-  <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAZElEQVR42u3XwREAEBBD0XRgHNSnaf1QAXaMJUwOzv/dNhBiqjcfBHgKkEs1ve0Aa3gFAq+4FQHPuAUB7/gMgRPxEYIP4BXvIQQQQAAB+AC6BRTnmGKQUEwyilFKMcv1M/oa0AD36JLNg+KoVQAAAABJRU5ErkJggg==">
-  <style>
-    :root {
-      color-scheme: dark;
-      --bg: #10121a;
-      --panel: #171b27;
-      --panel-alt: #1f2433;
-      --border: #262c3d;
-      --text: #f2f5ff;
-      --muted: #9ba4bc;
-      --accent: #5fd4ff;
-      font-family: "Inter", "Segoe UI", system-ui, sans-serif;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: radial-gradient(circle at 0% -40%, rgba(95, 212, 255, 0.22), transparent 55%), var(--bg);
-      color: var(--text);
-      display: flex;
-      flex-direction: column;
-    }
-
-    header {
-      padding: clamp(24px, 6vw, 48px) clamp(18px, 6vw, 48px) 16px;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(2rem, 4vw, 3rem);
-      letter-spacing: -0.02em;
-    }
-
-    .intro {
-      margin: 12px 0 0;
-      color: var(--muted);
-      max-width: 72ch;
-      line-height: 1.6;
-    }
-
-    main {
-      flex: 1;
-      display: grid;
-      grid-template-columns: minmax(240px, 320px) 1fr;
-      gap: 0;
-      min-height: 0;
-      border-top: 1px solid rgba(255, 255, 255, 0.04);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-    }
-
-    @media (max-width: 900px) {
-      main {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr;
-      }
-
-      aside {
-        border-right: none !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      }
-    }
-
-    aside {
-      background: var(--panel);
-      border-right: 1px solid rgba(255, 255, 255, 0.06);
-      overflow: hidden auto;
-      padding: 20px clamp(16px, 5vw, 24px) 24px;
-    }
-
-    .explorer-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 18px;
-      font-size: 0.9rem;
-      color: var(--muted);
-    }
-
-    .tree {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: grid;
-      gap: 6px;
-    }
-
-    .tree-item {
-      display: block;
-    }
-
-    .tree-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 8px 6px calc(8px + var(--indent, 0px));
-      border-radius: 10px;
-      cursor: pointer;
-      transition: background 120ms ease;
-      font-size: 0.92rem;
-      color: inherit;
-      text-decoration: none;
-    }
-
-    .tree-row:hover,
-    .tree-row:focus-visible {
-      outline: none;
-      background: rgba(95, 212, 255, 0.12);
-    }
-
-    .tree-row.active {
-      background: rgba(95, 212, 255, 0.2);
-      color: #e9f7ff;
-    }
-
-    .toggle {
-      border: none;
-      background: none;
-      display: grid;
-      place-items: center;
-      width: 20px;
-      height: 20px;
-      color: var(--muted);
-      cursor: pointer;
-      padding: 0;
-      margin-left: calc(var(--indent, 0px));
-    }
-
-    .toggle svg {
-      width: 14px;
-      height: 14px;
-      transition: transform 160ms ease;
-    }
-
-    .tree-item.collapsed > .children {
-      display: none;
-    }
-
-    .tree-item.collapsed > .tree-row .toggle svg {
-      transform: rotate(-90deg);
-    }
-
-    .tree-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      flex: 1;
-    }
-
-    .tree-label svg {
-      width: 18px;
-      height: 18px;
-      color: var(--accent);
-    }
-
-    section.gallery-view {
-      background: var(--panel-alt);
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-    }
-
-    .gallery-head {
-      padding: 24px clamp(18px, 5vw, 36px) 10px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .breadcrumbs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      font-size: 0.9rem;
-      color: var(--muted);
-    }
-
-    .breadcrumbs span {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .breadcrumbs span + span::before {
-      content: '\u203A';
-      opacity: 0.65;
-      font-size: 0.85rem;
-    }
-
-    .gallery-summary {
-      font-size: 0.95rem;
-      color: var(--muted);
-    }
-
-    .gallery-grid {
-      padding: 24px clamp(18px, 5vw, 36px) 48px;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 20px;
-      overflow: auto;
-      flex: 1;
-      align-content: start;
-    }
-
-    .pagination {
-      padding: 0 clamp(18px, 5vw, 36px) 32px;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 12px;
-      color: var(--muted);
-    }
-
-    .pagination[hidden] {
-      display: none;
-    }
-
-    .pagination button {
-      background: rgba(95, 212, 255, 0.12);
-      border: 1px solid rgba(95, 212, 255, 0.35);
-      color: var(--text);
-      border-radius: 999px;
-      padding: 6px 14px;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
-    }
-
-    .pagination button:disabled {
-      opacity: 0.45;
-      cursor: default;
-    }
-
-    .pagination button:not(:disabled):hover,
-    .pagination button:not(:disabled):focus-visible {
-      background: rgba(95, 212, 255, 0.2);
-      outline: none;
-    }
-
-    .pagination-info {
-      font-size: 0.85rem;
-    }
-
-    .card {
-      background: rgba(12, 15, 24, 0.7);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 16px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
-    }
-
-    .card:hover,
-    .card:focus-within {
-      border-color: rgba(95, 212, 255, 0.5);
-      transform: translateY(-4px);
-      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
-    }
-
-    .thumb {
-      --thumb-aspect: 4 / 3;
-      aspect-ratio: var(--thumb-aspect);
-      background: linear-gradient(135deg, rgba(6, 8, 14, 0.85), rgba(12, 16, 28, 0.85));
-      display: grid;
-      place-items: center;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .thumb.portrait {
-      --thumb-aspect: 3 / 4;
-    }
-
-    .thumb.square {
-      --thumb-aspect: 1 / 1;
-    }
-
-    .thumb img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      display: block;
-    }
-
-    .thumb.portrait img {
-      width: auto;
-      height: 100%;
-    }
-
-    .card-body {
-      padding: 14px 16px 18px;
-      display: grid;
-      gap: 6px;
-    }
-
-    .card-title {
-      font-weight: 600;
-      font-size: 0.95rem;
-      line-height: 1.35;
-    }
-
-    .card-meta {
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
-
-    .card button,
-    .card a {
-      background: none;
-      border: none;
-      color: inherit;
-      text-align: inherit;
-      font: inherit;
-      cursor: pointer;
-      padding: 0;
-    }
-
-    .folder-card {
-      align-items: center;
-      text-align: left;
-    }
-
-    .folder-thumb {
-      background: rgba(95, 212, 255, 0.14);
-      display: grid;
-      place-items: center;
-      color: var(--accent);
-    }
-
-    .empty,
-    .error {
-      grid-column: 1 / -1;
-      text-align: center;
-      padding: 48px 24px;
-      border-radius: 16px;
-      color: var(--muted);
-      border: 1px dashed rgba(255, 255, 255, 0.12);
-    }
-
-    .error {
-      border-color: rgba(255, 107, 107, 0.4);
-      color: #ffb5b5;
-    }
-
-    .lightbox {
-      position: fixed;
-      inset: 0;
-      background: rgba(8, 10, 16, 0.78);
-      backdrop-filter: blur(12px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      z-index: 40;
-    }
-
-    .lightbox.open {
-      display: flex;
-    }
-
-    .lightbox figure {
-      background: rgba(12, 15, 24, 0.95);
-      border-radius: 20px;
-      max-width: min(1000px, 90vw);
-      max-height: 85vh;
-      padding: 18px 18px 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      border: 1px solid rgba(95, 212, 255, 0.3);
-      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
-    }
-
-    .lightbox img {
-      max-width: 100%;
-      max-height: 70vh;
-      border-radius: 12px;
-      object-fit: contain;
-      background: rgba(6, 8, 14, 0.8);
-    }
-
-    .lightbox .close-btn {
-      align-self: flex-end;
-      border: none;
-      border-radius: 999px;
-      padding: 8px 14px;
-      background: rgba(95, 212, 255, 0.16);
-      color: #e9f7ff;
-      cursor: pointer;
-      font-size: 0.85rem;
-    }
-
-    footer {
-      padding: 18px;
-      text-align: center;
-      font-size: 0.8rem;
-      color: rgba(255, 255, 255, 0.45);
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>Digital Gratitude List</h1>
-    <p class="intro">Browse every photo catalogued in the <strong>Digital Gratitude List</strong>. Use the navigation tree to drill into folders just like Windows Explorer, or jump into the all-photos view to skim everything at once.</p>
-  </header>
-
-  <main>
-    <aside>
-      <div class="explorer-head">
-        <span>Folders</span>
-        <button class="toggle" id="collapseAll" title="Collapse all folders" aria-label="Collapse all folders">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17 12a1 1 0 0 1-1 1H8a1 1 0 1 1 0-2h8a1 1 0 0 1 1 1Z"/></svg>
-        </button>
-      </div>
-      <ul class="tree" id="treeRoot"></ul>
-    </aside>
-
-    <section class="gallery-view">
-      <div class="gallery-head">
-        <div class="breadcrumbs" id="breadcrumbs"></div>
-        <div class="gallery-summary" id="gallerySummary">Loading photos…</div>
-      </div>
-      <div class="gallery-grid" id="galleryGrid"></div>
-      <div class="pagination" id="pagination" hidden></div>
-    </section>
-  </main>
-
-  <div class="lightbox" id="lightbox" aria-hidden="true">
-    <figure>
-      <button class="close-btn" id="lightboxClose" type="button">Close</button>
-      <img id="lightboxImage" alt="Expanded view">
-      <figcaption id="lightboxCaption"></figcaption>
-    </figure>
-  </div>
-
-  <footer>
-    Built automatically from the folder structure inside <code>Digital_Gratitude_List</code>.
-  </footer>
-
-  <script>
-    const treeRoot = document.getElementById('treeRoot');
-    const breadcrumbs = document.getElementById('breadcrumbs');
-    const galleryGrid = document.getElementById('galleryGrid');
-    const gallerySummary = document.getElementById('gallerySummary');
-    const pagination = document.getElementById('pagination');
-    const collapseAllBtn = document.getElementById('collapseAll');
-
-    const lightbox = document.getElementById('lightbox');
-    const lightboxImage = document.getElementById('lightboxImage');
-    const lightboxCaption = document.getElementById('lightboxCaption');
-    const lightboxClose = document.getElementById('lightboxClose');
-
-    const PAGE_SIZE = 25;
-    const state = {
-      data: null,
-      currentPath: ['ALL'],
-      page: 1
-    };
-
-    async function loadManifest() {
-      try {
-        const response = await fetch('manifest.json', { cache: 'no-store' });
-        if (!response.ok) throw new Error('Manifest not found');
-        const manifest = await response.json();
-        state.data = manifest;
-        buildExplorer();
-        selectFolder(['ALL']);
-      } catch (error) {
-        galleryGrid.innerHTML = '';
-        const message = document.createElement('div');
-        message.className = 'error';
-        message.textContent = 'Unable to load the gallery manifest. Please try refreshing the page.';
-        galleryGrid.appendChild(message);
-        gallerySummary.textContent = 'Failed to load photos.';
-        console.error('Failed to load manifest', error);
-      }
-    }
-
-    function getNode(pathSegments) {
-      if (!state.data) return null;
-      if (!pathSegments.length) return state.data;
-      let node = state.data;
-      for (const segment of pathSegments) {
-        const next = node.dirs.find(dir => dir.name === segment);
-        if (!next) return null;
-        node = next;
-      }
-      return node;
-    }
-
-    function buildFileUrl(file) {
-      const parts = [state.data.rootDir, ...file.segments];
-      // The gallery page lives in a subfolder (`/gallery`), but the image files are
-      // stored at the repository root. Constructing a URL without a leading
-      // `../` causes the browser to look for `/gallery/Digital_Gratitude_List/...`,
-      // which does not exist. Prefix the joined path with `../` so that the
-      // request goes up one directory and finds the correct file. Alternatively,
-      // an absolute root slash (`/`) could be used here if hosting permits.
-      return '../' + parts.map(encodeURIComponent).join('/');
-    }
-
-    function collectFiles(node, path = []) {
-      const results = [];
-      for (const file of node.files) {
-        results.push({
-          file: file.name,
-          path,
-          url: buildFileUrl(file),
-          modified: file.modified || 0
-        });
-      }
-      for (const dir of node.dirs) {
-        results.push(...collectFiles(dir, [...path, dir.name]));
-      }
-      return results;
-    }
-
-    function sortFiles(a, b) {
-      const delta = (b.modified || 0) - (a.modified || 0);
-      if (delta !== 0) return delta;
-      return a.file.localeCompare(b.file, undefined, { numeric: true, sensitivity: 'base' });
-    }
-
-    function applyThumbOrientation(container, img) {
-      if (!img.naturalWidth || !img.naturalHeight) {
-        return;
-      }
-
-      container.classList.remove('portrait', 'square');
-
-      const ratio = img.naturalWidth / img.naturalHeight;
-      if (!Number.isFinite(ratio) || ratio <= 0) {
-        return;
-      }
-
-      if (Math.abs(ratio - 1) <= 0.05) {
-        container.classList.add('square');
-      } else if (ratio < 1) {
-        container.classList.add('portrait');
-      }
-    }
-
-    function formatCount(value) {
-      return new Intl.NumberFormat().format(value);
-    }
-
-    function renderBreadcrumbs() {
-      breadcrumbs.innerHTML = '';
-      const frag = document.createDocumentFragment();
-      if (state.currentPath[0] === 'ALL') {
-        const span = document.createElement('span');
-        span.textContent = 'All Photos';
-        frag.appendChild(span);
-      } else {
-        const home = document.createElement('span');
-        home.textContent = state.data.name;
-        home.className = 'crumb-home';
-        home.addEventListener('click', () => selectFolder([]));
-        home.style.cursor = 'pointer';
-        frag.appendChild(home);
-        let current = [];
-        for (const segment of state.currentPath) {
-          current = [...current, segment];
-          const span = document.createElement('span');
-          span.textContent = segment;
-          span.style.cursor = 'pointer';
-          span.addEventListener('click', () => selectFolder(current));
-          frag.appendChild(span);
-        }
-      }
-      breadcrumbs.appendChild(frag);
-    }
-
-    function renderGallery() {
-      if (!state.data) return;
-
-      galleryGrid.innerHTML = '';
-      pagination.innerHTML = '';
-      pagination.hidden = true;
-
-      let files = [];
-      let node;
-
-      if (state.currentPath[0] === 'ALL') {
-        node = state.data;
-        files = collectFiles(state.data, []);
-      } else {
-        node = getNode(state.currentPath);
-        if (!node) {
-          const message = document.createElement('div');
-          message.className = 'error';
-          message.textContent = 'The selected folder could not be found.';
-          galleryGrid.appendChild(message);
-          gallerySummary.textContent = 'Folder not found.';
-          return;
-        }
-        files = node.files.map(file => ({
-          file: file.name,
-          path: state.currentPath,
-          url: buildFileUrl(file),
-          modified: file.modified || 0
-        }));
-      }
-
-      files.sort(sortFiles);
-
-      const folderItems = [];
-      if (state.currentPath[0] !== 'ALL' && node) {
-        for (const dir of node.dirs) {
-          folderItems.push({ dir, path: [...state.currentPath, dir.name] });
-        }
-      }
-
-      const folderCount = folderItems.length;
-      const locationLabel = state.currentPath[0] === 'ALL'
-        ? 'All folders'
-        : (state.currentPath.length ? state.currentPath.join(' › ') : state.data.name);
-
-      if (state.currentPath[0] !== 'ALL' && !folderCount && !files.length) {
-        const empty = document.createElement('div');
-        empty.className = 'empty';
-        empty.textContent = 'This folder does not contain any photos.';
-        galleryGrid.appendChild(empty);
-        gallerySummary.textContent = `${locationLabel}: 0 photos`;
-        return;
-      }
-
-      const totalFiles = files.length;
-      const totalPages = totalFiles ? Math.ceil(totalFiles / PAGE_SIZE) : 1;
-      if (state.page > totalPages) {
-        state.page = totalPages;
-      }
-      const startIndex = totalFiles ? (state.page - 1) * PAGE_SIZE : 0;
-      const endIndex = totalFiles ? Math.min(startIndex + PAGE_SIZE, totalFiles) : 0;
-      const pagedFiles = files.slice(startIndex, endIndex);
-
-      for (const folder of folderItems) {
-        const card = document.createElement('article');
-        card.className = 'card folder-card';
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'thumb folder-thumb';
-        btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 6.75A1.75 1.75 0 0 1 5.75 5h3.086a1.75 1.75 0 0 1 1.238.512l.414.414c.1.1.236.156.378.156H18.25A1.75 1.75 0 0 1 20 7.832v8.918A2.25 2.25 0 0 1 17.75 19H6.25A2.25 2.25 0 0 1 4 16.75V6.75Z"/></svg>';
-        btn.addEventListener('click', () => selectFolder(folder.path));
-        const body = document.createElement('div');
-        body.className = 'card-body';
-        const title = document.createElement('div');
-        title.className = 'card-title';
-        title.textContent = folder.dir.name;
-        const meta = document.createElement('div');
-        meta.className = 'card-meta';
-        const photoCount = collectFiles(folder.dir, []).length;
-        meta.textContent = `${formatCount(photoCount)} photo${photoCount === 1 ? '' : 's'} inside`;
-        body.append(title, meta);
-        card.append(btn, body);
-        galleryGrid.appendChild(card);
-      }
-
-      for (const item of pagedFiles) {
-        const card = document.createElement('article');
-        card.className = 'card';
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'thumb';
-        const img = document.createElement('img');
-        img.loading = 'lazy';
-        img.decoding = 'async';
-        img.src = item.url;
-        img.alt = item.file;
-        img.addEventListener('load', () => applyThumbOrientation(button, img));
-        if (img.complete && img.naturalWidth && img.naturalHeight) {
-          applyThumbOrientation(button, img);
-        }
-        button.appendChild(img);
-        button.addEventListener('click', () => openLightbox(item));
-        const body = document.createElement('div');
-        body.className = 'card-body';
-        const title = document.createElement('div');
-        title.className = 'card-title';
-        title.textContent = item.file;
-        const meta = document.createElement('div');
-        meta.className = 'card-meta';
-        if (state.currentPath[0] === 'ALL') {
-          meta.textContent = item.path.length ? item.path.join(' › ') : state.data.name;
-        } else {
-          meta.textContent = 'Photo';
-        }
-        body.append(title, meta);
-        card.append(button, body);
-        galleryGrid.appendChild(card);
-      }
-
-      const fileCount = totalFiles;
-      const displayStart = totalFiles ? startIndex + 1 : 0;
-      const displayEnd = totalFiles ? startIndex + pagedFiles.length : 0;
-      const rangeText = totalFiles
-        ? ` — Showing ${formatCount(displayStart)}–${formatCount(displayEnd)}`
-        : '';
-      gallerySummary.textContent = `${locationLabel}: ${formatCount(fileCount)} photo${fileCount === 1 ? '' : 's'}${folderCount ? `, ${formatCount(folderCount)} folder${folderCount === 1 ? '' : 's'}` : ''}${rangeText}`;
-
-      renderPagination(totalFiles, totalPages);
-    }
-
-    function renderPagination(totalFiles, totalPages) {
-      if (totalFiles <= PAGE_SIZE) {
-        pagination.hidden = true;
-        return;
-      }
-
-      pagination.hidden = false;
-
-      const prevButton = document.createElement('button');
-      prevButton.type = 'button';
-      prevButton.textContent = 'Previous';
-      prevButton.disabled = state.page === 1;
-      prevButton.addEventListener('click', () => {
-        if (state.page > 1) {
-          state.page -= 1;
-          renderGallery();
-        }
-      });
-
-      const info = document.createElement('span');
-      info.className = 'pagination-info';
-      info.textContent = `Page ${state.page} of ${totalPages}`;
-
-      const nextButton = document.createElement('button');
-      nextButton.type = 'button';
-      nextButton.textContent = 'Next';
-      nextButton.disabled = state.page === totalPages;
-      nextButton.addEventListener('click', () => {
-        if (state.page < totalPages) {
-          state.page += 1;
-          renderGallery();
-        }
-      });
-
-      pagination.append(prevButton, info, nextButton);
-    }
-
-    function openLightbox(item) {
-      lightboxImage.src = item.url;
-      const pathLabel = item.path.length ? item.path.join(' › ') : state.data.name;
-      lightboxCaption.textContent = `${item.file} — ${pathLabel}`;
-      lightbox.classList.add('open');
-      lightbox.setAttribute('aria-hidden', 'false');
-      document.body.style.overflow = 'hidden';
-    }
-
-    function closeLightbox() {
-      lightbox.classList.remove('open');
-      lightbox.setAttribute('aria-hidden', 'true');
-      lightboxImage.src = '';
-      document.body.style.overflow = '';
-    }
-
-    lightbox.addEventListener('click', (evt) => {
-      if (evt.target === lightbox) {
-        closeLightbox();
-      }
-    });
-    lightboxClose.addEventListener('click', closeLightbox);
-    window.addEventListener('keydown', (evt) => {
-      if (evt.key === 'Escape' && lightbox.classList.contains('open')) {
-        closeLightbox();
-      }
-    });
-
-    function buildTree(parent, node, path = []) {
-      const item = document.createElement('li');
-      item.className = 'tree-item';
-      const row = document.createElement('div');
-      row.className = 'tree-row';
-      row.style.setProperty('--indent', `${path.length * 18}px`);
-      row.dataset.path = path.length ? path.join('|') : '__root__';
-
-      const toggle = document.createElement('button');
-      toggle.className = 'toggle';
-      toggle.type = 'button';
-      toggle.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="m9.17 5.17 6 6a1 1 0 0 1 0 1.41l-6 6A1 1 0 0 1 8 17.59V6.41a1 1 0 0 1 1.17-1.24Z"/></svg>';
-      toggle.addEventListener('click', (evt) => {
-        evt.stopPropagation();
-        item.classList.toggle('collapsed');
-      });
-
-      const label = document.createElement('span');
-      label.className = 'tree-label';
-      label.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 6.75A1.75 1.75 0 0 1 4.75 5h4.586a1.75 1.75 0 0 1 1.237.512l.915.914c.1.1.236.156.378.156H19.25A1.75 1.75 0 0 1 21 8.332v8.918A2.25 2.25 0 0 1 18.75 19H5.25A2.25 2.25 0 0 1 3 16.75V6.75Z"/></svg>';
-      const text = document.createElement('span');
-      text.textContent = node.name;
-      label.appendChild(text);
-
-      row.append(toggle, label);
-      row.addEventListener('click', () => selectFolder(path));
-      row.addEventListener('keydown', (evt) => {
-        if (evt.key === 'Enter' || evt.key === ' ') {
-          evt.preventDefault();
-          selectFolder(path);
-        }
-      });
-      row.tabIndex = 0;
-
-      const children = document.createElement('ul');
-      children.className = 'tree children';
-
-      item.append(row, children);
-      parent.appendChild(item);
-
-      for (const dir of node.dirs) {
-        buildTree(children, dir, [...path, dir.name]);
-      }
-    }
-
-    function buildExplorer() {
-      treeRoot.innerHTML = '';
-      const allItem = document.createElement('li');
-      allItem.className = 'tree-item';
-      const allRow = document.createElement('div');
-      allRow.className = 'tree-row';
-      allRow.dataset.path = '__all__';
-      allRow.innerHTML = '<span class="tree-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 6a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V6Zm3-1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H8Z"/></svg><span>All Photos</span></span>';
-      allRow.tabIndex = 0;
-      allRow.addEventListener('click', () => selectFolder(['ALL']));
-      allRow.addEventListener('keydown', (evt) => {
-        if (evt.key === 'Enter' || evt.key === ' ') {
-          evt.preventDefault();
-          selectFolder(['ALL']);
-        }
-      });
-      allItem.appendChild(allRow);
-      treeRoot.appendChild(allItem);
-
-      buildTree(treeRoot, state.data, []);
-    }
-
-    function selectFolder(path) {
-      if (!state.data) return;
-      state.currentPath = path.length && path[0] === 'ALL' ? ['ALL'] : path;
-      state.page = 1;
-      highlightSelection();
-      renderBreadcrumbs();
-      renderGallery();
-    }
-
-    function highlightSelection() {
-      const rows = treeRoot.querySelectorAll('.tree-row');
-      rows.forEach(row => row.classList.remove('active'));
-      if (state.currentPath[0] === 'ALL') {
-        const allRow = treeRoot.querySelector('.tree-row[data-path="__all__"]');
-        if (allRow) allRow.classList.add('active');
-        return;
-      }
-      const key = state.currentPath.length ? state.currentPath.join('|') : '__root__';
-      const target = treeRoot.querySelector(`.tree-row[data-path="${CSS.escape(key)}"]`);
-      if (target) {
-        target.classList.add('active');
-      }
-    }
-
-    collapseAllBtn.addEventListener('click', () => {
-      const items = treeRoot.querySelectorAll('.tree-item');
-      items.forEach((item, index) => {
-        if (index === 0) return;
-        item.classList.toggle('collapsed');
-      });
-    });
-
-    loadManifest();
-  </script>
-</body>
-</html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zack’s Gallery</title>
+<style>
+  :root { --gap:12px }
+  body{margin:24px;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  header{display:flex;gap:var(--gap);flex-wrap:wrap;align-items:center;margin-bottom:8px}
+  nav.breadcrumbs{font-size:14px;color:#666;word-break:break-all;margin:6px 0 10px}
+  .grid{display:grid;gap:var(--gap);grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+  figure{margin:0;background:#f7f7f7;border:1px solid #e5e5e5;border-radius:8px;overflow:hidden}
+  img{width:100%;height:160px;object-fit:cover;display:block;background:#fff}
+  figcaption{font-size:12px;padding:6px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  input[type="search"]{padding:8px 10px;min-width:220px}
+  .meta{color:#666;font-size:14px}
+  .folders{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:var(--gap);margin:12px 0}
+  .folders a{display:block;padding:14px;border:1px solid #e5e5e5;border-radius:8px;background:#fafafa;text-decoration:none;color:inherit}
+  .muted{color:#666}
+</style>
+
+<header>
+  <strong id="count">Loading…</strong>
+  <input id="q" type="search" placeholder="Filter by filename…">
+  <span id="sort" class="meta"></span>
+</header>
+
+<nav class="breadcrumbs" id="crumbs" aria-label="Breadcrumb"></nav>
+<div id="folders" class="folders" hidden></div>
+<div id="grid" class="grid" aria-live="polite"></div>
+
+<script>
+(async () => {
+  const el = {
+    count: document.getElementById('count'),
+    sort:  document.getElementById('sort'),
+    q:     document.getElementById('q'),
+    crumbs:document.getElementById('crumbs'),
+    folders:document.getElementById('folders'),
+    grid:  document.getElementById('grid'),
+  };
+
+  const enc = (p) => p.split('/').map(encodeURIComponent).join('/');
+  const normPath = (p) => String(p).replace(/^\/+/, '').replace(/^gallery\//, '');
+  const forwardSlashes = (p) => p.split('\\').join('/');
+
+  function getPrefixFromPath(pathname = location.pathname){
+    const after = pathname.replace(/^\/?gallery\/?/, '');
+    return after === '' ? '' : (after.endsWith('/') ? after : after + '/');
+  }
+
+  function setCount(total, prefix, foldersCount, visibleCount){
+    const pieces = [];
+    pieces.push(`${total} total file${total!==1?'s':''}`);
+    if (prefix) pieces.push(`in ${prefix}`);
+    if (foldersCount) pieces.push(`• ${foldersCount} folder${foldersCount!==1?'s':''}`);
+    if (typeof visibleCount === 'number') pieces.push(`• showing ${visibleCount}`);
+    el.count.textContent = pieces.join(' ');
+  }
+
+  function renderCrumbs(prefix){
+    const parts = prefix.split('/').filter(Boolean);
+    let acc = '';
+    const items = [`<a href="/gallery" data-nav-root>Home</a>`];
+    for (const p of parts) {
+      acc += p + '/';
+      items.push(`<a href="/gallery/${enc(acc)}" data-nav="${acc}">${p}</a>`);
+    }
+    el.crumbs.innerHTML = items.join(' ▸ ');
+  }
+
+  function splitFolder(entries, prefix){
+    const subs = new Set(), here = [];
+    for (const raw of entries) {
+      const f = { ...raw, path: normPath(forwardSlashes(raw.path)) };
+      if (!f.path.startsWith(prefix)) continue;
+      const rest = f.path.slice(prefix.length);
+      const slash = rest.indexOf('/');
+      if (slash === -1) here.push(f);
+      else subs.add(rest.slice(0, slash + 1));
+    }
+    return { subs: Array.from(subs).sort(), here };
+  }
+
+  function renderFolders(prefix, subs){
+    if (!subs.length) { el.folders.hidden = true; el.folders.innerHTML = ''; return; }
+    el.folders.hidden = false;
+    el.folders.innerHTML = '';
+    for (const s of subs) {
+      const a = document.createElement('a');
+      a.href = '/gallery/' + enc(prefix + s);
+      a.dataset.nav = prefix + s;
+      a.textContent = '📁 ' + s.replace(/\/$/, '');
+      el.folders.appendChild(a);
+    }
+  }
+
+  function renderFiles(list){
+    el.grid.innerHTML = '';
+    for (const f of list) {
+      const url = '/gallery/' + enc(f.path);
+      const date = f.t ? new Date(f.t).toISOString().slice(0,10) : '';
+      const fig = document.createElement('figure');
+      fig.innerHTML = `<a href="${url}" target="_blank" rel="noopener">
+          <img loading="lazy" decoding="async" src="${url}" alt="${f.path}">
+        </a>
+        <figcaption>${f.path.split('/').pop()}${date?`<br><small>${date}</small>`:''}</figcaption>`;
+      el.grid.appendChild(fig);
+    }
+  }
+
+  function navigateTo(newPrefix){
+    const url = '/gallery/' + newPrefix;
+    history.pushState({ prefix: newPrefix }, '', url);
+    renderFolder(newPrefix);
+  }
+
+  window.addEventListener('popstate', (e) => {
+    const pref = e.state?.prefix ?? getPrefixFromPath();
+    renderFolder(pref);
+  });
+
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[data-nav], a[data-nav-root]');
+    if (!a) return;
+    e.preventDefault();
+    if (a.hasAttribute('data-nav-root')) return navigateTo('');
+    navigateTo(a.dataset.nav || '');
+  });
+
+  try {
+    const res = await fetch('/gallery/photos.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error(`photos.json ${res.status}`);
+    const data = await res.json();
+
+    const all = (data.files || [])
+      .filter(f => f && f.path)
+      .map(f => ({ ...f, path: normPath(forwardSlashes(f.path)) }));
+
+    const TOTAL = data.count || all.length;
+    if (data.sort) el.sort.textContent = `Sorted: ${data.sort}`;
+
+    function renderFolder(prefix){
+      renderCrumbs(prefix);
+      const { subs, here } = splitFolder(all, prefix);
+
+      // Sort newest → oldest by timestamp
+      const ts = v => (typeof v === 'number' ? v : (typeof v === 'string' ? Number(v) : 0));
+	  const hereSorted = [...here].sort((a,b) => ts(b.t) - ts(a.t) || a.path.localeCompare(b.path));
+
+      renderFolders(prefix, subs);
+      renderFiles(hereSorted);
+      setCount(TOTAL, prefix, subs.length, hereSorted.length);
+
+      el.q.oninput = () => {
+        const needle = el.q.value.trim().toLowerCase();
+        const filtered = hereSorted.filter(f => f.path.toLowerCase().includes(needle));
+        renderFiles(filtered);
+        setCount(TOTAL, prefix, subs.length, filtered.length);
+      };
+    }
+
+    renderFolder(getPrefixFromPath());
+
+  } catch (err) {
+    console.error(err);
+    el.count.textContent = 'Error: ' + (err?.message || err);
+    el.count.classList.add('muted');
+  }
+})();
+</script>
