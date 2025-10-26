@@ -60,7 +60,7 @@
   function renderCrumbs(prefix){
     const parts = prefix.split('/').filter(Boolean);
     let acc = '';
-    const items = [`<a href="/gallery" data-nav-root>/gallery</a>`];
+    const items = [`<a href="/gallery" data-nav-root>Home</a>`];
     for (const p of parts) {
       acc += p + '/';
       items.push(`<a href="/gallery/${enc(acc)}" data-nav="${acc}">${p}</a>`);
