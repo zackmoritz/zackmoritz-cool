@@ -8,7 +8,6 @@ const APP_SHELL = [
   "./icons/xp-192.svg",
   "./icons/xp-512.svg"
 ];
-const CDN_PREFIX = "https://cdn.jsdelivr.net/";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -36,11 +35,6 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (request.url.startsWith(CDN_PREFIX)) {
-    event.respondWith(cacheFirst(request));
-    return;
-  }
-
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request).catch(() => caches.match("./index.html"))
@@ -53,13 +47,3 @@ self.addEventListener("fetch", (event) => {
   );
 });
 
-async function cacheFirst(request) {
-  const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(request);
-  if (cached) {
-    return cached;
-  }
-  const response = await fetch(request);
-  cache.put(request, response.clone());
-  return response;
-}

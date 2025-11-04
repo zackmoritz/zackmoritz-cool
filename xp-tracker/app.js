@@ -15,6 +15,7 @@ const installButton = document.getElementById("installButton");
 
 const xpTable = buildXpTable(MAX_LEVEL + 1);
 let chartInstance;
+let currentChartSkill = DEFAULT_SKILLS[0];
 let deferredPrompt;
 
 const state = loadState();
@@ -290,21 +291,20 @@ function renderActivityFeed() {
   });
 }
 
+const chartDateFormatter = new Intl.DateTimeFormat(undefined, {
+  month: "short",
+  day: "numeric"
+});
+
 function initializeChart() {
   const canvas = document.getElementById("xpChart");
-  if (!window.Chart) {
-    chartInsight.textContent = "Chart module failed to load. Check your connection and refresh.";
-    if (chartEmptyNotice) {
-      chartEmptyNotice.hidden = false;
-      chartEmptyNotice.textContent = "The XP chart couldn't load. Check your connection and try again.";
-    }
-    return;
-  }
   if (!(canvas instanceof HTMLCanvasElement)) {
     chartInsight.textContent = "Chart canvas is unavailable.";
     if (chartEmptyNotice) {
       chartEmptyNotice.hidden = false;
+      chartEmptyNotice.textContent = "Your browser cannot display the progression chart.";
     }
+    chartInstance = null;
     return;
   }
   const ctx = canvas.getContext("2d");
@@ -312,134 +312,304 @@ function initializeChart() {
     chartInsight.textContent = "Unable to initialize the XP chart context.";
     if (chartEmptyNotice) {
       chartEmptyNotice.hidden = false;
+      chartEmptyNotice.textContent = "Your browser does not support canvas drawing.";
     }
+    chartInstance = null;
     return;
   }
-  chartInstance = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: [],
-      datasets: [
-        {
-          label: "Cumulative XP",
-          data: [],
-          borderColor: "rgba(248, 193, 42, 0.9)",
-          backgroundColor: "rgba(248, 193, 42, 0.18)",
-          tension: 0.35,
-          pointRadius: 4,
-          pointBackgroundColor: "rgba(248, 193, 42, 1)",
-          fill: true,
-          stepped: "before"
-        },
-        {
-          label: "Next level threshold",
-          data: [],
-          borderColor: "rgba(96, 165, 250, 0.55)",
-          borderDash: [6, 6],
-          tension: 0,
-          pointRadius: 0,
-          fill: false
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        x: {
-          ticks: {
-            color: "#a0b5e8"
-          },
-          grid: {
-            color: "rgba(255, 255, 255, 0.04)"
-          }
-        },
-        y: {
-          beginAtZero: true,
-          ticks: {
-            color: "#a0b5e8"
-          },
-          grid: {
-            color: "rgba(255, 255, 255, 0.04)"
-          }
-        }
-      },
-      plugins: {
-        legend: {
-          labels: {
-            color: "#f6f7ff"
-          }
-        },
-        tooltip: {
-          callbacks: {
-            label: (context) => {
-              const value = context.parsed.y || 0;
-              if (context.datasetIndex === 0) {
-                const level = levelForXp(value);
-                return `${context.dataset.label}: ${value.toLocaleString()} XP • Lvl ${level}`;
-              }
-              return `${context.dataset.label}: ${value.toLocaleString()} XP`;
-            },
-            afterLabel: (context) => {
-              if (context.datasetIndex !== 0) {
-                return "";
-              }
-              const totalXp = context.parsed.y || 0;
-              const remaining = xpToNextLevel(totalXp);
-              if (remaining <= 0) {
-                return "Max level reached";
-              }
-              return `${remaining.toLocaleString()} XP until next level`;
-            }
-          }
-        }
-      }
-    }
-  });
+
+  chartInstance = { canvas, ctx };
+
+  if (window.ResizeObserver) {
+    const observer = new ResizeObserver(() => updateChart(currentChartSkill));
+    observer.observe(canvas);
+    chartInstance.resizeObserver = observer;
+  } else {
+    const handler = () => updateChart(currentChartSkill);
+    window.addEventListener("resize", handler);
+    chartInstance.resizeHandler = handler;
+  }
 }
 
 function updateChart(skill) {
-  if (!chartInstance) return;
-  const history = state.skills[skill]?.history ?? [];
-  const hasGains = history.some((entry) => entry.delta > 0);
-  if (chartEmptyNotice) {
-    if (hasGains) {
-      chartEmptyNotice.hidden = true;
-    } else {
-      chartEmptyNotice.hidden = false;
-      chartEmptyNotice.textContent = `Log some XP in ${skill} to start charting your journey.`;
-    }
-  }
-  if (history.length === 0) {
-    chartInstance.data.labels = [];
-    chartInstance.data.datasets[0].data = [];
-    chartInstance.data.datasets[1].data = [];
-    chartInstance.update();
+  currentChartSkill = skill;
+  if (!chartInstance?.ctx) {
     return;
   }
 
-  const formatter = new Intl.DateTimeFormat(undefined, {
-    month: "short",
-    day: "numeric"
-  });
+  const history = state.skills[skill]?.history ?? [];
+  const hasGains = history.some((entry) => entry.delta > 0);
+
+  if (chartEmptyNotice) {
+    if (history.length === 0 || !hasGains) {
+      chartEmptyNotice.hidden = false;
+      chartEmptyNotice.textContent =
+        history.length === 0 || history.every((entry) => entry.xpAfter === 0)
+          ? `Log some XP in ${skill} to start charting your journey.`
+          : `Keep logging XP in ${skill} to reveal more of your progression.`;
+    } else {
+      chartEmptyNotice.hidden = true;
+    }
+  }
 
   const sortedHistory = [...history].sort((a, b) => a.timestamp - b.timestamp);
+  if (sortedHistory.length === 0) {
+    clearChartArea();
+    return;
+  }
 
-  chartInstance.data.labels = sortedHistory.map((entry) => formatter.format(entry.timestamp));
+  drawXpChart(sortedHistory, skill);
+}
+
+function clearChartArea() {
+  if (!chartInstance?.ctx) {
+    return;
+  }
+  const { canvas, ctx } = chartInstance;
+  const dpr = window.devicePixelRatio || 1;
+  const width = canvas.clientWidth || canvas.width || 400;
+  const height = canvas.clientHeight || canvas.height || 260;
+  canvas.width = Math.round(width * dpr);
+  canvas.height = Math.round(height * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+}
+
+function drawXpChart(sortedHistory, skill) {
+  const { canvas, ctx } = chartInstance;
+  const dpr = window.devicePixelRatio || 1;
+  const width = canvas.clientWidth || canvas.width || 400;
+  const height = canvas.clientHeight || canvas.height || 260;
+  const scaledWidth = Math.round(width * dpr);
+  const scaledHeight = Math.round(height * dpr);
+  if (canvas.width !== scaledWidth || canvas.height !== scaledHeight) {
+    canvas.width = scaledWidth;
+    canvas.height = scaledHeight;
+  }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+
+  const padding = { top: 32, right: 28, bottom: 44, left: 60 };
+  const plotWidth = Math.max(width - padding.left - padding.right, 10);
+  const plotHeight = Math.max(height - padding.top - padding.bottom, 10);
+  const baseY = height - padding.bottom;
+
   const xpValues = sortedHistory.map((entry) => entry.xpAfter);
-  const thresholds = sortedHistory.map((entry) => xpForLevel(Math.min(entry.levelAfter + 1, MAX_LEVEL + 1)));
-  const pointRadii = xpValues.map((_, index, arr) => (index === arr.length - 1 && hasGains ? 6 : 3));
+  const lastEntry = sortedHistory[sortedHistory.length - 1];
+  const lastXp = lastEntry.xpAfter;
+  const currentLevel = levelForXp(lastXp);
+  const nextLevelXp = currentLevel >= MAX_LEVEL ? lastXp : xpForLevel(currentLevel + 1);
+  const targetMax = Math.max(nextLevelXp, lastXp, 100);
+  const yTicks = createTickMarks(targetMax * 1.08);
+  const chartMax = yTicks[yTicks.length - 1] || targetMax || 1;
 
-  chartInstance.data.datasets[0].label = `${skill} XP progression`;
-  chartInstance.data.datasets[0].data = xpValues;
-  chartInstance.data.datasets[0].pointRadius = pointRadii;
-  chartInstance.data.datasets[0].pointHoverRadius = pointRadii.map((radius) => radius + 2);
-  chartInstance.data.datasets[1].label = `${skill} next level target`;
-  chartInstance.data.datasets[1].data = thresholds;
+  const gradient = ctx.createLinearGradient(0, padding.top, 0, baseY);
+  gradient.addColorStop(0, "rgba(26, 33, 72, 0.45)");
+  gradient.addColorStop(1, "rgba(12, 16, 36, 0.85)");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(padding.left, padding.top, plotWidth, plotHeight);
 
-  const maxValue = Math.max(...xpValues, ...thresholds, 100);
-  chartInstance.options.scales.y.suggestedMax = maxValue * 1.1;
-  chartInstance.update();
+  drawGridLines(ctx, padding, width, height, plotWidth, plotHeight, yTicks, sortedHistory, chartMax);
+
+  const getX = (index) => {
+    if (sortedHistory.length === 1) {
+      return padding.left + plotWidth / 2;
+    }
+    return padding.left + (plotWidth * index) / (sortedHistory.length - 1);
+  };
+
+  const getY = (xp) => {
+    if (chartMax === 0) {
+      return baseY;
+    }
+    const clamped = Math.min(Math.max(xp, 0), chartMax);
+    const ratio = clamped / chartMax;
+    return baseY - ratio * plotHeight;
+  };
+
+  drawSeriesArea(ctx, sortedHistory, getX, getY, baseY);
+  drawSeriesLine(ctx, sortedHistory, getX, getY);
+  drawSeriesPoints(ctx, sortedHistory, getX, getY);
+  drawNextLevelGuide(ctx, padding, width, getY, nextLevelXp, lastXp, skill);
+}
+
+function drawGridLines(ctx, padding, width, height, plotWidth, plotHeight, yTicks, sortedHistory, chartMax) {
+  const baseY = height - padding.bottom;
+  ctx.save();
+  ctx.lineWidth = 1;
+  ctx.font = "12px/1.4 'Inter', system-ui, sans-serif";
+
+  yTicks.forEach((value) => {
+    const y = baseY - (Math.min(value, chartMax) / chartMax) * plotHeight;
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+    ctx.beginPath();
+    ctx.moveTo(padding.left, y);
+    ctx.lineTo(width - padding.right, y);
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(198, 206, 255, 0.75)";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    ctx.fillText(`${formatNumber(value)} XP`, padding.left - 10, y);
+  });
+
+  const xTickIndexes = selectXTickIndexes(sortedHistory.length);
+  xTickIndexes.forEach((index) => {
+    const x =
+      sortedHistory.length === 1
+        ? padding.left + plotWidth / 2
+        : padding.left + (plotWidth * index) / (sortedHistory.length - 1);
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
+    ctx.beginPath();
+    ctx.moveTo(x, padding.top);
+    ctx.lineTo(x, baseY);
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(198, 206, 255, 0.75)";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillText(chartDateFormatter.format(sortedHistory[index].timestamp), x, baseY + 8);
+  });
+
+  ctx.restore();
+
+  ctx.beginPath();
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+  ctx.moveTo(padding.left, padding.top);
+  ctx.lineTo(padding.left, baseY);
+  ctx.lineTo(width - padding.right, baseY);
+  ctx.stroke();
+}
+
+function drawSeriesArea(ctx, sortedHistory, getX, getY, baseY) {
+  if (sortedHistory.length === 0) {
+    return;
+  }
+  ctx.save();
+  ctx.fillStyle = "rgba(248, 193, 42, 0.16)";
+  ctx.beginPath();
+  const startX = getX(0);
+  ctx.moveTo(startX, baseY);
+  ctx.lineTo(startX, getY(sortedHistory[0].xpAfter));
+  for (let i = 1; i < sortedHistory.length; i += 1) {
+    ctx.lineTo(getX(i), getY(sortedHistory[i - 1].xpAfter));
+    ctx.lineTo(getX(i), getY(sortedHistory[i].xpAfter));
+  }
+  const endX = getX(sortedHistory.length - 1);
+  ctx.lineTo(endX, baseY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawSeriesLine(ctx, sortedHistory, getX, getY) {
+  if (sortedHistory.length === 0) {
+    return;
+  }
+  ctx.save();
+  ctx.strokeStyle = "rgba(248, 193, 42, 0.85)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(getX(0), getY(sortedHistory[0].xpAfter));
+  for (let i = 1; i < sortedHistory.length; i += 1) {
+    ctx.lineTo(getX(i), getY(sortedHistory[i - 1].xpAfter));
+    ctx.lineTo(getX(i), getY(sortedHistory[i].xpAfter));
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawSeriesPoints(ctx, sortedHistory, getX, getY) {
+  if (sortedHistory.length === 0) {
+    return;
+  }
+  const lastIndex = sortedHistory.length - 1;
+  sortedHistory.forEach((entry, index) => {
+    const radius = index === lastIndex && entry.delta > 0 ? 6 : 3.5;
+    const x = getX(index);
+    const y = getY(entry.xpAfter);
+    ctx.save();
+    ctx.fillStyle = index === lastIndex && entry.delta > 0 ? "rgba(248, 193, 42, 1)" : "rgba(248, 193, 42, 0.55)";
+    ctx.strokeStyle = "rgba(17, 23, 46, 0.9)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  });
+}
+
+function drawNextLevelGuide(ctx, padding, width, getY, nextLevelXp, lastXp, skill) {
+  if (nextLevelXp <= lastXp) {
+    return;
+  }
+  const guideY = getY(nextLevelXp);
+  ctx.save();
+  ctx.setLineDash([6, 6]);
+  ctx.strokeStyle = "rgba(96, 165, 250, 0.7)";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(padding.left, guideY);
+  ctx.lineTo(width - padding.right, guideY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = "rgba(148, 184, 255, 0.9)";
+  ctx.font = "12px/1.4 'Inter', system-ui, sans-serif";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "bottom";
+  const textY = Math.max(guideY - 6, padding.top + 12);
+  const label = `${skill} next level: ${nextLevelXp.toLocaleString()} XP`;
+  ctx.fillText(label, padding.left + 8, textY);
+  ctx.restore();
+}
+
+function createTickMarks(maxValue) {
+  const safeMax = Math.max(maxValue, 1);
+  const targetTicks = 5;
+  const rawStep = safeMax / targetTicks;
+  const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+  const normalized = rawStep / magnitude;
+  let step;
+  if (normalized <= 1) step = 1 * magnitude;
+  else if (normalized <= 2) step = 2 * magnitude;
+  else if (normalized <= 5) step = 5 * magnitude;
+  else step = 10 * magnitude;
+
+  const ticks = [];
+  for (let value = 0; value <= safeMax + step; value += step) {
+    ticks.push(Math.round(value));
+  }
+  if (!ticks.includes(Math.round(safeMax))) {
+    ticks.push(Math.round(safeMax));
+  }
+  return [...new Set(ticks)].sort((a, b) => a - b);
+}
+
+function selectXTickIndexes(length) {
+  if (length <= 1) {
+    return [0];
+  }
+  const ticks = new Set([0, length - 1]);
+  const segments = Math.min(3, length - 1);
+  for (let i = 1; i < segments; i += 1) {
+    ticks.add(Math.round((i * (length - 1)) / segments));
+  }
+  return [...ticks].sort((a, b) => a - b);
+}
+
+function formatNumber(value) {
+  if (value >= 1_000_000_000) {
+    return `${(value / 1_000_000_000).toFixed(1).replace(/\.0$/, "")}B`;
+  }
+  if (value >= 1_000_000) {
+    return `${(value / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
+  }
+  if (value >= 1_000) {
+    return `${(value / 1_000).toFixed(1).replace(/\.0$/, "")}K`;
+  }
+  return `${Math.round(value)}`;
 }
 
 function updateChartInsight(skill) {
