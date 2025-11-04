@@ -1,318 +1,364 @@
-diff --git a/xp-tracker/styles.css b/xp-tracker/styles.css
-new file mode 100644
-index 0000000000000000000000000000000000000000..c6b3eae5bf7208dfe1fac880d0d8b477273954e0
---- /dev/null
-+++ b/xp-tracker/styles.css
-@@ -0,0 +1,312 @@
-+:root {
-+  color-scheme: dark;
-+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-+  --bg: radial-gradient(circle at 20% 20%, rgba(84, 182, 255, 0.12), transparent 60%),
-+        radial-gradient(circle at 80% 0%, rgba(255, 192, 120, 0.12), transparent 55%),
-+        #050711;
-+  --card-bg: rgba(9, 14, 29, 0.78);
-+  --accent: #f8c12a;
-+  --accent-soft: rgba(248, 193, 42, 0.3);
-+  --text-muted: #a0b5e8;
-+  --border: rgba(101, 137, 255, 0.3);
-+  --success: #34d399;
-+}
-+
-+* {
-+  box-sizing: border-box;
-+}
-+
-+body {
-+  margin: 0;
-+  min-height: 100vh;
-+  background: var(--bg);
-+  color: #f6f7ff;
-+  display: flex;
-+  flex-direction: column;
-+  padding: 0 1.5rem 2.5rem;
-+}
-+
-+.app-header {
-+  display: flex;
-+  justify-content: space-between;
-+  align-items: flex-start;
-+  gap: 1.5rem;
-+  padding: 2.75rem 0 1.5rem;
-+}
-+
-+.app-header h1 {
-+  margin: 0;
-+  font-size: clamp(1.8rem, 2vw + 1rem, 2.6rem);
-+  letter-spacing: 0.02em;
-+}
-+
-+.app-header p {
-+  margin: 0.4rem 0 0;
-+  color: var(--text-muted);
-+  max-width: 36ch;
-+}
-+
-+.install-button {
-+  align-self: center;
-+  padding: 0.75rem 1.4rem;
-+  border-radius: 999px;
-+  border: 1px solid var(--accent);
-+  background: rgba(248, 193, 42, 0.12);
-+  color: var(--accent);
-+  font-weight: 600;
-+  text-transform: uppercase;
-+  letter-spacing: 0.05em;
-+  cursor: pointer;
-+  transition: transform 0.2s ease, box-shadow 0.2s ease;
-+}
-+
-+.install-button:hover {
-+  transform: translateY(-2px);
-+  box-shadow: 0 8px 18px rgba(248, 193, 42, 0.18);
-+}
-+
-+main {
-+  display: grid;
-+  gap: 2rem;
-+}
-+
-+.skill-grid {
-+  display: grid;
-+  gap: 1.5rem;
-+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-+}
-+
-+.skill-card {
-+  position: relative;
-+  padding: 1.4rem;
-+  border-radius: 18px;
-+  background: var(--card-bg);
-+  border: 1px solid var(--border);
-+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 12px 22px rgba(8, 12, 28, 0.45);
-+  overflow: hidden;
-+}
-+
-+.skill-card::after {
-+  content: "";
-+  position: absolute;
-+  inset: 0;
-+  background: radial-gradient(circle at top right, rgba(248, 193, 42, 0.25), transparent 45%);
-+  pointer-events: none;
-+}
-+
-+.skill-card h3 {
-+  margin: 0;
-+  font-size: 1.3rem;
-+  letter-spacing: 0.04em;
-+  text-transform: uppercase;
-+}
-+
-+.skill-metadata {
-+  display: flex;
-+  align-items: baseline;
-+  justify-content: space-between;
-+  margin-top: 0.6rem;
-+}
-+
-+.skill-metadata span {
-+  color: var(--text-muted);
-+  font-size: 0.95rem;
-+}
-+
-+.level-display {
-+  font-size: 2.6rem;
-+  font-weight: 700;
-+  margin: 0.4rem 0 0;
-+}
-+
-+.xp-progress {
-+  margin-top: 1rem;
-+  height: 12px;
-+  border-radius: 999px;
-+  background: rgba(255, 255, 255, 0.05);
-+  overflow: hidden;
-+}
-+
-+.xp-progress__bar {
-+  height: 100%;
-+  background: linear-gradient(90deg, rgba(248, 193, 42, 0.8), rgba(248, 193, 42, 0.4));
-+  transition: width 0.4s ease;
-+}
-+
-+.next-level {
-+  margin-top: 0.6rem;
-+  display: flex;
-+  justify-content: space-between;
-+  font-size: 0.9rem;
-+  color: var(--text-muted);
-+}
-+
-+.chart-panel {
-+  background: var(--card-bg);
-+  border-radius: 22px;
-+  border: 1px solid var(--border);
-+  padding: 1.8rem;
-+  display: flex;
-+  flex-direction: column;
-+  gap: 1.2rem;
-+  box-shadow: 0 18px 30px rgba(6, 10, 24, 0.45);
-+}
-+
-+.chart-panel canvas {
-+  width: 100% !important;
-+  min-height: 280px;
-+}
-+
-+.chart-panel__header {
-+  display: flex;
-+  justify-content: space-between;
-+  align-items: flex-end;
-+  flex-wrap: wrap;
-+  gap: 1rem;
-+}
-+
-+.chart-subtitle {
-+  margin: 0.3rem 0 0;
-+  color: var(--text-muted);
-+}
-+
-+.chart-panel__selector {
-+  display: grid;
-+  gap: 0.35rem;
-+  font-size: 0.9rem;
-+  color: var(--text-muted);
-+}
-+
-+.chart-panel__selector select {
-+  background: rgba(17, 23, 46, 0.9);
-+  color: #f6f7ff;
-+  border: 1px solid rgba(101, 137, 255, 0.5);
-+  border-radius: 10px;
-+  padding: 0.55rem 1rem;
-+  font-size: 1rem;
-+  cursor: pointer;
-+}
-+
-+.chart-insight {
-+  border-radius: 12px;
-+  background: rgba(17, 23, 46, 0.75);
-+  padding: 0.85rem 1.1rem;
-+  color: var(--text-muted);
-+  font-size: 0.95rem;
-+  border: 1px solid rgba(101, 137, 255, 0.18);
-+}
-+
-+.log-panel {
-+  background: rgba(9, 14, 29, 0.76);
-+  border-radius: 22px;
-+  border: 1px solid rgba(101, 137, 255, 0.25);
-+  padding: 1.8rem;
-+  display: grid;
-+  gap: 1.5rem;
-+}
-+
-+.log-form {
-+  display: grid;
-+  gap: 1rem;
-+}
-+
-+.log-form label {
-+  display: grid;
-+  gap: 0.4rem;
-+  font-size: 0.95rem;
-+  color: var(--text-muted);
-+}
-+
-+.log-form input,
-+.log-form select {
-+  padding: 0.65rem 0.85rem;
-+  border-radius: 10px;
-+  border: 1px solid rgba(101, 137, 255, 0.35);
-+  background: rgba(9, 14, 29, 0.85);
-+  color: #f6f7ff;
-+  font-size: 1rem;
-+}
-+
-+.log-form button {
-+  justify-self: flex-start;
-+  padding: 0.75rem 1.6rem;
-+  border-radius: 999px;
-+  border: none;
-+  background: linear-gradient(120deg, rgba(248, 193, 42, 0.9), rgba(248, 144, 42, 0.9));
-+  color: #0b1024;
-+  font-weight: 700;
-+  text-transform: uppercase;
-+  letter-spacing: 0.06em;
-+  cursor: pointer;
-+  box-shadow: 0 10px 22px rgba(248, 161, 42, 0.35);
-+}
-+
-+.optional {
-+  font-style: italic;
-+  color: rgba(255, 255, 255, 0.5);
-+}
-+
-+.activity h3 {
-+  margin: 0;
-+  font-size: 1.1rem;
-+  letter-spacing: 0.05em;
-+  text-transform: uppercase;
-+}
-+
-+#activityFeed {
-+  list-style: none;
-+  margin: 0.9rem 0 0;
-+  padding: 0;
-+  display: grid;
-+  gap: 0.75rem;
-+}
-+
-+.activity-item {
-+  display: grid;
-+  gap: 0.25rem;
-+  padding: 0.75rem 0.95rem;
-+  border-radius: 12px;
-+  background: rgba(17, 23, 46, 0.72);
-+  border: 1px solid rgba(101, 137, 255, 0.18);
-+}
-+
-+.activity-item__header {
-+  display: flex;
-+  justify-content: space-between;
-+  font-weight: 600;
-+}
-+
-+.activity-item__details {
-+  color: var(--text-muted);
-+  font-size: 0.9rem;
-+  display: flex;
-+  justify-content: space-between;
-+}
-+
-+.activity-item__note {
-+  color: rgba(255, 255, 255, 0.7);
-+  font-size: 0.9rem;
-+}
-+
-+.app-footer {
-+  margin-top: 2rem;
-+  padding-bottom: 2rem;
-+  color: rgba(160, 181, 232, 0.6);
-+  text-align: center;
-+  font-size: 0.9rem;
-+}
-+
-+@media (max-width: 720px) {
-+  body {
-+    padding: 0 1rem 2rem;
-+  }
-+
-+  .app-header {
-+    flex-direction: column;
-+    align-items: flex-start;
-+  }
-+
-+  .install-button {
-+    align-self: flex-start;
-+  }
-+}
+:root {
+  color-scheme: dark;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --bg: radial-gradient(circle at 20% 20%, rgba(84, 182, 255, 0.12), transparent 60%),
+        radial-gradient(circle at 80% 0%, rgba(255, 192, 120, 0.12), transparent 55%),
+        #050711;
+  --card-bg: rgba(9, 14, 29, 0.78);
+  --accent: #f8c12a;
+  --accent-soft: rgba(248, 193, 42, 0.3);
+  --text-muted: #a0b5e8;
+  --border: rgba(101, 137, 255, 0.3);
+  --success: #34d399;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: #f6f7ff;
+  display: flex;
+  flex-direction: column;
+  padding: 0 1.5rem 2.5rem;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  padding: 2.75rem 0 1.5rem;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: clamp(1.8rem, 2vw + 1rem, 2.6rem);
+  letter-spacing: 0.02em;
+}
+
+.app-header p {
+  margin: 0.4rem 0 0;
+  color: var(--text-muted);
+  max-width: 36ch;
+}
+
+.install-button {
+  align-self: center;
+  padding: 0.75rem 1.4rem;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  background: rgba(248, 193, 42, 0.12);
+  color: var(--accent);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.install-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(248, 193, 42, 0.18);
+}
+
+main {
+  display: grid;
+  gap: 2rem;
+}
+
+.skill-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.skill-card {
+  position: relative;
+  padding: 1.4rem;
+  border-radius: 18px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 12px 22px rgba(8, 12, 28, 0.45);
+  overflow: hidden;
+}
+
+.skill-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top right, rgba(248, 193, 42, 0.25), transparent 45%);
+  pointer-events: none;
+}
+
+.skill-card h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.skill-metadata {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-top: 0.6rem;
+}
+
+.skill-metadata span {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.level-display {
+  font-size: 2.6rem;
+  font-weight: 700;
+  margin: 0.4rem 0 0;
+}
+
+.xp-progress {
+  margin-top: 1rem;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+.xp-progress__bar {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(248, 193, 42, 0.8), rgba(248, 193, 42, 0.4));
+  transition: width 0.4s ease;
+}
+
+.next-level {
+  margin-top: 0.6rem;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.chart-panel {
+  background: var(--card-bg);
+  border-radius: 22px;
+  border: 1px solid var(--border);
+  padding: 1.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  box-shadow: 0 18px 30px rgba(6, 10, 24, 0.45);
+}
+
+.chart-panel__canvas-wrap {
+  position: relative;
+  width: 100%;
+  min-height: 280px;
+  height: 320px;
+}
+
+.chart-panel canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.chart-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.chart-subtitle {
+  margin: 0.3rem 0 0;
+  color: var(--text-muted);
+}
+
+.chart-panel__selector {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.chart-panel__selector select {
+  background: rgba(17, 23, 46, 0.9);
+  color: #f6f7ff;
+  border: 1px solid rgba(101, 137, 255, 0.5);
+  border-radius: 10px;
+  padding: 0.55rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.chart-insight {
+  border-radius: 12px;
+  background: rgba(17, 23, 46, 0.75);
+  padding: 0.85rem 1.1rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.log-panel {
+  display: grid;
+  gap: 1.25rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 1.8rem;
+}
+
+.log-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.log-form label {
+  display: grid;
+  gap: 0.45rem;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.log-form select,
+.log-form input,
+.log-form button {
+  font: inherit;
+}
+
+.log-form select,
+.log-form input {
+  background: rgba(17, 23, 46, 0.9);
+  color: #f6f7ff;
+  border: 1px solid rgba(101, 137, 255, 0.5);
+  border-radius: 10px;
+  padding: 0.55rem 1rem;
+}
+
+.log-form input:focus,
+.log-form select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.log-form button {
+  justify-self: start;
+  padding: 0.65rem 1.6rem;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, rgba(248, 193, 42, 0.8), rgba(248, 193, 42, 0.5));
+  color: #1c1f33;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.log-form button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(248, 193, 42, 0.25);
+}
+
+.optional {
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.activity h3 {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+#activityFeed {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.activity-item {
+  background: rgba(17, 23, 46, 0.75);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(101, 137, 255, 0.2);
+  display: grid;
+  gap: 0.55rem;
+}
+
+.activity-item__header,
+.activity-item__details {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: #f6f7ff;
+}
+
+.activity-item__details {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.activity-item__note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.app-footer {
+  margin-top: auto;
+  padding: 2.5rem 0 0;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  body {
+    padding: 0 1rem 2rem;
+  }
+
+  .app-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .install-button {
+    align-self: flex-start;
+  }
+
+  .chart-panel {
+    padding: 1.4rem;
+  }
+
+  .chart-panel__canvas-wrap {
+    height: 260px;
+  }
+
+  .log-panel {
+    padding: 1.4rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .chart-panel__canvas-wrap {
+    height: 220px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

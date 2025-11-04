@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="XP crest">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1b2038"/>
+      <stop offset="100%" stop-color="#0b0f1f"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffe57f"/>
+      <stop offset="100%" stop-color="#f3a83b"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <path d="M96 160c0-26.51 21.49-48 48-48h224c26.51 0 48 21.49 48 48v192c0 26.51-21.49 48-48 48H144c-26.51 0-48-21.49-48-48V160z" fill="#12162a" stroke="#2f3a68" stroke-width="24"/>
+  <path d="M176 352l80-112-76-112h56l50 76 48-76h52l-74 110 82 114h-58l-54-80-52 80h-54z" fill="url(#glow)" stroke="#fef3c0" stroke-width="12" stroke-linejoin="round"/>
+  <circle cx="392" cy="120" r="44" fill="#2f3a68"/>
+  <circle cx="392" cy="120" r="28" fill="url(#glow)"/>
+</svg>
