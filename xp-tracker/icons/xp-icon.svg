@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">XP Tracker icon</title>
+  <desc id="desc">Rounded badge with stylised XP letters inspired by RuneScape colours.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#232946" />
+      <stop offset="100%" stop-color="#0b0e1b" />
+    </linearGradient>
+    <linearGradient id="ring" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f8d272" />
+      <stop offset="100%" stop-color="#c08b1b" />
+    </linearGradient>
+    <linearGradient id="letters" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95" />
+      <stop offset="100%" stop-color="#f8c12a" />
+    </linearGradient>
+  </defs>
+  <rect x="40" y="40" width="432" height="432" rx="120" fill="url(#bg)" />
+  <path d="M256 32a224 224 0 1 1 0 448 224 224 0 0 1 0-448zm0 32a192 192 0 1 0 0 384 192 192 0 0 0 0-384z" fill="url(#ring)" />
+  <path d="M183 160h70c46 0 77 26 77 68 0 43-32 71-81 71h-34v54h-32zm66 107c28 0 47-13 47-39 0-25-18-38-43-38h-38v77zm102-107h38l36 70 35-70h37l-55 104v88h-32v-88z" fill="url(#letters)" />
+</svg>
