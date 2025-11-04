@@ -286,9 +286,18 @@ function renderActivityFeed() {
 }
 
 function initializeChart() {
-  const ctx = document.getElementById("xpChart");
+  const canvas = document.getElementById("xpChart");
   if (!window.Chart) {
     chartInsight.textContent = "Chart module failed to load. Check your connection and refresh.";
+    return;
+  }
+  if (!(canvas instanceof HTMLCanvasElement)) {
+    chartInsight.textContent = "Chart canvas is unavailable.";
+    return;
+  }
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    chartInsight.textContent = "Unable to initialize the XP chart context.";
     return;
   }
   chartInstance = new Chart(ctx, {
@@ -304,7 +313,17 @@ function initializeChart() {
           tension: 0.35,
           pointRadius: 4,
           pointBackgroundColor: "rgba(248, 193, 42, 1)",
-          fill: true
+          fill: true,
+          stepped: "before"
+        },
+        {
+          label: "Next level threshold",
+          data: [],
+          borderColor: "rgba(96, 165, 250, 0.55)",
+          borderDash: [6, 6],
+          tension: 0,
+          pointRadius: 0,
+          fill: false
         }
       ]
     },
@@ -321,6 +340,7 @@ function initializeChart() {
           }
         },
         y: {
+          beginAtZero: true,
           ticks: {
             color: "#a0b5e8"
           },
@@ -339,8 +359,22 @@ function initializeChart() {
           callbacks: {
             label: (context) => {
               const value = context.parsed.y || 0;
-              const level = levelForXp(value);
-              return `${value.toLocaleString()} XP • Lvl ${level}`;
+              if (context.datasetIndex === 0) {
+                const level = levelForXp(value);
+                return `${context.dataset.label}: ${value.toLocaleString()} XP • Lvl ${level}`;
+              }
+              return `${context.dataset.label}: ${value.toLocaleString()} XP`;
+            },
+            afterLabel: (context) => {
+              if (context.datasetIndex !== 0) {
+                return "";
+              }
+              const totalXp = context.parsed.y || 0;
+              const remaining = xpToNextLevel(totalXp);
+              if (remaining <= 0) {
+                return "Max level reached";
+              }
+              return `${remaining.toLocaleString()} XP until next level`;
             }
           }
         }
@@ -355,6 +389,7 @@ function updateChart(skill) {
   if (history.length === 0) {
     chartInstance.data.labels = [];
     chartInstance.data.datasets[0].data = [];
+    chartInstance.data.datasets[1].data = [];
     chartInstance.update();
     return;
   }
@@ -364,8 +399,19 @@ function updateChart(skill) {
     day: "numeric"
   });
 
-  chartInstance.data.labels = history.map((entry) => formatter.format(entry.timestamp));
-  chartInstance.data.datasets[0].data = history.map((entry) => entry.xpAfter);
+  const sortedHistory = [...history].sort((a, b) => a.timestamp - b.timestamp);
+
+  chartInstance.data.labels = sortedHistory.map((entry) => formatter.format(entry.timestamp));
+  const xpValues = sortedHistory.map((entry) => entry.xpAfter);
+  const thresholds = sortedHistory.map((entry) => xpForLevel(Math.min(entry.levelAfter + 1, MAX_LEVEL + 1)));
+
+  chartInstance.data.datasets[0].label = `${skill} XP progression`;
+  chartInstance.data.datasets[0].data = xpValues;
+  chartInstance.data.datasets[1].label = `${skill} next level target`;
+  chartInstance.data.datasets[1].data = thresholds;
+
+  const maxValue = Math.max(...xpValues, ...thresholds, 100);
+  chartInstance.options.scales.y.suggestedMax = maxValue * 1.1;
   chartInstance.update();
 }
 

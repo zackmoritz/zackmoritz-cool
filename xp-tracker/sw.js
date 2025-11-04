@@ -1,11 +1,12 @@
-const CACHE_NAME = "xp-tracker-v1";
+const CACHE_NAME = "xp-tracker-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css",
   "./app.js",
   "./manifest.json",
-  "./icons/xp-icon.svg"
+  "./icons/xp-192.svg",
+  "./icons/xp-512.svg"
 ];
 const CDN_PREFIX = "https://cdn.jsdelivr.net/";
 

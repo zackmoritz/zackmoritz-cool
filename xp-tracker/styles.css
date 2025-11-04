@@ -153,11 +153,14 @@ main {
 }
 
 .chart-panel__canvas-wrap {
+  position: relative;
   width: 100%;
   min-height: 280px;
+  height: 320px;
 }
 
 .chart-panel canvas {
+  display: block;
   width: 100% !important;
   height: 100% !important;
 }
@@ -334,8 +337,18 @@ main {
     padding: 1.4rem;
   }
 
+  .chart-panel__canvas-wrap {
+    height: 260px;
+  }
+
   .log-panel {
     padding: 1.4rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .chart-panel__canvas-wrap {
+    height: 220px;
   }
 }
 
