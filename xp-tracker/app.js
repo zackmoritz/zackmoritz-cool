@@ -10,6 +10,7 @@ const logNote = document.getElementById("logNote");
 const logForm = document.getElementById("logForm");
 const activityFeed = document.getElementById("activityFeed");
 const chartInsight = document.getElementById("chartInsight");
+const chartEmptyNotice = document.getElementById("chartEmptyNotice");
 const installButton = document.getElementById("installButton");
 
 const xpTable = buildXpTable(MAX_LEVEL + 1);
@@ -244,8 +245,12 @@ function addXp(skill, amount, note) {
   saveState(state);
   renderSkillCards();
   renderActivityFeed();
-  updateChart(skillSelector.value);
-  updateChartInsight(skillSelector.value);
+  skillSelector.value = skill;
+  updateChart(skill);
+  updateChartInsight(skill);
+  if (chartEmptyNotice) {
+    chartEmptyNotice.hidden = false;
+  }
 }
 
 function renderActivityFeed() {
@@ -289,15 +294,25 @@ function initializeChart() {
   const canvas = document.getElementById("xpChart");
   if (!window.Chart) {
     chartInsight.textContent = "Chart module failed to load. Check your connection and refresh.";
+    if (chartEmptyNotice) {
+      chartEmptyNotice.hidden = false;
+      chartEmptyNotice.textContent = "The XP chart couldn't load. Check your connection and try again.";
+    }
     return;
   }
   if (!(canvas instanceof HTMLCanvasElement)) {
     chartInsight.textContent = "Chart canvas is unavailable.";
+    if (chartEmptyNotice) {
+      chartEmptyNotice.hidden = false;
+    }
     return;
   }
   const ctx = canvas.getContext("2d");
   if (!ctx) {
     chartInsight.textContent = "Unable to initialize the XP chart context.";
+    if (chartEmptyNotice) {
+      chartEmptyNotice.hidden = false;
+    }
     return;
   }
   chartInstance = new Chart(ctx, {
@@ -386,6 +401,15 @@ function initializeChart() {
 function updateChart(skill) {
   if (!chartInstance) return;
   const history = state.skills[skill]?.history ?? [];
+  const hasGains = history.some((entry) => entry.delta > 0);
+  if (chartEmptyNotice) {
+    if (hasGains) {
+      chartEmptyNotice.hidden = true;
+    } else {
+      chartEmptyNotice.hidden = false;
+      chartEmptyNotice.textContent = `Log some XP in ${skill} to start charting your journey.`;
+    }
+  }
   if (history.length === 0) {
     chartInstance.data.labels = [];
     chartInstance.data.datasets[0].data = [];
@@ -404,9 +428,12 @@ function updateChart(skill) {
   chartInstance.data.labels = sortedHistory.map((entry) => formatter.format(entry.timestamp));
   const xpValues = sortedHistory.map((entry) => entry.xpAfter);
   const thresholds = sortedHistory.map((entry) => xpForLevel(Math.min(entry.levelAfter + 1, MAX_LEVEL + 1)));
+  const pointRadii = xpValues.map((_, index, arr) => (index === arr.length - 1 && hasGains ? 6 : 3));
 
   chartInstance.data.datasets[0].label = `${skill} XP progression`;
   chartInstance.data.datasets[0].data = xpValues;
+  chartInstance.data.datasets[0].pointRadius = pointRadii;
+  chartInstance.data.datasets[0].pointHoverRadius = pointRadii.map((radius) => radius + 2);
   chartInstance.data.datasets[1].label = `${skill} next level target`;
   chartInstance.data.datasets[1].data = thresholds;
 

@@ -159,6 +159,27 @@ main {
   height: 320px;
 }
 
+.chart-panel__empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  text-align: center;
+  color: var(--text-muted);
+  background: rgba(5, 7, 17, 0.65);
+  border: 1px dashed rgba(160, 181, 232, 0.45);
+  border-radius: 18px;
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.chart-panel__empty[hidden] {
+  display: none;
+}
+
 .chart-panel canvas {
   display: block;
   width: 100% !important;
