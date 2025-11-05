@@ -12,6 +12,7 @@ const activityFeed = document.getElementById("activityFeed");
 const chartInsight = document.getElementById("chartInsight");
 const chartEmptyNotice = document.getElementById("chartEmptyNotice");
 const installButton = document.getElementById("installButton");
+const storageWarning = document.getElementById("storageWarning");
 
 const xpTable = buildXpTable(MAX_LEVEL + 1);
 let chartInstance;
@@ -74,6 +75,9 @@ function loadState() {
     }
   } catch (error) {
     console.warn("Failed to read tracker state", error);
+    showStorageWarning(
+      "Browser storage is unavailable, so progress will reset after you close this tab."
+    );
   }
 
   const initial = {
@@ -146,7 +150,15 @@ function ensureDefaultSkills(stateObj) {
 }
 
 function saveState(nextState) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+    hideStorageWarning();
+  } catch (error) {
+    console.warn("Failed to persist tracker state", error);
+    showStorageWarning(
+      "Progress is stored only for this session because browser storage could not be accessed."
+    );
+  }
 }
 
 function createHistoryEntry({ skill, xpAfter, delta, levelBefore, levelAfter, note, timestamp }) {
@@ -359,6 +371,21 @@ function updateChart(skill) {
   }
 
   drawXpChart(sortedHistory, skill);
+}
+
+function showStorageWarning(message) {
+  if (!storageWarning) {
+    return;
+  }
+  storageWarning.hidden = false;
+  storageWarning.textContent = message;
+}
+
+function hideStorageWarning() {
+  if (!storageWarning) {
+    return;
+  }
+  storageWarning.hidden = true;
 }
 
 function clearChartArea() {

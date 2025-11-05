@@ -233,6 +233,17 @@ main {
   padding: 1.8rem;
 }
 
+.storage-warning {
+  margin: -0.4rem 0 0.4rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(248, 114, 42, 0.4);
+  background: rgba(248, 114, 42, 0.12);
+  color: #ffd7c2;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
 .log-form {
   display: grid;
   gap: 1rem;
