@@ -1,27 +1,23 @@
-diff --git a/xp-tracker/manifest.json b/xp-tracker/manifest.json
-new file mode 100644
-index 0000000000000000000000000000000000000000..d4578d7881daecbc50363e60427f71cf4b245b6d
---- /dev/null
-+++ b/xp-tracker/manifest.json
-@@ -0,0 +1,21 @@
-+{
-+  "name": "Skill XP Tracker",
-+  "short_name": "XP Tracker",
-+  "start_url": "./index.html",
-+  "display": "standalone",
-+  "background_color": "#050711",
-+  "theme_color": "#090c1a",
-+  "description": "Track real-world skills with a RuneScape-style XP curve and offline-ready progressive web app.",
-+  "icons": [
-+    {
-+      "src": "./icons/xp-192.png",
-+      "sizes": "192x192",
-+      "type": "image/png"
-+    },
-+    {
-+      "src": "./icons/xp-512.png",
-+      "sizes": "512x512",
-+      "type": "image/png"
-+    }
-+  ]
-+}
+{
+  "name": "Skill XP Tracker",
+  "short_name": "XP Tracker",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#050711",
+  "theme_color": "#090c1a",
+  "description": "Track real-world skills with a RuneScape-style XP curve and offline-ready progressive web app.",
+  "icons": [
+    {
+      "src": "./icons/xp-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/xp-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

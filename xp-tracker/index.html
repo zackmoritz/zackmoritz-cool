@@ -1,87 +1,88 @@
-diff --git a/xp-tracker/index.html b/xp-tracker/index.html
-new file mode 100644
-index 0000000000000000000000000000000000000000..e6e01a24fd3f5a4f457118e77b3d9d8fe0e766fd
---- /dev/null
-+++ b/xp-tracker/index.html
-@@ -0,0 +1,81 @@
-+<!doctype html>
-+<html lang="en">
-+<head>
-+  <meta charset="utf-8">
-+  <meta name="viewport" content="width=device-width, initial-scale=1">
-+  <meta name="theme-color" content="#090c1a">
-+  <title>Skill XP Tracker</title>
-+  <link rel="manifest" href="./manifest.json">
-+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/xp-192.png">
-+  <link rel="icon" type="image/png" sizes="512x512" href="./icons/xp-512.png">
-+  <link rel="stylesheet" href="./styles.css">
-+</head>
-+<body>
-+  <header class="app-header">
-+    <div>
-+      <h1>RuneScape-style XP Tracker</h1>
-+      <p>Track your daily skill gains and level up your real-world stats.</p>
-+    </div>
-+    <button id="installButton" class="install-button" hidden>Install app</button>
-+  </header>
-+
-+  <main>
-+    <section class="skill-grid" aria-label="Skill summaries">
-+      <!-- Skill cards injected by app.js -->
-+    </section>
-+
-+    <section class="chart-panel" aria-labelledby="chart-title">
-+      <div class="chart-panel__header">
-+        <div>
-+          <h2 id="chart-title">Skill progression</h2>
-+          <p class="chart-subtitle">RuneScape XP curve with level milestones</p>
-+        </div>
-+        <label class="chart-panel__selector" for="skillSelector">
-+          <span>Select skill</span>
-+          <select id="skillSelector" aria-label="Skill for chart"></select>
-+        </label>
-+      </div>
-+      <canvas id="xpChart" width="400" height="260" role="img" aria-label="XP history line chart"></canvas>
-+      <div class="chart-insight" id="chartInsight"></div>
-+    </section>
-+
-+    <section class="log-panel" aria-labelledby="log-title">
-+      <h2 id="log-title">Log XP gain</h2>
-+      <form id="logForm" class="log-form">
-+        <label>
-+          Skill
-+          <select id="logSkill" required></select>
-+        </label>
-+        <label>
-+          XP gained
-+          <input id="logAmount" type="number" min="1" step="1" required>
-+        </label>
-+        <label>
-+          Notes <span class="optional">(optional)</span>
-+          <input id="logNote" type="text" maxlength="120" placeholder="What did you complete?">
-+        </label>
-+        <button type="submit">Add entry</button>
-+      </form>
-+
-+      <section class="activity" aria-live="polite">
-+        <h3>Recent activity</h3>
-+        <ul id="activityFeed"></ul>
-+      </section>
-+    </section>
-+  </main>
-+
-+  <footer class="app-footer">
-+    <p>Progression follows the RuneScape experience curve. Keep logging to reach new levels!</p>
-+  </footer>
-+
-+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js" integrity="sha384-zbTWI0C1mUglYjIYHjoLO56koc+3AONhScxCovcE6Y+KX/tBN/jH0ykCKJT08L8h" crossorigin="anonymous"></script>
-+  <script src="./app.js" type="module"></script>
-+  <script>
-+    if ('serviceWorker' in navigator) {
-+      window.addEventListener('load', () => {
-+        navigator.serviceWorker.register('./sw.js');
-+      });
-+    }
-+  </script>
-+</body>
-+</html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090c1a">
+  <title>Skill XP Tracker</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="./icons/xp-192.svg">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="./icons/xp-512.svg">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <h1>RuneScape-style XP Tracker</h1>
+      <p>Track your daily skill gains and level up your real-world stats.</p>
+    </div>
+    <button id="installButton" class="install-button" hidden>Install app</button>
+  </header>
+
+  <main>
+    <section class="skill-grid" aria-label="Skill summaries">
+      <!-- Skill cards injected by app.js -->
+    </section>
+
+    <section class="chart-panel" aria-labelledby="chart-title">
+      <div class="chart-panel__header">
+        <div>
+          <h2 id="chart-title">Skill progression</h2>
+          <p class="chart-subtitle">RuneScape XP curve with level milestones</p>
+        </div>
+        <label class="chart-panel__selector" for="skillSelector">
+          <span>Select skill</span>
+          <select id="skillSelector" aria-label="Skill for chart"></select>
+        </label>
+      </div>
+      <div class="chart-panel__canvas-wrap">
+        <div class="chart-panel__empty" id="chartEmptyNotice" aria-live="polite">
+          Log some XP to plot your RuneScape-style progression.
+        </div>
+        <canvas id="xpChart" width="400" height="260" role="img" aria-label="XP history line chart"></canvas>
+      </div>
+      <div class="chart-insight" id="chartInsight"></div>
+    </section>
+
+    <section class="log-panel" aria-labelledby="log-title">
+      <h2 id="log-title">Log XP gain</h2>
+      <p id="storageWarning" class="storage-warning" role="alert" hidden>
+        Progress is stored only for this session because browser storage could not be accessed.
+      </p>
+      <form id="logForm" class="log-form">
+        <label>
+          Skill
+          <select id="logSkill" required></select>
+        </label>
+        <label>
+          XP gained
+          <input id="logAmount" type="number" min="1" step="1" required>
+        </label>
+        <label>
+          Notes <span class="optional">(optional)</span>
+          <input id="logNote" type="text" maxlength="120" placeholder="What did you complete?">
+        </label>
+        <button type="submit">Add entry</button>
+      </form>
+
+      <section class="activity" aria-live="polite">
+        <h3>Recent activity</h3>
+        <ul id="activityFeed"></ul>
+      </section>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p>Progression follows the RuneScape experience curve. Keep logging to reach new levels!</p>
+  </footer>
+
+  <script src="./app.js" type="module"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js');
+      });
+    }
+  </script>
+</body>
+</html>
