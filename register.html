@@ -301,10 +301,11 @@
                 emailInput.style.borderColor = '#e74c3c';
             }
         } catch (error) {
-            // Network or other errors
-            errorMsg.textContent = 'Network error. Please check your connection and try again.';
+            // Network or other errors - show detailed info
+            errorMsg.textContent = 'Network error: ' + error.message + ' | Worker URL: ' + WORKER_URL;
             errorMsg.style.display = 'block';
             emailInput.style.borderColor = '#e74c3c';
+            console.log('Full error:', error);
         } finally {
             // Reset loading state
             submitBtn.classList.remove('loading');
