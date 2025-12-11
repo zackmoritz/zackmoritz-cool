@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - zackmoritz.cool</title>
+    <title>Login - zackmoritz.cool</title>
     <style>
         * {
             margin: 0;
@@ -60,7 +60,7 @@
     }
 
     .form-group {
-        margin-bottom: 30px;
+        margin-bottom: 24px;
     }
 
     label {
@@ -71,7 +71,8 @@
         font-size: 14px;
     }
 
-    input[type="email"] {
+    input[type="email"],
+    input[type="password"] {
         width: 100%;
         padding: 15px 20px;
         border: 2px solid #e0e0e0;
@@ -81,18 +82,37 @@
         outline: none;
     }
 
-    input[type="email"]:focus {
+    input[type="email"]:focus,
+    input[type="password"]:focus {
         border-color: #667eea;
         box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
     }
 
-    input[type="email"]:disabled {
+    input[type="email"]:disabled,
+    input[type="password"]:disabled {
         background: #f5f5f5;
         cursor: not-allowed;
     }
 
-    input[type="email"]::placeholder {
+    input::placeholder {
         color: #aaa;
+    }
+
+    .forgot-password {
+        text-align: right;
+        margin-top: -16px;
+        margin-bottom: 24px;
+    }
+
+    .forgot-password a {
+        color: #667eea;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .forgot-password a:hover {
+        text-decoration: underline;
     }
 
     .btn {
@@ -200,17 +220,17 @@
     <div class="container">
         <div class="logo">
             <h1>zackmoritz.cool</h1>
-            <p>Join the coolest community</p>
+            <p>Welcome back!</p>
         </div>
 
 
     <div class="message success" id="successMsg">
-        🎉 Registration successful! Check your email.
+        Registration successful! Redirecting...
     </div>
 
     <div class="message error-msg" id="errorMsg"></div>
 
-    <form id="registerForm">
+    <form id="loginForm">
         <div class="form-group">
             <label for="email">Email Address</label>
             <input 
@@ -223,23 +243,41 @@
             <div class="error" id="emailError">Please enter a valid email address</div>
         </div>
 
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input 
+                type="password" 
+                id="password" 
+                name="password" 
+                placeholder="Enter your password"
+                required
+            >
+            <div class="error" id="passwordError">Please enter your password</div>
+        </div>
+
+        <div class="forgot-password">
+            <a href="#">Forgot password?</a>
+        </div>
+
         <button type="submit" class="btn" id="submitBtn">
-            <span class="btn-text">Create Account</span>
+            <span class="btn-text">Sign In</span>
             <div class="spinner"></div>
         </button>
     </form>
 
     <div class="footer-text">
-        Already have an account? <a href="login.html">Sign in</a>
+        Don't have an account? <a href="login/register.html">Sign up</a>
     </div>
 </div>
 
 <script>
     const WORKER_URL = "https://loginmanager.zackmoritz.workers.dev";
 
-    const form = document.getElementById("registerForm");
+    const form = document.getElementById("loginForm");
     const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
     const emailError = document.getElementById("emailError");
+    const passwordError = document.getElementById("passwordError");
     const successMsg = document.getElementById("successMsg");
     const errorMsg = document.getElementById("errorMsg");
     const submitBtn = document.getElementById("submitBtn");
@@ -248,54 +286,71 @@
         e.preventDefault();
         
         emailError.style.display = "none";
+        passwordError.style.display = "none";
         successMsg.style.display = "none";
         errorMsg.style.display = "none";
         
         const email = emailInput.value.trim();
+        const password = passwordInput.value;
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        
+        let hasError = false;
         
         if (!emailRegex.test(email)) {
             emailError.style.display = "block";
             emailInput.style.borderColor = "#e74c3c";
-            return;
+            hasError = true;
         }
+        
+        if (!password || password.length < 6) {
+            passwordError.textContent = "Password must be at least 6 characters";
+            passwordError.style.display = "block";
+            passwordInput.style.borderColor = "#e74c3c";
+            hasError = true;
+        }
+        
+        if (hasError) return;
         
         submitBtn.classList.add("loading");
         submitBtn.disabled = true;
         emailInput.disabled = true;
+        passwordInput.disabled = true;
         
         try {
-            const response = await fetch(WORKER_URL, {
+            const response = await fetch(WORKER_URL + "/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ email: email })
+                body: JSON.stringify({ email: email, password: password })
             });
 
             const data = await response.json();
 
             if (response.ok) {
                 emailInput.style.borderColor = "#e0e0e0";
+                passwordInput.style.borderColor = "#e0e0e0";
                 successMsg.style.display = "block";
-                emailInput.value = "";
                 
                 setTimeout(function() {
-                    successMsg.style.display = "none";
-                }, 5000);
+                    window.location.href = "/dashboard.html";
+                }, 1500);
             } else {
-                errorMsg.textContent = data.error || "Registration failed. Please try again.";
+                errorMsg.textContent = data.error || "Login failed. Please check your credentials.";
                 errorMsg.style.display = "block";
                 emailInput.style.borderColor = "#e74c3c";
+                passwordInput.style.borderColor = "#e74c3c";
             }
         } catch (error) {
             errorMsg.textContent = "Network error: " + error.message;
             errorMsg.style.display = "block";
             emailInput.style.borderColor = "#e74c3c";
+            passwordInput.style.borderColor = "#e74c3c";
         } finally {
             submitBtn.classList.remove("loading");
             submitBtn.disabled = false;
             emailInput.disabled = false;
+            passwordInput.disabled = false;
         }
     });
 
@@ -303,6 +358,12 @@
         emailError.style.display = "none";
         errorMsg.style.display = "none";
         emailInput.style.borderColor = "#e0e0e0";
+    });
+
+    passwordInput.addEventListener("input", function() {
+        passwordError.style.display = "none";
+        errorMsg.style.display = "none";
+        passwordInput.style.borderColor = "#e0e0e0";
     });
 </script>
 
