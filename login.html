@@ -1,210 +1,368 @@
-// loginmanager.zackmoritz.workers.dev (or whatever your main worker file is)
+<!DOCTYPE html>
 
-const signupHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Create Account</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - zackmoritz.cool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+    html, body {
+        height: 100%;
+        width: 100%;
+    }
+
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #0f172a;
-      color: #e5e7eb;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background-attachment: fixed;
+        background-size: cover;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
     }
-    .card {.
-      background: #020617;
-      border: 1px solid #1e293b;
-      border-radius: 12px;
-      padding: 24px 28px;
-      max-width: 400px;
-      width: 100%;
-      box-shadow: 0 24px 60px rgba(0,0,0,0.7);
+
+    .container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        padding: 50px 40px;
+        width: 100%;
+        max-width: 450px;
     }
-    h1 {
-      font-size: 1.3rem;
-      margin: 0 0 0.5rem;
+
+    .logo {
+        text-align: center;
+        margin-bottom: 40px;
     }
-    p {
-      margin: 0 0 1.5rem;
-      font-size: 0.9rem;
-      color: #9ca3af;
+
+    .logo h1 {
+        font-size: 32px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: 700;
+        margin-bottom: 8px;
     }
+
+    .logo p {
+        color: #666;
+        font-size: 14px;
+    }
+
+    .form-group {
+        margin-bottom: 24px;
+    }
+
     label {
-      font-size: 0.85rem;
-      display: block;
-      margin-bottom: 0.35rem;
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 600;
+        font-size: 14px;
     }
-    input {
-      width: 100%;
-      padding: 0.6rem 0.7rem;
-      border-radius: 8px;
-      border: 1px solid #374151;
-      background: #020617;
-      color: #e5e7eb;
-      font-size: 0.9rem;
-      box-sizing: border-box;
-      margin-bottom: 0.9rem;
+
+    input[type="email"],
+    input[type="password"] {
+        width: 100%;
+        padding: 15px 20px;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        outline: none;
     }
-    input:focus {
-      outline: none;
-      border-color: #38bdf8;
-      box-shadow: 0 0 0 1px #38bdf8;
+
+    input[type="email"]:focus,
+    input[type="password"]:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
     }
-    button {
-      width: 100%;
-      padding: 0.7rem 0.8rem;
-      border-radius: 999px;
-      border: none;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      background: linear-gradient(135deg, #38bdf8, #818cf8);
-      color: #020617;
-      margin-top: 0.4rem;
+
+    input[type="email"]:disabled,
+    input[type="password"]:disabled {
+        background: #f5f5f5;
+        cursor: not-allowed;
     }
-    button:active {
-      transform: translateY(1px);
-      filter: brightness(0.95);
+
+    input::placeholder {
+        color: #aaa;
     }
+
+    .forgot-password {
+        text-align: right;
+        margin-top: -16px;
+        margin-bottom: 24px;
+    }
+
+    .forgot-password a {
+        color: #667eea;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .forgot-password a:hover {
+        text-decoration: underline;
+    }
+
+    .btn {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    }
+
+    .btn:active:not(:disabled) {
+        transform: translateY(0);
+    }
+
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .footer-text {
+        text-align: center;
+        margin-top: 25px;
+        color: #666;
+        font-size: 14px;
+    }
+
+    .footer-text a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .footer-text a:hover {
+        text-decoration: underline;
+    }
+
+    .error {
+        color: #e74c3c;
+        font-size: 12px;
+        margin-top: 6px;
+        display: none;
+    }
+
     .message {
-      margin-top: 1rem;
-      padding: 0.7rem 0.8rem;
-      border-radius: 8px;
-      font-size: 0.85rem;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        display: none;
+        font-size: 14px;
     }
-    .message.success {
-      background: rgba(34,197,94,0.1);
-      border: 1px solid #22c55e;
-      color: #bbf7d0;
+
+    .success {
+        background: #d4edda;
+        color: #155724;
     }
-    .message.error {
-      background: rgba(248,113,113,0.1);
-      border: 1px solid #f87171;
-      color: #fecaca;
+
+    .error-msg {
+        background: #f8d7da;
+        color: #721c24;
     }
-  </style>
+
+    .spinner {
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-top: 3px solid white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        animation: spin 0.8s linear infinite;
+        display: none;
+        margin: 0 auto;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .btn-text {
+        display: block;
+    }
+
+    .btn.loading .btn-text {
+        display: none;
+    }
+
+    .btn.loading .spinner {
+        display: block;
+    }
+</style>
+
 </head>
 <body>
-  <div class="card">
-    <h1>Create your back office account</h1>
-    <p>Use your email as your login. This will store your account in the database.</p>
-    <form method="POST" action="/register">
-      <label for="email">Email (this will be your login)</label>
-      <input type="email" id="email" name="email" required />
+    <div class="container">
+        <div class="logo">
+            <h1>zackmoritz.cool</h1>
+            <p>Welcome back!</p>
+        </div>
 
-      <label for="password">Password</label>
-      <input type="password" id="password" name="password" required minlength="8" />
+    <div class="message success" id="successMsg">
+        Registration successful! Redirecting...
+    </div>
 
-      <button type="submit">Create account</button>
+    <div class="message error-msg" id="errorMsg"></div>
+
+    <form id="loginForm">
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input 
+                type="email" 
+                id="email" 
+                name="email" 
+                placeholder="you@example.com"
+                required
+            >
+            <div class="error" id="emailError">Please enter a valid email address</div>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input 
+                type="password" 
+                id="password" 
+                name="password" 
+                placeholder="Enter your password"
+                required
+            >
+            <div class="error" id="passwordError">Please enter your password</div>
+        </div>
+
+        <div class="forgot-password">
+            <a href="#">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn" id="submitBtn">
+            <span class="btn-text">Sign In</span>
+            <div class="spinner"></div>
+        </button>
     </form>
 
-    <!-- The server can inject a status message here -->
-    <!-- {{STATUS_MESSAGE}} -->
-  </div>
-</body>
-</html>`;
- 
-export default {
-  async fetch(request, env, ctx) {
-    const url = new URL(request.url);
-
-    // Show the signup page on GET /
-    if (request.method === "GET" && url.pathname === "/") {
-      return new Response(signupHtml, {
-        headers: { "Content-Type": "text/html; charset=utf-8" },
-      });
-    }
-
-    // Handle account creation on POST /register
-    if (request.method === "POST" && url.pathname === "/register") {
-      const formData = await request.formData();
-      const email = (formData.get("email") || "").toString().trim().toLowerCase();
-      const password = (formData.get("password") || "").toString();
-
-      if (!email || !password) {
-        return htmlWithMessage(signupHtml, "Email and password are required.", "error");
-      }
-
-      if (password.length < 8) {
-        return htmlWithMessage(signupHtml, "Password must be at least 8 characters.", "error");
-      }
-
-      // Hash the password (simple SHA-256; fine for your tiny user count, but
-      // in a real production app you'd use a strong password hashing algo).
-      const passwordHash = await hashPassword(password);
-
-      const createdAt = Date.now();
-
-      try {
-        await env.DB.prepare(
-          `INSERT INTO users (email, password_hash, created_at) VALUES (?, ?, ?)`
-        )
-          .bind(email, passwordHash, createdAt)
-          .run();
-
-        return htmlWithMessage(
-          signupHtml,
-          "Account created successfully. You can now log in (next step we’ll build).",
-          "success"
-        );
-      } catch (err) {
-        // Likely a UNIQUE constraint violation if the email already exists
-        if (String(err).includes("UNIQUE")) {
-          return htmlWithMessage(signupHtml, "That email is already registered.", "error");
-        }
-        return htmlWithMessage(
-          signupHtml,
-          "Something went wrong saving your account. Check the Worker logs for details.",
-          "error"
-        );
-      }
-    }
-
-    // Default: 404 for anything else
-    return new Response("Not found", { status: 404 });
-  },
-};
-
-// Helper: hash password using SHA-256
-async function hashPassword(password) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  return bufferToHex(digest);
-}
-
-function bufferToHex(buffer) {
-  const bytes = new Uint8Array(buffer);
-  let hex = "";
-  for (let i = 0; i < bytes.length; i++) {
-    hex += bytes[i].toString(16).padStart(2, "0");
-  }
-  return hex;
-}
-
-// Helper: inject a status message into the HTML
-function htmlWithMessage(html, message, type) {
-  const messageBlock = `
-    <div class="message ${type}">
-      ${escapeHtml(message)}
+    <div class="footer-text">
+        Don't have an account? <a href="register.html">Sign up</a>
     </div>
-  `;
-  const marker = "<!-- {{STATUS_MESSAGE}} -->";
-  const finalHtml = html.replace(marker, messageBlock);
-  return new Response(finalHtml, {
-    headers: { "Content-Type": "text/html; charset=utf-8" },
-  });
-}
+</div>
 
-function escapeHtml(str) {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
+<script>
+    const WORKER_URL = "https://loginmanager.zackmoritz.workers.dev";
+
+    const form = document.getElementById("loginForm");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    const emailError = document.getElementById("emailError");
+    const passwordError = document.getElementById("passwordError");
+    const successMsg = document.getElementById("successMsg");
+    const errorMsg = document.getElementById("errorMsg");
+    const submitBtn = document.getElementById("submitBtn");
+
+    form.addEventListener("submit", async function(e) {
+        e.preventDefault();
+        
+        emailError.style.display = "none";
+        passwordError.style.display = "none";
+        successMsg.style.display = "none";
+        errorMsg.style.display = "none";
+        
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        
+        let hasError = false;
+        
+        if (!emailRegex.test(email)) {
+            emailError.style.display = "block";
+            emailInput.style.borderColor = "#e74c3c";
+            hasError = true;
+        }
+        
+        if (!password || password.length < 6) {
+            passwordError.textContent = "Password must be at least 6 characters";
+            passwordError.style.display = "block";
+            passwordInput.style.borderColor = "#e74c3c";
+            hasError = true;
+        }
+        
+        if (hasError) return;
+        
+        submitBtn.classList.add("loading");
+        submitBtn.disabled = true;
+        emailInput.disabled = true;
+        passwordInput.disabled = true;
+        
+        try {
+            const response = await fetch(WORKER_URL + "/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ email: email, password: password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                emailInput.style.borderColor = "#e0e0e0";
+                passwordInput.style.borderColor = "#e0e0e0";
+                successMsg.style.display = "block";
+                
+                setTimeout(function() {
+                    window.location.href = "/dashboard.html";
+                }, 1500);
+            } else {
+                errorMsg.textContent = data.error || "Login failed. Please check your credentials.";
+                errorMsg.style.display = "block";
+                emailInput.style.borderColor = "#e74c3c";
+                passwordInput.style.borderColor = "#e74c3c";
+            }
+        } catch (error) {
+            errorMsg.textContent = "Network error: " + error.message;
+            errorMsg.style.display = "block";
+            emailInput.style.borderColor = "#e74c3c";
+            passwordInput.style.borderColor = "#e74c3c";
+        } finally {
+            submitBtn.classList.remove("loading");
+            submitBtn.disabled = false;
+            emailInput.disabled = false;
+            passwordInput.disabled = false;
+        }
+    });
+
+    emailInput.addEventListener("input", function() {
+        emailError.style.display = "none";
+        errorMsg.style.display = "none";
+        emailInput.style.borderColor = "#e0e0e0";
+    });
+
+    passwordInput.addEventListener("input", function() {
+        passwordError.style.display = "none";
+        errorMsg.style.display = "none";
+        passwordInput.style.borderColor = "#e0e0e0";
+    });
+</script>
+
+</body>
+</html>
