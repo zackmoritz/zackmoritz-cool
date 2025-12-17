@@ -12,7 +12,7 @@
             box-sizing: border-box;
         }
 
-
+```
     html, body {
         height: 100%;
         width: 100%;
@@ -213,7 +213,7 @@
         display: block;
     }
 </style>
-
+```
 
 </head>
 <body>
@@ -223,7 +223,7 @@
             <p>Welcome back!</p>
         </div>
 
-
+```
     <div class="message success" id="successMsg">
         Registration successful! Redirecting...
     </div>
@@ -333,7 +333,7 @@
                 successMsg.style.display = "block";
                 
                 setTimeout(function() {
-                    window.location.href = "/dashboard.html";
+                    window.location.href = "/backoffice.html";
                 }, 1500);
             } else {
                 errorMsg.textContent = data.error || "Login failed. Please check your credentials.";
@@ -366,7 +366,7 @@
         passwordInput.style.borderColor = "#e0e0e0";
     });
 </script>
-
+```
 
 </body>
 </html>
