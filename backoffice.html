@@ -281,7 +281,7 @@
 ```
 <div class="container">
     <div class="welcome-card">
-        <h2>Welcome back, Zack! 👋</h2>
+        <h2 id="welcomeMessage">Welcome back! 👋</h2>
         <p>Manage your reading time and control your public profile</p>
     </div>
 
@@ -377,6 +377,19 @@
 
     // Set today's date as default
     dateInput.valueAsDate = new Date();
+
+    // Load user info
+    async function loadUserInfo() {
+        const userEmail = localStorage.getItem("userEmail");
+        
+        if (!userEmail) {
+            // Not logged in, redirect to login
+            window.location.href = "/login.html";
+            return;
+        }
+        
+        document.getElementById("welcomeMessage").textContent = "Welcome back, " + userEmail + "! 👋";
+    }
 
     function setMinutes(mins) {
         minutesInput.value = mins;
@@ -476,6 +489,7 @@
     });
 
     // Load stats on page load
+    loadUserInfo();
     loadStats();
 </script>
 ```

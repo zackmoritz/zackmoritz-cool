@@ -332,6 +332,9 @@
                 passwordInput.style.borderColor = "#e0e0e0";
                 successMsg.style.display = "block";
                 
+                // Save user email
+                localStorage.setItem("userEmail", email);
+                
                 setTimeout(function() {
                     window.location.href = "/backoffice.html";
                 }, 1500);
