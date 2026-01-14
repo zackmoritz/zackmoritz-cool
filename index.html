@@ -4,10 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Zachary Moritz -- Character Card</title>
+  <!-- Temporary change for validating automation workflow -->
   <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAZElEQVR42u3XwREAEBBD0XRgHNSnaf1QAXaMJUwOzv/dNhBiqjcfBHgKkEs1ve0Aa3gFAq+4FQHPuAUB7/gMgRPxEYIP4BXvIQQQQAAB+AC6BRTnmGKQUEwyilFKMcv1M/oa0AD36JLNg+KoVQAAAABJRU5ErkJggg==">
   <style>
     :root {
-      --card-width: min(90vw, 380px);
+      --card-width: 100%;
       --card-height: 560px;
       --bg-dark: #06060d;
       --bg-glow: radial-gradient(circle at 20% 20%, rgba(96, 162, 255, 0.25), transparent 60%),
@@ -34,7 +35,6 @@
 
     .card-shell {
       width: var(--card-width);
-      max-width: 420px;
       padding: 12px;
       border-radius: 18px;
       background: var(--border-gold);
