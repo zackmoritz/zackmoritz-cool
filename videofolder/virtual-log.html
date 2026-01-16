@@ -118,11 +118,7 @@
 
     <div class="container">
         <div class="video-container">
-            <stream 
-                src="ece267465cbd3fc12689fd5a5f8d6da2" 
-                controls 
-                preload="auto">
-            </stream>
+            <video id="video" controls crossorigin="anonymous"></video>
         </div>
 
         <div class="contact-section">
@@ -145,7 +141,23 @@
         &copy; 2026 zackmoritz.cool
     </footer>
 
-    <script data-cfasync="false" defer src="https://embed.videodelivery.net/embed/sdk.latest.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    
+    <script>
+      var video = document.getElementById('video');
+      var videoSrc = 'https://customer-nlxh7gcbfxnca4cu.cloudflarestream.com/ece267465cbd3fc12689fd5a5f8d6da2/manifest/video.m3u8';
+
+      if (Hls.isSupported()) {
+        var hls = new Hls();
+        hls.loadSource(videoSrc);
+        hls.attachMedia(video);
+      }
+      // For Safari which supports HLS natively
+      else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = videoSrc;
+      }
+    </script>
 
 </body>
+
 </html>
