@@ -6,8 +6,8 @@
     <title>Zack Moritz | Official Site</title>
     <style>
         :root {
-            --primary-blue: #1b365d; /* Deep professional blue */
-            --gold-accent: #c5a059;  /* Elegant gold */
+            --primary-blue: #1b365d;
+            --gold-accent: #c5a059;
             --bg-light: #f9f9f9;
         }
 
@@ -38,25 +38,20 @@
             padding: 0 20px;
         }
 
-        /* Video Section */
+        /* Updated Video Section - Eliminates Black Boxes */
         .video-container {
-            position: relative;
-            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
-            height: 0;
+            width: 100%;
+            background: transparent;
+            border-radius: 12px;
             overflow: hidden;
-            background: #000;
-            border-radius: 8px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            line-height: 0;
         }
 
-        .video-container video, 
-        .video-container iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
+        /* Cloudflare Stream Player sizing */
+        stream {
             width: 100%;
-            height: 100%;
-            border: 0;
+            aspect-ratio: auto; /* Adjusts to your video's actual shape */
         }
 
         /* Contact Form */
@@ -72,71 +67,70 @@
             color: var(--primary-blue);
             margin-top: 0;
             text-align: center;
+            letter-spacing: 1px;
         }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: var(--primary-blue); }
 
         input, textarea {
             width: 100%;
             padding: 12px;
-            border: 1px solid #ccc;
+            border: 1px solid #ddd;
             border-radius: 4px;
-            box-sizing: border-box; /* Ensures padding doesn't affect width */
+            box-sizing: border-box;
+            font-size: 16px;
         }
 
         button {
             background-color: var(--primary-blue);
             color: white;
-            padding: 12px 24px;
+            padding: 14px 24px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-size: 16px;
+            font-weight: bold;
             width: 100%;
-            transition: background 0.3s;
+            transition: all 0.3s ease;
         }
 
         button:hover {
             background-color: var(--gold-accent);
+            transform: translateY(-1px);
         }
 
         footer {
             text-align: center;
-            padding: 40px;
-            font-size: 0.9em;
-            color: #777;
+            padding: 60px 40px;
+            font-size: 0.85em;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
     </style>
 </head>
 <body>
 
     <header>
-        <img src="http://zackmoritz.cool/videofolder/logo.png" alt="Zack Moritz Logo" class="logo">
+        <img src="http://zackmoritz.cool/videofolder/logo.png" alt="Zack Moritz" class="logo">
     </header>
 
     <div class="container">
         <div class="video-container">
-            <iframe src="https://customer-nlxh7gcbfxnca4cu.cloudflarestream.com/ece267465cbd3fc12689fd5a5f8d6da2/manifest/video.m3u8" allowfullscreen></iframe>
+            <stream 
+                src="ece267465cbd3fc12689fd5a5f8d6da2" 
+                controls 
+                preload="auto">
+            </stream>
         </div>
 
         <div class="contact-section">
-            <h2>Get in Touch</h2>
+            <h2>Contact Zack</h2>
             <form action="mailto:zack@zackmoritz.cool" method="post" enctype="text/plain">
                 <div class="form-group">
                     <label>Name</label>
                     <input type="text" name="Name" placeholder="Your Name" required>
-                </div>
-                <div class="form-group">
-                    <label>Subject</label>
-                    <input type="text" name="Subject" placeholder="What is this about?" required>
                 </div>
                 <div class="form-group">
                     <label>Message</label>
@@ -148,8 +142,10 @@
     </div>
 
     <footer>
-        &copy; 2026 zackmoritz.cool | All Rights Reserved.
+        &copy; 2026 zackmoritz.cool
     </footer>
+
+    <script data-cfasync="false" defer src="https://embed.videodelivery.net/embed/sdk.latest.js"></script>
 
 </body>
 </html>
