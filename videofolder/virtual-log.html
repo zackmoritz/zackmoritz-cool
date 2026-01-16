@@ -38,9 +38,11 @@
             padding: 0 20px;
         }
 
-        /* Updated Video Section - Eliminates Black Boxes */
+        /* --- THE FIXED VIDEO SECTION --- */
         .video-container {
             width: 100%;
+            max-width: 720px; /* This keeps it from being oversized */
+            margin: 0 auto;   /* This centers it */
             background: transparent;
             border-radius: 12px;
             overflow: hidden;
@@ -48,19 +50,23 @@
             line-height: 0;
         }
 
-        /* Cloudflare Stream Player sizing */
-        stream {
+        .video-container video {
             width: 100%;
-            aspect-ratio: auto; /* Adjusts to your video's actual shape */
+            height: auto; /* Ensures no black bars */
+            display: block;
+            border: 0;
         }
+        /* ------------------------------ */
 
-        /* Contact Form */
         .contact-section {
             margin-top: 60px;
             background: #fff;
             padding: 40px;
             border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         h2 {
@@ -97,7 +103,6 @@
 
         button:hover {
             background-color: var(--gold-accent);
-            transform: translateY(-1px);
         }
 
         footer {
@@ -117,6 +122,7 @@
     </header>
 
     <div class="container">
+        
         <div class="video-container">
             <video id="video" controls crossorigin="anonymous"></video>
         </div>
@@ -135,6 +141,7 @@
                 <button type="submit">Send Message</button>
             </form>
         </div>
+
     </div>
 
     <footer>
@@ -142,7 +149,6 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    
     <script>
       var video = document.getElementById('video');
       var videoSrc = 'https://customer-nlxh7gcbfxnca4cu.cloudflarestream.com/ece267465cbd3fc12689fd5a5f8d6da2/manifest/video.m3u8';
@@ -152,12 +158,10 @@
         hls.loadSource(videoSrc);
         hls.attachMedia(video);
       }
-      // For Safari which supports HLS natively
       else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = videoSrc;
       }
     </script>
 
 </body>
-
 </html>
