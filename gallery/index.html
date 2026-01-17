@@ -1,22 +1,36 @@
 <!doctype html>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Zack’s Gallery</title>
-<style>
-  :root { --gap:12px }
-  body{margin:24px;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-  header{display:flex;gap:var(--gap);flex-wrap:wrap;align-items:center;margin-bottom:8px}
-  nav.breadcrumbs{font-size:14px;color:#666;word-break:break-all;margin:6px 0 10px}
-  .grid{display:grid;gap:var(--gap);grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
-  figure{margin:0;background:#f7f7f7;border:1px solid #e5e5e5;border-radius:8px;overflow:hidden}
-  img{width:100%;height:160px;object-fit:cover;display:block;background:#fff}
-  figcaption{font-size:12px;padding:6px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  input[type="search"]{padding:8px 10px;min-width:220px}
-  .meta{color:#666;font-size:14px}
-  .folders{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:var(--gap);margin:12px 0}
-  .folders a{display:block;padding:14px;border:1px solid #e5e5e5;border-radius:8px;background:#fafafa;text-decoration:none;color:inherit}
-  .muted{color:#666}
-</style>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Zack’s Gallery</title>
+  <link rel="icon" type="image/svg+xml" href="/gallery/favicon.svg">
+  <style>
+    :root { --gap:12px }
+    body{margin:24px;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+    header{display:flex;gap:var(--gap);flex-wrap:wrap;align-items:center;margin-bottom:8px}
+    nav.breadcrumbs{font-size:14px;color:#666;word-break:break-all;margin:6px 0 10px}
+    
+    /* Grid for Files */
+    .grid{display:grid;gap:var(--gap);grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+    figure{margin:0;background:#f7f7f7;border:1px solid #e5e5e5;border-radius:8px;overflow:hidden}
+    img{width:100%;height:160px;object-fit:cover;display:block;background:#fff}
+    figcaption{font-size:12px;padding:6px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    
+    /* Folder Styling */
+    .folders{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:var(--gap);margin:12px 0}
+    .folder-card{display:flex;flex-direction:column;text-decoration:none;color:inherit;border:1px solid #e5e5e5;border-radius:8px;background:#fafafa;overflow:hidden;transition:transform 0.1s}
+    .folder-card:hover{border-color:#bbb;transform:translateY(-2px)}
+    .folder-thumb{width:100%;height:120px;background:#eee;display:flex;align-items:center;justify-content:center;font-size:32px;overflow:hidden}
+    .folder-thumb img{width:100%;height:100%;object-fit:cover}
+    .folder-label{padding:10px;font-weight:500;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:#fff;border-top:1px solid #e5e5e5}
+
+    input[type="search"]{padding:8px 10px;min-width:220px}
+    .meta{color:#666;font-size:14px}
+    .muted{color:#666}
+  </style>
+</head>
+<body>
 
 <header>
   <strong id="count">Loading…</strong>
@@ -69,27 +83,56 @@
   }
 
   function splitFolder(entries, prefix){
-    const subs = new Set(), here = [];
+    const subsMap = new Map(); 
+    const here = [];
+
     for (const raw of entries) {
       const f = { ...raw, path: normPath(forwardSlashes(raw.path)) };
       if (!f.path.startsWith(prefix)) continue;
+      
       const rest = f.path.slice(prefix.length);
       const slash = rest.indexOf('/');
-      if (slash === -1) here.push(f);
-      else subs.add(rest.slice(0, slash + 1));
+      
+      if (slash === -1) {
+        here.push(f);
+      } else {
+        const folderName = rest.slice(0, slash + 1);
+        const fileName = rest.slice(slash + 1).toLowerCase();
+        
+        // Check for cover image inside the subfolder
+        if (fileName === 'cover.jpg' || fileName === 'cover.png' || fileName === 'cover.jpeg') {
+          subsMap.set(folderName, f.path);
+        } else if (!subsMap.has(folderName)) {
+          subsMap.set(folderName, null);
+        }
+      }
     }
-    return { subs: Array.from(subs).sort(), here };
+    return { 
+      subs: Array.from(subsMap.entries()).sort((a, b) => a[0].localeCompare(b[0])), 
+      here 
+    };
   }
 
   function renderFolders(prefix, subs){
     if (!subs.length) { el.folders.hidden = true; el.folders.innerHTML = ''; return; }
     el.folders.hidden = false;
     el.folders.innerHTML = '';
-    for (const s of subs) {
+
+    for (const [name, coverPath] of subs) {
+      const url = '/gallery/' + enc(prefix + name);
+      const coverUrl = coverPath ? '/gallery/' + enc(coverPath) : null;
+      
       const a = document.createElement('a');
-      a.href = '/gallery/' + enc(prefix + s);
-      a.dataset.nav = prefix + s;
-      a.textContent = '📁 ' + s.replace(/\/$/, '');
+      a.className = 'folder-card';
+      a.href = url;
+      a.dataset.nav = prefix + name;
+      
+      a.innerHTML = `
+        <div class="folder-thumb">
+          ${coverUrl ? `<img src="${coverUrl}" loading="lazy" alt="">` : '📁'}
+        </div>
+        <div class="folder-label">${name.replace(/\/$/, '')}</div>
+      `;
       el.folders.appendChild(a);
     }
   }
@@ -143,9 +186,15 @@
       renderCrumbs(prefix);
       const { subs, here } = splitFolder(all, prefix);
 
+      // Filter out files named 'cover.jpg/png/jpeg' so they don't show in the file grid
+      const filteredHere = here.filter(f => {
+        const name = f.path.split('/').pop().toLowerCase();
+        return name !== 'cover.jpg' && name !== 'cover.png' && name !== 'cover.jpeg';
+      });
+
       // Sort newest → oldest by timestamp
       const ts = v => (typeof v === 'number' ? v : (typeof v === 'string' ? Number(v) : 0));
-	  const hereSorted = [...here].sort((a,b) => ts(b.t) - ts(a.t) || a.path.localeCompare(b.path));
+      const hereSorted = [...filteredHere].sort((a,b) => ts(b.t) - ts(a.t) || a.path.localeCompare(b.path));
 
       renderFolders(prefix, subs);
       renderFiles(hereSorted);
@@ -168,3 +217,5 @@
   }
 })();
 </script>
+</body>
+</html>
