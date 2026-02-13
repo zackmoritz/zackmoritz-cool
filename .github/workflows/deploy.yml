@@ -11,10 +11,12 @@ jobs:
     name: Deploy
     steps:
       - uses: actions/checkout@v4
-      - name: Deploy to Cloudflare Workers with D1
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          command: |
-            wrangler deploy
-            wrangler d1 migrations apply DB --remote
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Deploy and Migrate
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          npx wrangler deploy
+          npx wrangler d1 migrations apply DB --remote
