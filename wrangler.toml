@@ -4,6 +4,6 @@ compatibility_date = "2026-02-13"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "zackmoritz-cool-db"
-database_id = "REPLACE_WITH_REAL_D1_DATABASE_ID"
+database_name = "zack-moritz-db"
+database_id = "a1715526-2f80-485f-87a6-65e90db635a5"
 migrations_dir = "d1/migrations"
