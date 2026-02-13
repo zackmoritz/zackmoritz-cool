@@ -24,13 +24,14 @@ def run() -> int:
             cur.executescript(sql)
             print(f"Applied: {path.relative_to(ROOT)}")
 
-        cur.execute("SELECT COUNT(*) FROM categories")
-        categories_count = cur.fetchone()[0]
-        cur.execute("SELECT COUNT(*) FROM inventory_items")
-        items_count = cur.fetchone()[0]
+        cur.execute("SELECT COUNT(*) FROM members")
+        members_count = cur.fetchone()[0]
 
-        print(f"categories rows: {categories_count}")
-        print(f"inventory_items rows: {items_count}")
+        cur.execute("SELECT email FROM members WHERE email = 'zackmoritz94@gmail.com' LIMIT 1")
+        seeded_user = cur.fetchone()
+
+        print(f"members rows: {members_count}")
+        print(f"seeded login user present: {bool(seeded_user)}")
         return 0
     except sqlite3.DatabaseError as exc:
         print(f"SQL validation failed: {exc}")
