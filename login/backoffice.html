@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Backoffice - zackmoritz.cool</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #e2e8f0;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(59, 130, 246, .25), transparent 30%),
+        radial-gradient(circle at 85% 5%, rgba(168, 85, 247, .22), transparent 35%),
+        linear-gradient(150deg, #020617 0%, #0f172a 100%);
+      padding: 28px;
+    }
+    .wrap { max-width: 980px; margin: 0 auto; }
+    .header {
+      display:flex; justify-content:space-between; align-items:center; gap:12px;
+      margin-bottom: 20px;
+      background: rgba(15, 23, 42, .55);
+      border: 1px solid rgba(148, 163, 184, .2);
+      border-radius: 16px;
+      padding: 16px;
+      backdrop-filter: blur(8px);
+    }
+    .header h1 { font-size: 1.2rem; color:#cbd5e1; }
+    .header p { margin-top:4px; color:#94a3b8; }
+    .logout {
+      border:none; border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer;
+      background: linear-gradient(135deg, #ef4444, #b91c1c); color:white;
+    }
+    .grid { display:grid; grid-template-columns: 1.3fr .9fr; gap: 18px; }
+    .panel {
+      background: rgba(15, 23, 42, .55);
+      border: 1px solid rgba(148, 163, 184, .2);
+      border-radius: 16px;
+      padding: 18px;
+      backdrop-filter: blur(8px);
+    }
+    .panel h2 { font-size: 1rem; margin-bottom: 14px; color:#e2e8f0; }
+    .message { display:none; margin-bottom:10px; padding:10px; border-radius:10px; font-size:.9rem; }
+    .ok { background:#14532d; color:#dcfce7; }
+    .err { background:#7f1d1d; color:#fee2e2; }
+    .group { margin-bottom: 12px; }
+    label { display:block; margin-bottom:6px; color:#cbd5e1; font-size:.9rem; font-weight:600; }
+    input, textarea {
+      width:100%; border-radius:10px; border:1px solid #334155; background:#0b1220; color:#e2e8f0;
+      padding:10px 11px; font-size:.95rem;
+    }
+    .quick { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+    .quick button {
+      border:1px solid #334155; background:#0b1220; color:#e2e8f0; border-radius:999px;
+      padding:7px 12px; cursor:pointer;
+    }
+    .btn {
+      border:none; border-radius:10px; padding:11px 14px; font-weight:700; cursor:pointer; color:white;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    }
+    .stats { display:grid; gap:10px; }
+    .stat { border:1px solid #334155; background:#0b1220; border-radius:12px; padding:12px; }
+    .stat h3 { color:#94a3b8; font-size:.84rem; margin-bottom:4px; }
+    .stat p { font-size:1.5rem; font-weight:800; color:#f8fafc; }
+    @media (max-width: 860px){ .grid{ grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div>
+        <h1 id="welcomeMessage">Welcome</h1>
+        <p>Track your reading progress</p>
+      </div>
+      <button class="logout" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="grid">
+      <section class="panel">
+        <h2>Log Reading Time</h2>
+        <div id="successMsg" class="message ok">✅ Reading time logged successfully!</div>
+        <div id="errorMsg" class="message err"></div>
+
+        <form id="readingForm">
+          <div class="quick">
+            <button type="button" onclick="setMinutes(15)">15m</button>
+            <button type="button" onclick="setMinutes(30)">30m</button>
+            <button type="button" onclick="setMinutes(45)">45m</button>
+            <button type="button" onclick="setMinutes(60)">60m</button>
+          </div>
+
+          <div class="group">
+            <label for="minutes">Minutes</label>
+            <input type="number" id="minutes" min="1" required />
+          </div>
+          <div class="group">
+            <label for="date">Date</label>
+            <input type="date" id="date" required />
+          </div>
+          <div class="group">
+            <label for="notes">Notes (Optional)</label>
+            <textarea id="notes" rows="3" placeholder="What did you read?"></textarea>
+          </div>
+          <button class="btn" id="submitBtn" type="submit">Save Reading Log</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2>Reading Stats</h2>
+        <div class="stats">
+          <div class="stat"><h3>Today</h3><p id="todayMinutes">0</p></div>
+          <div class="stat"><h3>This Week</h3><p id="weekMinutes">0</p></div>
+          <div class="stat"><h3>Total</h3><p id="totalMinutes">0</p></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+<script>
+const WORKER_URL = "https://loginmanager.zackmoritz.workers.dev";
+const AUTH_KEY = "memberSiteAuthenticated";
+const form = document.getElementById("readingForm");
+const minutesInput = document.getElementById("minutes");
+const dateInput = document.getElementById("date");
+const notesInput = document.getElementById("notes");
+const successMsg = document.getElementById("successMsg");
+const errorMsg = document.getElementById("errorMsg");
+
+dateInput.valueAsDate = new Date();
+
+function loadUserInfo() {
+  const userEmail = localStorage.getItem("userEmail");
+  const isAuthenticated = localStorage.getItem(AUTH_KEY) === "true";
+
+  if (!isAuthenticated || !userEmail) {
+    window.location.href = "/login/login.html";
+    return;
+  }
+
+  document.getElementById("welcomeMessage").textContent = "Welcome back, " + userEmail + " 👋";
+}
+
+function setMinutes(mins) {
+  minutesInput.value = mins;
+}
+
+function logout() {
+  localStorage.removeItem(AUTH_KEY);
+  localStorage.removeItem("userEmail");
+  window.location.href = "/login/login.html";
+}
+
+async function loadStats() {
+  try {
+    const response = await fetch(WORKER_URL + "/stats");
+    if (!response.ok) return;
+    const data = await response.json();
+    document.getElementById("todayMinutes").textContent = data.today || 0;
+    document.getElementById("weekMinutes").textContent = data.week || 0;
+    document.getElementById("totalMinutes").textContent = data.total || 0;
+  } catch (error) {
+    console.error("Failed to load stats:", error);
+  }
+}
+
+form.addEventListener("submit", async function (e) {
+  e.preventDefault();
+  successMsg.style.display = "none";
+  errorMsg.style.display = "none";
+
+  const minutes = parseInt(minutesInput.value, 10);
+  if (!minutes || minutes < 1) {
+    errorMsg.textContent = "Please enter valid minutes.";
+    errorMsg.style.display = "block";
+    return;
+  }
+
+  try {
+    const response = await fetch(WORKER_URL + "/reading", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ minutes, date: dateInput.value, notes: notesInput.value.trim() })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Failed to save log.");
+
+    successMsg.style.display = "block";
+    notesInput.value = "";
+    minutesInput.value = "";
+    dateInput.valueAsDate = new Date();
+    loadStats();
+  } catch (error) {
+    errorMsg.textContent = error.message;
+    errorMsg.style.display = "block";
+  }
+});
+
+loadUserInfo();
+loadStats();
+</script>
+</body>
+</html>
