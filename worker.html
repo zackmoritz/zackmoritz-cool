@@ -1,0 +1,99 @@
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+export default {
+  async fetch(request, env) {
+    // 1. Handle CORS Preflight
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders });
+    }
+
+    // 2. Simple Connection Test
+    if (request.method === 'GET') {
+      return new Response('Grok Backend Online.', { headers: corsHeaders });
+    }
+
+    // 3. Validate Request
+    let prompt;
+    try {
+      const body = await request.json();
+      prompt = body.prompt;
+    } catch (e) {
+      return Response.json({ response: 'Invalid JSON body' }, { status: 400, headers: corsHeaders });
+    }
+
+    // 4. Verify API Key
+    const apiKey = env.GROK_API_KEY; 
+    if (!apiKey) {
+      return Response.json({ response: 'Server error: GROK_API_KEY is missing in Worker Secrets.' }, { status: 500, headers: corsHeaders });
+    }
+
+    const systemPrompt = `You are Grok, expert developer for Cloudflare D1. 
+    Table: pages (slug, title, html_content, js_content).
+    Respond with explanation + SQL. Use '' for strings. 
+    IMPORTANT: Always wrap SQL in triple backticks like this: \`\`\`sql [commands] \`\`\``;
+
+    try {
+
+      // Add this line temporarily to check if the key is loaded
+console.log("API Key found:", !!env.GROK_API_KEY); 
+
+      // 5. Call xAI Grok
+      const grokResponse = await fetch('https://api.x.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey.trim()}` // Trim to remove accidental whitespace
+        },
+        body: JSON.stringify({
+          model: 'grok-4-1-fast-reasoning', 
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.2 // Lowered for more consistent SQL
+        })
+      });
+
+      const data = await grokResponse.json();
+
+      if (!grokResponse.ok) {
+        return Response.json({ 
+          response: `xAI Error: ${data.error?.message || 'Check API Key/Billing'}` 
+        }, { headers: corsHeaders });
+      }
+
+      let aiText = data.choices[0].message.content;
+
+      // 6. Extract SQL safely (handles markdown blocks)
+      const sqlRegex = /```sql\s*([\s\S]*?)\s*```/gi;
+      let match;
+      let execLog = '';
+      let updated = false;
+
+      while ((match = sqlRegex.exec(aiText)) !== null) {
+        const sqlQuery = match[1].trim();
+        if (sqlQuery) {
+          try {
+            await env.DB.prepare(sqlQuery).run();
+            updated = true;
+            execLog += `\n✅ Executed: ${sqlQuery.substring(0, 40)}...`;
+          } catch (dbErr) {
+            execLog += `\n❌ SQL Error: ${dbErr.message}`;
+          }
+        }
+      }
+
+      return Response.json({ 
+        response: aiText + (execLog ? `\n\n**Database Log:**${execLog}` : ""), 
+        updated 
+      }, { headers: corsHeaders });
+
+    } catch (e) {
+      return Response.json({ response: 'Worker Exception: ' + e.message }, { headers: corsHeaders });
+    }
+  }
+};
