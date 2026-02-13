@@ -382,12 +382,14 @@
     async function loadUserInfo() {
         const userEmail = localStorage.getItem("userEmail");
         
-        if (!userEmail) {
+        const isAuthenticated = localStorage.getItem("memberSiteAuthenticated") === "true";
+
+        if (!isAuthenticated || !userEmail) {
             // Not logged in, redirect to login
-            window.location.href = "/login.html";
+            window.location.href = "/login/login.html";
             return;
         }
-        
+
         document.getElementById("welcomeMessage").textContent = "Welcome back, " + userEmail + "! 👋";
     }
 
@@ -400,7 +402,9 @@
     }
 
     function logout() {
-        window.location.href = "login.html";
+        localStorage.removeItem("memberSiteAuthenticated");
+        localStorage.removeItem("userEmail");
+        window.location.href = "/login/login.html";
     }
 
     async function loadStats() {
