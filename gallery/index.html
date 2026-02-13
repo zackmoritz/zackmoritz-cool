@@ -176,10 +176,16 @@
     const data = await res.json();
 
     const all = (data.files || [])
-      .filter(f => f && f.path)
-      .map(f => ({ ...f, path: normPath(forwardSlashes(f.path)) }));
+  .filter(f => f && f.path)
+  .map(f => ({ ...f, path: normPath(forwardSlashes(f.path)) }));
 
-    const TOTAL = data.count || all.length;
+// Exclude cover images from total count
+const nonCoverFiles = all.filter(f => {
+  const name = f.path.split('/').pop().toLowerCase();
+  return name !== 'cover.jpg' && name !== 'cover.png' && name !== 'cover.jpeg';
+});
+
+const TOTAL = data.count || nonCoverFiles.length;
     if (data.sort) el.sort.textContent = `Sorted: ${data.sort}`;
 
     function renderFolder(prefix){
