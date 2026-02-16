@@ -17,7 +17,6 @@
                 radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.18), transparent 40%),
                 radial-gradient(circle at 80% 0%, rgba(139, 92, 246, 0.2), transparent 35%),
                 linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            color: #0f172a;
         }
         .card {
             width: 100%;
@@ -66,14 +65,14 @@
 <div class="card">
     <h1>zackmoritz.cool</h1>
     <p class="subtitle">Member Access</p>
-    <div class="hint">Login checks credentials from the members database table.</div>
+    <div class="hint">Sign in with your temporary account (username/email + password).</div>
 
     <div id="successMsg" class="message success">Login successful. Redirecting…</div>
     <div id="errorMsg" class="message error"></div>
 
     <form id="loginForm">
-        <label for="username">Username (Email)</label>
-        <input type="email" id="username" required placeholder="zackmoritz94@gmail.com">
+        <label for="username">Username or Email</label>
+        <input type="text" id="username" required placeholder="zackmoritz94@gmail.com">
 
         <label for="password">Password</label>
         <input type="password" id="password" required placeholder="Enter password">
@@ -98,34 +97,28 @@
         submitBtn.disabled = true;
 
         try {
-            const response = await fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+            const response = await fetch("/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     username: usernameInput.value.trim(),
                     password: passwordInput.value
                 })
             });
 
-        if (username === TEMP_USERNAME && password === TEMP_PASSWORD) {
+            const data = await response.json();
+            if (!response.ok || !data.ok) throw new Error(data.error || "Login failed.");
+
             localStorage.setItem(AUTH_KEY, "true");
-            localStorage.setItem("userEmail", TEMP_USERNAME);
+            localStorage.setItem("userEmail", data.email);
             successMsg.style.display = "block";
 
-            if (!response.ok || !data.ok) {
-                throw new Error(data.error || 'Login failed.');
-            }
-
-            localStorage.setItem(AUTH_KEY, 'true');
-            localStorage.setItem('userEmail', data.email);
-            successMsg.style.display = 'block';
-
             setTimeout(function () {
-                window.location.href = '/login/backoffice.html';
+                window.location.href = "/login/backoffice.html";
             }, 700);
         } catch (error) {
             errorMsg.textContent = error.message;
-            errorMsg.style.display = 'block';
+            errorMsg.style.display = "block";
         } finally {
             submitBtn.disabled = false;
         }
