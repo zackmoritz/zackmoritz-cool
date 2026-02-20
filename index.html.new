@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading Tracker | Zachary Moritz</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@300;600&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f1115;
+            --card-bg: #1a1d23;
+            --text: #e2e8f0;
+            --accent: #ffd86b;
+            --accent-soft: rgba(255, 216, 107, 0.1);
+            --border: rgba(255, 255, 255, 0.08);
+            --font-serif: 'Crimson Pro', serif;
+            --font-sans: 'Inter', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: var(--font-sans);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        h1 {
+            font-family: var(--font-serif);
+            font-size: 3rem;
+            color: var(--accent);
+            letter-spacing: -0.02em;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            font-size: 0.8rem;
+            opacity: 0.6;
+        }
+
+        .main-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 48px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .timer-display {
+            font-family: var(--font-serif);
+            font-size: 4.5rem;
+            font-weight: 300;
+            margin: 20px 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 32px;
+        }
+
+        button {
+            background: var(--accent);
+            color: var(--bg);
+            border: none;
+            padding: 16px 32px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: var(--font-sans);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 216, 107, 0.2);
+            filter: brightness(1.1);
+        }
+
+        button:active { transform: translateY(0); }
+
+        button.stop {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text);
+        }
+
+        button.stop:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.4);
+            box-shadow: none;
+        }
+
+        .history-section {
+            width: 100%;
+            max-width: 500px;
+            margin-top: 60px;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 0 10px;
+        }
+
+        .history-header h2 {
+            font-family: var(--font-serif);
+            font-size: 1.5rem;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .history-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            padding: 16px 20px;
+            border-radius: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .item-date {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .item-duration {
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--accent-soft);
+            padding: 16px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 216, 107, 0.1);
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            opacity: 0.6;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-family: var(--font-serif);
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            opacity: 0.4;
+            font-style: italic;
+        }
+
+        footer {
+            margin-top: auto;
+            padding-top: 60px;
+            font-size: 0.8rem;
+            opacity: 0.4;
+        }
+
+        @media (max-width: 480px) {
+            h1 { font-size: 2.2rem; }
+            .timer-display { font-size: 3.5rem; }
+            .main-card { padding: 32px 24px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Reading Time</h1>
+        <p class="subtitle">Focus & Mindfulness</p>
+    </header>
+
+    <div class="main-card">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Time</div>
+                <div class="stat-value" id="total-time">0h 00m</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Sessions</div>
+                <div class="stat-value" id="session-count">0</div>
+            </div>
+        </div>
+
+        <div class="timer-display" id="display">00:00:00</div>
+        
+        <div class="controls">
+            <button id="start-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                <span>Start Session</span>
+            </button>
+            <button id="stop-btn" class="stop" style="display: none;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h12v12H6z"/></svg>
+                <span>End Session</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="history-section">
+        <div class="history-header">
+            <h2>Recent Sessions</h2>
+            <button id="clear-btn" class="stop" style="padding: 4px 12px; font-size: 0.7rem; border-radius: 8px;">Clear All</button>
+        </div>
+        <div id="history-list" class="history-list">
+            <!-- Items injected here -->
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2026 Zachary Moritz &bull; Designed by Aurelia
+    </footer>
+
+    <script>
+        let startTime;
+        let timerInterval;
+        let elapsedSeconds = 0;
+        let isRunning = false;
+
+        const display = document.getElementById('display');
+        const startBtn = document.getElementById('start-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const historyList = document.getElementById('history-list');
+        const totalTimeDisplay = document.getElementById('total-time');
+        const sessionCountDisplay = document.getElementById('session-count');
+        const clearBtn = document.getElementById('clear-btn');
+
+        function formatTime(s) {
+            const hrs = Math.floor(s / 3600);
+            const mins = Math.floor((s % 3600) / 60);
+            const secs = s % 60;
+            return [hrs, mins, secs].map(v => v < 10 ? '0' + v : v).join(':');
+        }
+
+        function formatDuration(s) {
+            if (s < 60) return s + 's';
+            const mins = Math.floor(s / 60);
+            const hrs = Math.floor(mins / 60);
+            if (hrs > 0) return hrs + 'h ' + (mins % 60) + 'm';
+            return mins + 'm';
+        }
+
+        function updateDisplay() {
+            display.textContent = formatTime(elapsedSeconds);
+        }
+
+        function startTimer() {
+            if (isRunning) return;
+            isRunning = true;
+            startTime = Date.now() - (elapsedSeconds * 1000);
+            timerInterval = setInterval(() => {
+                elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+                updateDisplay();
+            }, 1000);
+            
+            startBtn.style.display = 'none';
+            stopBtn.style.display = 'inline-flex';
+        }
+
+        function stopTimer() {
+            if (!isRunning) return;
+            isRunning = false;
+            clearInterval(timerInterval);
+            
+            saveSession(elapsedSeconds);
+            elapsedSeconds = 0;
+            updateDisplay();
+            
+            startBtn.style.display = 'inline-flex';
+            stopBtn.style.display = 'none';
+            renderHistory();
+        }
+
+        function saveSession(duration) {
+            if (duration < 1) return;
+            const sessions = JSON.parse(localStorage.getItem('reading_sessions') || '[]');
+            sessions.unshift({
+                date: new Date().toISOString(),
+                duration: duration
+            });
+            localStorage.setItem('reading_sessions', JSON.stringify(sessions.slice(0, 50)));
+        }
+
+        function renderHistory() {
+            const sessions = JSON.parse(localStorage.getItem('reading_sessions') || '[]');
+            historyList.innerHTML = '';
+            
+            let total = 0;
+            
+            if (sessions.length === 0) {
+                historyList.innerHTML = '<div class=\"empty-state\">No sessions logged yet. Pick up a book and start tracking.</div>';
+            } else {
+                sessions.forEach(session => {
+                    total += session.duration;
+                    const date = new Date(session.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    const div = document.createElement('div');
+                    div.className = 'history-item';
+                    div.innerHTML = `
+                        <span class=\"item-date\">${date}</span>
+                        <span class=\"item-duration\">${formatDuration(session.duration)}</span>
+                    `;
+                    historyList.appendChild(div);
+                });
+            }
+            
+            totalTimeDisplay.textContent = formatDuration(total);
+            sessionCountDisplay.textContent = sessions.length;
+        }
+
+        startBtn.addEventListener('click', startTimer);
+        stopBtn.addEventListener('click', stopTimer);
+        clearBtn.addEventListener('click', () => {
+            if (confirm('Clear all reading history?')) {
+                localStorage.removeItem('reading_sessions');
+                renderHistory();
+            }
+        });
+
+        renderHistory();
+    </script>
+</body>
+</html>

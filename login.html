@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Member Login - zackmoritz.cool</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.18), transparent 40%),
+                radial-gradient(circle at 80% 0%, rgba(139, 92, 246, 0.2), transparent 35%),
+                linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #0f172a;
+        }
+        .card {
+            width: 100%;
+            max-width: 460px;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.3);
+            padding: 38px 32px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 8px;
+            font-size: 1.85rem;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle { text-align: center; color: #475569; margin-bottom: 24px; }
+        .hint {
+            margin-bottom: 18px;
+            padding: 11px 12px;
+            background: #eef2ff;
+            border: 1px solid #c7d2fe;
+            color: #3730a3;
+            border-radius: 10px;
+            font-size: .9rem;
+        }
+        label { display:block; margin: 8px 0 6px; font-weight: 600; color: #1e293b; font-size: .9rem; }
+        input {
+            width:100%; border:1.5px solid #cbd5e1; border-radius:12px; padding:12px 13px; font-size:.96rem;
+            transition:.2s border-color,.2s box-shadow;
+        }
+        input:focus { outline:none; border-color:#6366f1; box-shadow:0 0 0 4px rgba(99,102,241,.14); }
+        .btn {
+            width:100%; margin-top:16px; border:none; border-radius:12px; padding:12px 14px; color:white;
+            font-weight:700; font-size:1rem; cursor:pointer;
+            background:linear-gradient(135deg,#4f46e5,#7c3aed);
+        }
+        .btn:disabled { opacity:.7; cursor:not-allowed; }
+        .message { display:none; margin-bottom:12px; padding:10px 11px; border-radius:10px; font-size:.9rem; }
+        .error { background:#fee2e2; color:#991b1b; border:1px solid #fecaca; }
+        .success { background:#dcfce7; color:#166534; border:1px solid #bbf7d0; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>zackmoritz.cool</h1>
+    <p class="subtitle">Member Access</p>
+    <div class="hint">Login checks credentials from the members database table.</div>
+
+    <div id="successMsg" class="message success">Login successful. Redirecting…</div>
+    <div id="errorMsg" class="message error"></div>
+
+    <form id="loginForm">
+        <label for="username">Username (Email)</label>
+        <input type="email" id="username" required placeholder="zackmoritz94@gmail.com">
+
+        <label for="password">Password</label>
+        <input type="password" id="password" required placeholder="Enter password">
+
+        <button id="submitBtn" class="btn" type="submit">Sign In</button>
+    </form>
+</div>
+
+<script>
+    const AUTH_KEY = "memberSiteAuthenticated";
+    const form = document.getElementById("loginForm");
+    const usernameInput = document.getElementById("username");
+    const passwordInput = document.getElementById("password");
+    const submitBtn = document.getElementById("submitBtn");
+    const errorMsg = document.getElementById("errorMsg");
+    const successMsg = document.getElementById("successMsg");
+
+    form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        errorMsg.style.display = "none";
+        successMsg.style.display = "none";
+        submitBtn.disabled = true;
+
+        try {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: usernameInput.value.trim(),
+                    password: passwordInput.value
+                })
+            });
+
+            const data = await response.json();
+            if (!response.ok || !data.ok) {
+                throw new Error(data.error || 'Login failed.');
+            }
+
+            localStorage.setItem(AUTH_KEY, 'true');
+            localStorage.setItem('userEmail', data.email);
+            successMsg.style.display = 'block';
+
+            setTimeout(function () {
+                window.location.href = '/login/backoffice.html';
+            }, 700);
+        } catch (error) {
+            errorMsg.textContent = error.message;
+            errorMsg.style.display = 'block';
+        } finally {
+            submitBtn.disabled = false;
+        }
+    });
+</script>
+</body>
+</html>
