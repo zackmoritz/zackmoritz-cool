@@ -1,0 +1,1 @@
+console.log("Skipping manifest build (file restored as dummy).");
