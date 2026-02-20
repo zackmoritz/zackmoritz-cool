@@ -18,6 +18,7 @@ function jsonResponse(data, status = 200) {
 }
 
 export async function onRequestPost({ request, env }) {
+  // Force re-deploy
   try {
     const { username, password } = await request.json();
 
