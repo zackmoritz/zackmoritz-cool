@@ -68,10 +68,11 @@
 
         .timer-display {
             font-family: var(--font-serif);
-            font-size: 4.5rem;
+            font-size: 3.6rem;
             font-weight: 300;
             margin: 20px 0;
             font-variant-numeric: tabular-nums;
+            letter-spacing: -0.01em;
         }
 
         .controls {
@@ -206,7 +207,7 @@
 
         @media (max-width: 480px) {
             h1 { font-size: 2.2rem; }
-            .timer-display { font-size: 3.5rem; }
+            .timer-display { font-size: 2.6rem; }
             .main-card { padding: 32px 24px; }
         }
     </style>
@@ -229,7 +230,7 @@
             </div>
         </div>
 
-        <div class="timer-display" id="display">00:00:00</div>
+        <div class="timer-display" id="display">00:00:00.00</div>
         
         <div class="controls">
             <button id="start-btn">
@@ -260,7 +261,7 @@
     <script>
         let startTime;
         let timerInterval;
-        let elapsedSeconds = 0;
+        let elapsedMs = 0;
         let isRunning = false;
 
         const display = document.getElementById('display');
@@ -271,11 +272,15 @@
         const sessionCountDisplay = document.getElementById('session-count');
         const clearBtn = document.getElementById('clear-btn');
 
-        function formatTime(s) {
-            const hrs = Math.floor(s / 3600);
-            const mins = Math.floor((s % 3600) / 60);
-            const secs = s % 60;
-            return [hrs, mins, secs].map(v => v < 10 ? '0' + v : v).join(':');
+        function formatTime(ms) {
+            const totalHundredths = Math.floor(ms / 10);
+            const hundredths = totalHundredths % 100;
+            const totalSecs = Math.floor(ms / 1000);
+            const hrs = Math.floor(totalSecs / 3600);
+            const mins = Math.floor((totalSecs % 3600) / 60);
+            const secs = totalSecs % 60;
+            const hms = [hrs, mins, secs].map(v => v < 10 ? '0' + v : v).join(':');
+            return hms + '.' + (hundredths < 10 ? '0' + hundredths : hundredths);
         }
 
         function formatDuration(s) {
@@ -287,17 +292,17 @@
         }
 
         function updateDisplay() {
-            display.textContent = formatTime(elapsedSeconds);
+            display.textContent = formatTime(elapsedMs);
         }
 
         function startTimer() {
             if (isRunning) return;
             isRunning = true;
-            startTime = Date.now() - (elapsedSeconds * 1000);
+            startTime = Date.now() - elapsedMs;
             timerInterval = setInterval(() => {
-                elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+                elapsedMs = Date.now() - startTime;
                 updateDisplay();
-            }, 1000);
+            }, 10);
             
             startBtn.style.display = 'none';
             stopBtn.style.display = 'inline-flex';
@@ -308,8 +313,8 @@
             isRunning = false;
             clearInterval(timerInterval);
             
-            saveSession(elapsedSeconds);
-            elapsedSeconds = 0;
+            saveSession(Math.floor(elapsedMs / 1000));
+            elapsedMs = 0;
             updateDisplay();
             
             startBtn.style.display = 'inline-flex';
