@@ -1,393 +1,648 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reading Tracker | Zachary Moritz</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@300;600&family=Inter:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #0f1115;
-            --card-bg: #1a1d23;
-            --text: #e2e8f0;
-            --accent: #ffd86b;
-            --accent-soft: rgba(255, 216, 107, 0.1);
-            --border: rgba(255, 255, 255, 0.08);
-            --font-serif: 'Crimson Pro', serif;
-            --font-sans: 'Inter', sans-serif;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reading Tracker | Zachary Moritz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@300;600&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f1115;
+      --card-bg: #1a1d23;
+      --text: #e2e8f0;
+      --muted: rgba(226,232,240,0.5);
+      --accent: #ffd86b;
+      --accent-soft: rgba(255,216,107,0.1);
+      --border: rgba(255,255,255,0.08);
+      --red: #ff6b6b;
+      --green: #6bffb8;
+      --serif: 'Crimson Pro', serif;
+      --sans: 'Inter', sans-serif;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px 80px;
+    }
+    header { text-align:center; margin-bottom:32px; }
+    h1 { font-family:var(--serif); font-size:2.8rem; color:var(--accent); letter-spacing:-0.02em; }
+    .subtitle { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.2em; opacity:0.5; margin-top:4px; }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+    /* TABS */
+    .tabs {
+      display:flex; gap:4px; background:var(--card-bg);
+      border:1px solid var(--border); border-radius:12px;
+      padding:4px; margin-bottom:28px; width:100%; max-width:520px;
+    }
+    .tab-btn {
+      flex:1; padding:10px 0; border:none; background:transparent;
+      color:var(--muted); font-family:var(--sans); font-size:0.85rem;
+      font-weight:600; cursor:pointer; border-radius:9px; transition:all 0.2s;
+    }
+    .tab-btn.active { background:var(--accent); color:#0f1115; }
+    .tab-content { display:none; width:100%; max-width:520px; }
+    .tab-content.active { display:block; }
 
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: var(--font-sans);
-            line-height: 1.6;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 40px 20px;
-            min-height: 100vh;
-        }
+    /* CARDS */
+    .card {
+      background:var(--card-bg); border:1px solid var(--border);
+      border-radius:20px; padding:28px; margin-bottom:16px;
+    }
+    .card-title {
+      font-family:var(--serif); font-size:1.3rem; margin-bottom:16px; color:var(--accent);
+    }
 
-        header {
-            text-align: center;
-            margin-bottom: 60px;
-        }
+    /* TIMER */
+    .timer-display {
+      font-family:var(--serif); font-size:3.5rem; font-weight:300;
+      text-align:center; margin:16px 0; font-variant-numeric:tabular-nums;
+      letter-spacing:-0.01em;
+    }
+    .controls { display:flex; justify-content:center; gap:12px; margin-top:20px; }
+    .btn {
+      background:var(--accent); color:#0f1115; border:none;
+      padding:14px 28px; border-radius:999px; font-weight:700;
+      font-size:0.95rem; cursor:pointer; font-family:var(--sans);
+      display:inline-flex; align-items:center; gap:8px; transition:all 0.2s;
+    }
+    .btn:hover { filter:brightness(1.1); transform:translateY(-1px); }
+    .btn.outline {
+      background:transparent; border:1px solid var(--border);
+      color:var(--text);
+    }
+    .btn.outline:hover { background:rgba(255,255,255,0.05); transform:translateY(-1px); }
+    .btn.danger { background:var(--red); color:#fff; }
+    .btn.sm { padding:8px 16px; font-size:0.8rem; }
 
-        h1 {
-            font-family: var(--font-serif);
-            font-size: 3rem;
-            color: var(--accent);
-            letter-spacing: -0.02em;
-            margin-bottom: 8px;
-        }
+    /* STATS GRID */
+    .stats-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:16px; }
+    .stat-card {
+      background:var(--accent-soft); border:1px solid rgba(255,216,107,0.12);
+      border-radius:14px; padding:14px;
+    }
+    .stat-label { font-size:0.68rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.6; margin-bottom:4px; }
+    .stat-value { font-family:var(--serif); font-size:1.2rem; font-weight:600; line-height:1.2; }
 
-        .subtitle {
-            text-transform: uppercase;
-            letter-spacing: 0.2em;
-            font-size: 0.8rem;
-            opacity: 0.6;
-        }
+    /* STREAK + GOAL */
+    .streak-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+    .streak-card {
+      background:rgba(107,255,184,0.07); border:1px solid rgba(107,255,184,0.12);
+      border-radius:14px; padding:14px;
+    }
+    .streak-card .stat-value { color:var(--green); }
+    .goal-section { margin-bottom:16px; }
+    .goal-bar-wrap { background:var(--border); border-radius:999px; height:8px; margin:8px 0; overflow:hidden; }
+    .goal-bar { background:var(--accent); height:100%; border-radius:999px; transition:width 0.6s ease; }
+    .goal-meta { display:flex; justify-content:space-between; font-size:0.78rem; opacity:0.6; }
+    .goal-input-row { display:flex; gap:8px; align-items:center; margin-top:10px; }
+    .goal-input-row input {
+      background:var(--bg); border:1px solid var(--border); color:var(--text);
+      border-radius:8px; padding:6px 10px; font-size:0.85rem; font-family:var(--sans);
+      width:90px;
+    }
 
-        .main-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 48px;
-            width: 100%;
-            max-width: 500px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.4);
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
+    /* YEARLY */
+    .year-item {
+      border:1px solid var(--border); border-radius:12px; padding:14px 16px;
+      margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;
+    }
+    .year-item.current { border-color:rgba(255,216,107,0.3); background:var(--accent-soft); }
+    .year-label { font-size:0.8rem; opacity:0.6; }
+    .year-total { font-family:var(--serif); font-size:1.1rem; font-weight:600; }
+    .year-avg { font-size:0.75rem; opacity:0.6; margin-top:2px; }
+    .trend { font-size:1rem; margin-left:8px; }
 
-        .timer-display {
-            font-family: var(--font-serif);
-            font-size: 3.6rem;
-            font-weight: 300;
-            margin: 20px 0;
-            font-variant-numeric: tabular-nums;
-            letter-spacing: -0.01em;
-        }
+    /* LOG FORM */
+    .time-inputs { display:flex; gap:8px; margin-bottom:14px; }
+    .time-field { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
+    .time-field label { font-size:0.68rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.6; }
+    .time-field input {
+      width:100%; text-align:center; background:var(--bg);
+      border:1px solid var(--border); color:var(--text); border-radius:10px;
+      padding:10px 4px; font-size:1.1rem; font-family:var(--serif);
+      font-variant-numeric:tabular-nums;
+    }
+    .time-field input:focus { outline:none; border-color:var(--accent); }
+    .form-row { margin-bottom:14px; }
+    .form-row label { font-size:0.78rem; opacity:0.6; display:block; margin-bottom:6px; }
+    .form-row input, .form-row textarea {
+      width:100%; background:var(--bg); border:1px solid var(--border);
+      color:var(--text); border-radius:10px; padding:10px 14px;
+      font-size:0.9rem; font-family:var(--sans);
+    }
+    .form-row input:focus, .form-row textarea:focus { outline:none; border-color:var(--accent); }
+    .form-row textarea { resize:vertical; min-height:70px; }
 
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 16px;
-            margin-top: 32px;
-        }
+    /* HISTORY */
+    .history-scroll { max-height:600px; overflow-y:auto; }
+    .date-group { margin-bottom:12px; border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+    .date-header {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:12px 16px; cursor:pointer; user-select:none;
+      transition:background 0.15s;
+    }
+    .date-header:hover { background:rgba(255,255,255,0.03); }
+    .date-header-left { display:flex; flex-direction:column; }
+    .date-name { font-weight:600; font-size:0.9rem; }
+    .date-meta { font-size:0.75rem; opacity:0.5; margin-top:1px; }
+    .date-header-right { display:flex; align-items:center; gap:10px; }
+    .date-total { font-family:var(--serif); color:var(--accent); font-size:1rem; }
+    .chevron { opacity:0.4; transition:transform 0.2s; font-size:0.8rem; }
+    .date-group.open .chevron { transform:rotate(180deg); }
+    .date-entries { display:none; border-top:1px solid var(--border); }
+    .date-group.open .date-entries { display:block; }
+    .entry-row {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:10px 16px; border-bottom:1px solid var(--border);
+    }
+    .entry-row:last-child { border-bottom:none; }
+    .entry-time { font-size:0.78rem; opacity:0.5; }
+    .entry-dur { font-family:var(--serif); font-size:0.95rem; color:var(--accent); }
+    .entry-notes { font-size:0.78rem; opacity:0.6; margin-top:2px; font-style:italic; }
+    .del-btn {
+      background:transparent; border:none; color:var(--red); cursor:pointer;
+      opacity:0.5; font-size:1rem; padding:4px 8px; line-height:1;
+    }
+    .del-btn:hover { opacity:1; }
 
-        button {
-            background: var(--accent);
-            color: var(--bg);
-            border: none;
-            padding: 16px 32px;
-            border-radius: 999px;
-            font-weight: 700;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            font-family: var(--font-sans);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+    /* TOAST */
+    .toast {
+      position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+      background:#1e2530; border:1px solid var(--accent);
+      color:var(--text); padding:12px 24px; border-radius:12px;
+      font-size:0.9rem; opacity:0; pointer-events:none;
+      transition:opacity 0.3s; z-index:999; white-space:nowrap;
+    }
+    .toast.show { opacity:1; }
 
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(255, 216, 107, 0.2);
-            filter: brightness(1.1);
-        }
+    /* EMPTY */
+    .empty { text-align:center; padding:40px; opacity:0.35; font-style:italic; font-size:0.9rem; }
 
-        button:active { transform: translateY(0); }
-
-        button.stop {
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: var(--text);
-        }
-
-        button.stop:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.4);
-            box-shadow: none;
-        }
-
-        .history-section {
-            width: 100%;
-            max-width: 500px;
-            margin-top: 60px;
-        }
-
-        .history-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding: 0 10px;
-        }
-
-        .history-header h2 {
-            font-family: var(--font-serif);
-            font-size: 1.5rem;
-        }
-
-        .history-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .history-item {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid var(--border);
-            padding: 16px 20px;
-            border-radius: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .item-date {
-            font-size: 0.9rem;
-            opacity: 0.7;
-        }
-
-        .item-duration {
-            font-weight: 700;
-            color: var(--accent);
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .stat-card {
-            background: var(--accent-soft);
-            padding: 16px;
-            border-radius: 16px;
-            border: 1px solid rgba(255, 216, 107, 0.1);
-        }
-
-        .stat-label {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            opacity: 0.6;
-            margin-bottom: 4px;
-        }
-
-        .stat-value {
-            font-family: var(--font-serif);
-            font-size: 1.4rem;
-            font-weight: 600;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            opacity: 0.4;
-            font-style: italic;
-        }
-
-        footer {
-            margin-top: auto;
-            padding-top: 60px;
-            font-size: 0.8rem;
-            opacity: 0.4;
-        }
-
-        @media (max-width: 480px) {
-            h1 { font-size: 2.2rem; }
-            .timer-display { font-size: 2.6rem; }
-            .main-card { padding: 32px 24px; }
-        }
-    </style>
+    @media (max-width:480px) {
+      h1 { font-size:2.2rem; }
+      .timer-display { font-size:2.8rem; }
+      .stats-grid { grid-template-columns:1fr 1fr; }
+      .stats-grid .stat-card:last-child { grid-column:span 2; }
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <h1>Reading Time</h1>
-        <p class="subtitle">Focus & Mindfulness</p>
-    </header>
+  <header>
+    <h1>Reading Time</h1>
+    <p class="subtitle">Focus &amp; Mindfulness</p>
+  </header>
 
-    <div class="main-card">
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">Total Time</div>
-                <div class="stat-value" id="total-time">0h 00m</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Sessions</div>
-                <div class="stat-value" id="session-count">0</div>
-            </div>
-        </div>
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="timer">Timer</button>
+    <button class="tab-btn" data-tab="log">Log</button>
+    <button class="tab-btn" data-tab="stats">Stats</button>
+    <button class="tab-btn" data-tab="history">History</button>
+  </nav>
 
-        <div class="timer-display" id="display">00:00:00.00</div>
-        
-        <div class="controls">
-            <button id="start-btn">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                <span>Start Session</span>
-            </button>
-            <button id="stop-btn" class="stop" style="display: none;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h12v12H6z"/></svg>
-                <span>End Session</span>
-            </button>
-        </div>
+  <!-- TIMER TAB -->
+  <div id="tab-timer" class="tab-content active">
+    <div class="card">
+      <div class="timer-display" id="display">00:00:00.00</div>
+      <div class="controls">
+        <button class="btn" id="start-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          Start
+        </button>
+        <button class="btn outline" id="stop-btn" style="display:none">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h12v12H6z"/></svg>
+          End Session
+        </button>
+      </div>
     </div>
+  </div>
 
-    <div class="history-section">
-        <div class="history-header">
-            <h2>Recent Sessions</h2>
-            <button id="clear-btn" class="stop" style="padding: 4px 12px; font-size: 0.7rem; border-radius: 8px;">Clear All</button>
-        </div>
-        <div id="history-list" class="history-list">
-            <!-- Items injected here -->
-        </div>
+  <!-- LOG TAB -->
+  <div id="tab-log" class="tab-content">
+    <div class="card">
+      <div class="card-title">Log a Session</div>
+      <div class="time-inputs">
+        <div class="time-field"><label>Hours</label><input type="number" id="log-h" min="0" max="23" value="0" placeholder="0"></div>
+        <div class="time-field"><label>Min</label><input type="number" id="log-m" min="0" max="59" value="0" placeholder="0"></div>
+        <div class="time-field"><label>Sec</label><input type="number" id="log-s" min="0" max="59" value="0" placeholder="0"></div>
+        <div class="time-field"><label>1/100s</label><input type="number" id="log-cs" min="0" max="99" value="0" placeholder="0"></div>
+      </div>
+      <div class="form-row">
+        <label>Date</label>
+        <input type="date" id="log-date">
+      </div>
+      <div class="form-row">
+        <label>Notes (optional)</label>
+        <textarea id="log-notes" placeholder="What did you read?" maxlength="500"></textarea>
+      </div>
+      <button class="btn" id="log-submit" style="width:100%;justify-content:center">Save Session</button>
     </div>
+  </div>
 
-    <footer>
-        &copy; 2026 Zachary Moritz &bull; Designed by Aurelia
-    </footer>
+  <!-- STATS TAB -->
+  <div id="tab-stats" class="tab-content">
+    <div class="card">
+      <div class="card-title">This Period</div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">Today</div><div class="stat-value" id="stat-today">—</div></div>
+        <div class="stat-card"><div class="stat-label">This Week</div><div class="stat-value" id="stat-week">—</div></div>
+        <div class="stat-card"><div class="stat-label">All Time</div><div class="stat-value" id="stat-all">—</div></div>
+      </div>
+      <div class="streak-grid">
+        <div class="streak-card"><div class="stat-label">🔥 Current Streak</div><div class="stat-value" id="stat-streak-cur">—</div></div>
+        <div class="streak-card"><div class="stat-label">🏆 Best Streak</div><div class="stat-value" id="stat-streak-best">—</div></div>
+      </div>
+    </div>
+    <div class="card goal-section">
+      <div class="card-title">Monthly Goal</div>
+      <div class="goal-meta">
+        <span id="goal-progress-label">0 min of <span id="goal-target-label">—</span></span>
+        <span id="goal-pct">0%</span>
+      </div>
+      <div class="goal-bar-wrap"><div class="goal-bar" id="goal-bar" style="width:0%"></div></div>
+      <div class="goal-input-row">
+        <input type="number" id="goal-input" placeholder="Goal (min)" min="1">
+        <button class="btn sm" id="goal-save">Set Goal</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Year by Year</div>
+      <div id="yearly-list"></div>
+    </div>
+  </div>
 
-    <script>
-        let startTime;
-        let timerInterval;
-        let elapsedMs = 0;
-        let isRunning = false;
+  <!-- HISTORY TAB -->
+  <div id="tab-history" class="tab-content">
+    <div class="card" style="padding:16px">
+      <div class="history-scroll" id="history-list"></div>
+    </div>
+  </div>
 
-        const display = document.getElementById('display');
-        const startBtn = document.getElementById('start-btn');
-        const stopBtn = document.getElementById('stop-btn');
-        const historyList = document.getElementById('history-list');
-        const totalTimeDisplay = document.getElementById('total-time');
-        const sessionCountDisplay = document.getElementById('session-count');
-        const clearBtn = document.getElementById('clear-btn');
+  <div id="toast" class="toast"></div>
 
-        function formatTime(ms) {
-            const totalHundredths = Math.floor(ms / 10);
-            const hundredths = totalHundredths % 100;
-            const totalSecs = Math.floor(ms / 1000);
-            const hrs = Math.floor(totalSecs / 3600);
-            const mins = Math.floor((totalSecs % 3600) / 60);
-            const secs = totalSecs % 60;
-            const hms = [hrs, mins, secs].map(v => v < 10 ? '0' + v : v).join(':');
-            return hms + '.' + (hundredths < 10 ? '0' + hundredths : hundredths);
+  <script>
+    // ─── State ──────────────────────────────────────────────────────────────
+    let allLogs = [];
+    const TZ_OFFSET = -new Date().getTimezoneOffset(); // in minutes
+
+    // ─── Utilities ──────────────────────────────────────────────────────────
+    function formatDuration(minutes) {
+      if (!minutes || minutes <= 0) return '0 min';
+      let rem = minutes;
+      const mo = Math.floor(rem / 43200); rem -= mo * 43200;
+      const wk = Math.floor(rem / 10080); rem -= wk * 10080;
+      const dy = Math.floor(rem / 1440);  rem -= dy * 1440;
+      const hr = Math.floor(rem / 60);    rem -= hr * 60;
+      const mn = Math.floor(rem);         rem -= mn;
+      const sc = Math.round(rem * 60);
+      const parts = [];
+      if (mo) parts.push(mo + 'mo');
+      if (wk) parts.push(wk + 'w');
+      if (dy) parts.push(dy + 'd');
+      if (hr) parts.push(hr + 'h');
+      if (mn) parts.push(mn + 'm');
+      if (sc && !mo && !wk && !dy) parts.push(sc + 's');
+      return parts.length ? parts.join(' ') : '0 min';
+    }
+
+    function formatTimerMs(ms) {
+      const h100 = Math.floor(ms / 10) % 100;
+      const s = Math.floor(ms / 1000);
+      const hr = Math.floor(s / 3600);
+      const mn = Math.floor((s % 3600) / 60);
+      const sc = s % 60;
+      return [hr,mn,sc].map(v => String(v).padStart(2,'0')).join(':')
+        + '.' + String(h100).padStart(2,'0');
+    }
+
+    function localDateStr(isoStr) {
+      const d = new Date(new Date(isoStr).getTime() + TZ_OFFSET * 60000);
+      return d.toISOString().slice(0, 10);
+    }
+
+    function dayLabel(dateStr) {
+      const d = new Date(dateStr + 'T12:00:00Z');
+      return d.toLocaleDateString(undefined, { weekday:'long', month:'short', day:'numeric', year:'numeric', timeZone:'UTC' });
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // ─── API ────────────────────────────────────────────────────────────────
+    async function loadLogs() {
+      try {
+        const res = await fetch('/api/reading-logs');
+        const data = await res.json();
+        allLogs = data.logs || [];
+      } catch (e) {
+        allLogs = [];
+      }
+      renderAll();
+    }
+
+    async function postLog(minutes, notes, logged_at) {
+      const res = await fetch('/api/reading-logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ minutes, notes: notes || null, logged_at })
+      });
+      return res.ok;
+    }
+
+    async function deleteLog(id) {
+      const res = await fetch('/api/reading-logs?id=' + encodeURIComponent(id), { method: 'DELETE' });
+      if (res.ok) {
+        allLogs = allLogs.filter(l => l.id !== id);
+        renderAll();
+        showToast('Entry deleted.');
+      }
+    }
+
+    // ─── Computed ───────────────────────────────────────────────────────────
+    function computeStats() {
+      const now = new Date(Date.now() + TZ_OFFSET * 60000);
+      const todayStr = now.toISOString().slice(0, 10);
+      const dow = now.getUTCDay();
+      const daysBack = (dow + 6) % 7;
+      const weekStart = new Date(now);
+      weekStart.setUTCDate(now.getUTCDate() - daysBack);
+      const weekStr = weekStart.toISOString().slice(0, 10);
+
+      let today = 0, week = 0, all = 0;
+      for (const l of allLogs) {
+        const d = localDateStr(l.logged_at);
+        all += l.minutes;
+        if (d === todayStr) today += l.minutes;
+        if (d >= weekStr) week += l.minutes;
+      }
+      return { today, week, all };
+    }
+
+    function computeStreaks() {
+      const dates = new Set(allLogs.map(l => localDateStr(l.logged_at)));
+      const sorted = [...dates].sort();
+      if (!sorted.length) return { current: 0, best: 0 };
+
+      const now = new Date(Date.now() + TZ_OFFSET * 60000);
+      const todayStr = now.toISOString().slice(0, 10);
+      const yesterday = new Date(now); yesterday.setUTCDate(now.getUTCDate() - 1);
+      const yStr = yesterday.toISOString().slice(0, 10);
+
+      let current = 0;
+      const anchor = dates.has(todayStr) ? todayStr : dates.has(yStr) ? yStr : null;
+      if (anchor) {
+        let d = new Date(anchor + 'T12:00:00Z');
+        while (dates.has(d.toISOString().slice(0, 10))) {
+          current++;
+          d.setUTCDate(d.getUTCDate() - 1);
         }
+      }
 
-        function formatDuration(s) {
-            if (s < 60) return s + 's';
-            const mins = Math.floor(s / 60);
-            const hrs = Math.floor(mins / 60);
-            if (hrs > 0) return hrs + 'h ' + (mins % 60) + 'm';
-            return mins + 'm';
+      let best = 1, cur = 1;
+      for (let i = 1; i < sorted.length; i++) {
+        const diff = (new Date(sorted[i] + 'T12:00:00Z') - new Date(sorted[i-1] + 'T12:00:00Z')) / 86400000;
+        cur = diff === 1 ? cur + 1 : 1;
+        if (cur > best) best = cur;
+      }
+      return { current, best: Math.max(best, current) };
+    }
+
+    function computeYearly() {
+      if (!allLogs.length) return [];
+      const sorted = [...allLogs].sort((a,b) => new Date(a.logged_at) - new Date(b.logged_at));
+      const first = new Date(sorted[0].logged_at);
+      const now = new Date();
+      const years = [];
+      let start = new Date(first);
+      while (start <= now) {
+        const end = new Date(start);
+        end.setDate(end.getDate() + 365);
+        const inYear = allLogs.filter(l => { const d = new Date(l.logged_at); return d >= start && d < end; });
+        const totalMins = inYear.reduce((s, l) => s + l.minutes, 0);
+        const elapsed = Math.min(365, (now - start) / 86400000);
+        years.push({ start: new Date(start), end: new Date(end), totalMins, avgPerDay: elapsed > 0 ? totalMins / elapsed : 0 });
+        start = new Date(end);
+      }
+      return years.reverse();
+    }
+
+    function groupByDate(logs) {
+      const map = {};
+      for (const l of logs) {
+        const d = localDateStr(l.logged_at);
+        if (!map[d]) map[d] = { dateStr: d, entries: [], total: 0 };
+        map[d].entries.push(l);
+        map[d].total += l.minutes;
+      }
+      return Object.values(map).sort((a,b) => b.dateStr.localeCompare(a.dateStr));
+    }
+
+    // ─── Render ─────────────────────────────────────────────────────────────
+    function renderAll() {
+      renderStats();
+      renderHistory();
+    }
+
+    function renderStats() {
+      const s = computeStats();
+      document.getElementById('stat-today').textContent = formatDuration(s.today);
+      document.getElementById('stat-week').textContent = formatDuration(s.week);
+      document.getElementById('stat-all').textContent = formatDuration(s.all);
+
+      const sk = computeStreaks();
+      document.getElementById('stat-streak-cur').textContent = sk.current + (sk.current === 1 ? ' day' : ' days');
+      document.getElementById('stat-streak-best').textContent = sk.best + (sk.best === 1 ? ' day' : ' days');
+
+      // Goal
+      const goalMin = parseInt(localStorage.getItem('reading_goal_min') || '0');
+      const now = new Date(Date.now() + TZ_OFFSET * 60000);
+      const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+      const monthMins = allLogs.filter(l => new Date(l.logged_at) >= monthStart).reduce((s,l) => s + l.minutes, 0);
+      if (goalMin > 0) {
+        const pct = Math.min(100, Math.round(monthMins / goalMin * 100));
+        document.getElementById('goal-bar').style.width = pct + '%';
+        document.getElementById('goal-pct').textContent = pct + '%';
+        document.getElementById('goal-progress-label').innerHTML = formatDuration(monthMins) + ' of <span id="goal-target-label">' + formatDuration(goalMin) + '</span>';
+        document.getElementById('goal-input').value = goalMin;
+      } else {
+        document.getElementById('goal-bar').style.width = '0%';
+        document.getElementById('goal-pct').textContent = 'No goal set';
+        document.getElementById('goal-progress-label').innerHTML = 'Set a monthly reading goal below';
+      }
+
+      // Yearly
+      const years = computeYearly();
+      const yl = document.getElementById('yearly-list');
+      if (!years.length) { yl.innerHTML = '<div class="empty">No data yet.</div>'; return; }
+      const maxAvg = Math.max(...years.map(y => y.avgPerDay));
+      yl.innerHTML = years.map((yr, i) => {
+        const isCurrent = i === 0;
+        const prev = years[i + 1];
+        let trend = '';
+        if (prev && prev.avgPerDay > 0) {
+          const delta = yr.avgPerDay - prev.avgPerDay;
+          trend = delta > 0.5 ? '<span class="trend">↑</span>' : delta < -0.5 ? '<span class="trend" style="color:var(--red)">↓</span>' : '<span class="trend">→</span>';
         }
+        const startLabel = yr.start.toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' });
+        const endLabel = yr.end > new Date() ? 'present' : yr.end.toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' });
+        return `<div class="year-item${isCurrent ? ' current' : ''}">
+          <div>
+            <div class="year-label">Year ${years.length - i} · ${startLabel} – ${endLabel}</div>
+            <div class="year-total">${formatDuration(yr.totalMins)} ${trend}</div>
+            <div class="year-avg">${formatDuration(yr.avgPerDay)} / day avg</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
 
-        function updateDisplay() {
-            display.textContent = formatTime(elapsedMs);
-        }
+    function renderHistory() {
+      const list = document.getElementById('history-list');
+      const groups = groupByDate(allLogs).slice(0, 15);
+      if (!groups.length) { list.innerHTML = '<div class="empty">No sessions logged yet.</div>'; return; }
+      list.innerHTML = groups.map(g => {
+        const multi = g.entries.length > 1;
+        const entries = g.entries.sort((a,b) => new Date(b.logged_at) - new Date(a.logged_at));
+        const firstNotes = entries[0].notes ? `<div class="entry-notes">${entries[0].notes}</div>` : '';
+        const entriesHtml = entries.map(e => {
+          const t = new Date(new Date(e.logged_at).getTime() + TZ_OFFSET * 60000)
+            .toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit' });
+          return `<div class="entry-row">
+            <div>
+              <div style="display:flex;gap:10px;align-items:center">
+                <span class="entry-time">${t}</span>
+                <span class="entry-dur">${formatDuration(e.minutes)}</span>
+              </div>
+              ${e.notes ? `<div class="entry-notes">${e.notes}</div>` : ''}
+            </div>
+            <button class="del-btn" onclick="confirmDelete('${e.id}')">✕</button>
+          </div>`;
+        }).join('');
+        return `<div class="date-group${multi ? '' : ' open'}" id="dg-${g.dateStr}">
+          <div class="date-header" onclick="toggleGroup('${g.dateStr}')">
+            <div class="date-header-left">
+              <span class="date-name">${dayLabel(g.dateStr)}</span>
+              <span class="date-meta">${g.entries.length} session${g.entries.length > 1 ? 's' : ''}${!multi && entries[0].notes ? ' · ' + entries[0].notes : ''}</span>
+            </div>
+            <div class="date-header-right">
+              <span class="date-total">${formatDuration(g.total)}</span>
+              ${multi ? '<span class="chevron">▼</span>' : ''}
+            </div>
+          </div>
+          <div class="date-entries">${entriesHtml}</div>
+        </div>`;
+      }).join('');
+    }
 
-        function startTimer() {
-            if (isRunning) return;
-            isRunning = true;
-            startTime = Date.now() - elapsedMs;
-            timerInterval = setInterval(() => {
-                elapsedMs = Date.now() - startTime;
-                updateDisplay();
-            }, 10);
-            startBtn.style.display = 'none';
-            stopBtn.style.display = 'inline-flex';
-        }
+    // ─── Interactions ────────────────────────────────────────────────────────
+    function toggleGroup(dateStr) {
+      document.getElementById('dg-' + dateStr).classList.toggle('open');
+    }
 
-        async function stopTimer() {
-            if (!isRunning) return;
-            isRunning = false;
-            clearInterval(timerInterval);
+    function confirmDelete(id) {
+      if (confirm('Delete this entry?')) deleteLog(id);
+    }
 
-            const durationSecs = Math.floor(elapsedMs / 1000);
-            const loggedAt = new Date().toISOString();
-            elapsedMs = 0;
-            updateDisplay();
-            startBtn.style.display = 'inline-flex';
-            stopBtn.style.display = 'none';
+    // ─── Timer ──────────────────────────────────────────────────────────────
+    let startTime, timerInterval, elapsedMs = 0, isRunning = false;
+    const display = document.getElementById('display');
 
-            if (durationSecs >= 1) {
-                const minutes = durationSecs / 60;
-                try {
-                    await fetch('/api/reading-logs', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ minutes, logged_at: loggedAt })
-                    });
-                } catch (e) {
-                    // fallback: save to localStorage
-                    const sessions = JSON.parse(localStorage.getItem('reading_sessions') || '[]');
-                    sessions.unshift({ date: loggedAt, duration: durationSecs });
-                    localStorage.setItem('reading_sessions', JSON.stringify(sessions.slice(0, 50)));
-                }
-            }
+    function startTimer() {
+      if (isRunning) return;
+      isRunning = true;
+      startTime = Date.now() - elapsedMs;
+      timerInterval = setInterval(() => {
+        elapsedMs = Date.now() - startTime;
+        display.textContent = formatTimerMs(elapsedMs);
+      }, 10);
+      document.getElementById('start-btn').style.display = 'none';
+      document.getElementById('stop-btn').style.display = 'inline-flex';
+    }
 
-            await loadHistory();
-        }
+    async function stopTimer() {
+      if (!isRunning) return;
+      isRunning = false;
+      clearInterval(timerInterval);
+      const secs = Math.floor(elapsedMs / 1000);
+      const loggedAt = new Date().toISOString();
+      elapsedMs = 0;
+      display.textContent = formatTimerMs(0);
+      document.getElementById('start-btn').style.display = 'inline-flex';
+      document.getElementById('stop-btn').style.display = 'none';
+      if (secs >= 1) {
+        await postLog(secs / 60, null, loggedAt);
+        showToast('Session saved — ' + formatDuration(secs / 60));
+        await loadLogs();
+      }
+    }
 
-        async function loadHistory() {
-            historyList.innerHTML = '<div class="empty-state">Loading history…</div>';
-            let sessions = [];
+    document.getElementById('start-btn').addEventListener('click', startTimer);
+    document.getElementById('stop-btn').addEventListener('click', stopTimer);
 
-            try {
-                const res = await fetch('/api/reading-logs');
-                const data = await res.json();
-                // D1 logs: { id, minutes, notes, logged_at } — convert minutes → seconds
-                sessions = (data.logs || []).map(l => ({
-                    date: l.logged_at,
-                    duration: Math.round(l.minutes * 60),
-                    notes: l.notes
-                }));
-            } catch (e) {
-                // fallback to localStorage
-                sessions = JSON.parse(localStorage.getItem('reading_sessions') || '[]');
-            }
+    // ─── Log Form ────────────────────────────────────────────────────────────
+    document.getElementById('log-date').value = new Date().toISOString().slice(0, 10);
 
-            historyList.innerHTML = '';
-            let total = 0;
+    document.getElementById('log-submit').addEventListener('click', async () => {
+      const h  = parseInt(document.getElementById('log-h').value)  || 0;
+      const m  = parseInt(document.getElementById('log-m').value)  || 0;
+      const s  = parseInt(document.getElementById('log-s').value)  || 0;
+      const cs = parseInt(document.getElementById('log-cs').value) || 0;
+      const minutes = h * 60 + m + s / 60 + cs / 6000;
+      if (minutes <= 0) { showToast('Enter a duration > 0'); return; }
+      if (minutes > 1440) { showToast('Duration cannot exceed 24 hours'); return; }
+      const dateVal = document.getElementById('log-date').value || new Date().toISOString().slice(0, 10);
+      const logged_at = new Date(dateVal + 'T12:00:00.000Z').toISOString();
+      const notes = document.getElementById('log-notes').value.trim();
+      const btn = document.getElementById('log-submit');
+      btn.disabled = true; btn.textContent = 'Saving…';
+      const ok = await postLog(minutes, notes, logged_at);
+      btn.disabled = false; btn.textContent = 'Save Session';
+      if (ok) {
+        showToast('✓ Session saved — ' + formatDuration(minutes));
+        document.getElementById('log-h').value = 0;
+        document.getElementById('log-m').value = 0;
+        document.getElementById('log-s').value = 0;
+        document.getElementById('log-cs').value = 0;
+        document.getElementById('log-notes').value = '';
+        document.getElementById('log-date').value = new Date().toISOString().slice(0, 10);
+        await loadLogs();
+      } else {
+        showToast('Error saving — try again');
+      }
+    });
 
-            if (sessions.length === 0) {
-                historyList.innerHTML = '<div class="empty-state">No sessions logged yet. Pick up a book and start tracking.</div>';
-            } else {
-                sessions.forEach(session => {
-                    total += session.duration;
-                    const date = new Date(session.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-                    const div = document.createElement('div');
-                    div.className = 'history-item';
-                    div.innerHTML = `
-                        <span class="item-date">${date}${session.notes ? ' — ' + session.notes : ''}</span>
-                        <span class="item-duration">${formatDuration(session.duration)}</span>
-                    `;
-                    historyList.appendChild(div);
-                });
-            }
+    // ─── Goal ────────────────────────────────────────────────────────────────
+    document.getElementById('goal-save').addEventListener('click', () => {
+      const v = parseInt(document.getElementById('goal-input').value);
+      if (v > 0) {
+        localStorage.setItem('reading_goal_min', v);
+        renderStats();
+        showToast('Goal set: ' + formatDuration(v) + ' / month');
+      }
+    });
 
-            totalTimeDisplay.textContent = formatDuration(total);
-            sessionCountDisplay.textContent = sessions.length;
-        }
+    // ─── Tabs ────────────────────────────────────────────────────────────────
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+      });
+    });
 
-        startBtn.addEventListener('click', startTimer);
-        stopBtn.addEventListener('click', stopTimer);
-        clearBtn.addEventListener('click', () => {
-            if (confirm('Clear local backup sessions?')) {
-                localStorage.removeItem('reading_sessions');
-            }
-        });
-
-        loadHistory();
-    </script>
+    // ─── Init ────────────────────────────────────────────────────────────────
+    loadLogs();
+  </script>
 </body>
 </html>
