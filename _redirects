@@ -1,0 +1,5 @@
+# Fix old broken redirect paths
+/login/backoffice.html  /backoffice  301
+/login/backoffice       /backoffice  301
+/login/login.html       /login       301
+/login/register.html    /register    301
