@@ -211,11 +211,7 @@
   <div id="tab-timer" class="tab-content active">
     <div class="card">
       <div class="timer-display" id="display">00:00:00.00</div>
-      <div class="form-row" style="margin-top:16px">
-        <label>Notes (optional)</label>
-        <textarea id="timer-notes" placeholder="What did you read?" maxlength="500"></textarea>
-      </div>
-      <div class="controls">
+      <div class="controls" id="timer-controls">
         <button class="btn" id="start-btn">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
           Start
@@ -224,6 +220,16 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h12v12H6z"/></svg>
           End Session
         </button>
+      </div>
+      <div id="timer-save-panel" style="display:none;margin-top:16px">
+        <div class="form-row">
+          <label>What did you read?</label>
+          <textarea id="timer-notes" placeholder="Optional notes…" maxlength="500"></textarea>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn" id="timer-save-btn" style="flex:1;justify-content:center">Save Session</button>
+          <button class="btn outline" id="timer-resume-btn">Resume</button>
+        </div>
       </div>
     </div>
   </div>
@@ -558,7 +564,7 @@
     }
 
     // ─── Timer ──────────────────────────────────────────────────────────────
-    let startTime, timerInterval, elapsedMs = 0, isRunning = false;
+    let startTime, timerInterval, elapsedMs = 0, isRunning = false, pausedAt = null;
     const display = document.getElementById('display');
 
     function startTimer() {
@@ -571,29 +577,54 @@
       }, 10);
       document.getElementById('start-btn').style.display = 'none';
       document.getElementById('stop-btn').style.display = 'inline-flex';
+      document.getElementById('timer-save-panel').style.display = 'none';
     }
 
-    async function stopTimer() {
+    function pauseTimer() {
+      // Stop the clock but don't save yet — show notes panel
       if (!isRunning) return;
       isRunning = false;
       clearInterval(timerInterval);
+      pausedAt = new Date().toISOString();
+      document.getElementById('stop-btn').style.display = 'none';
+      document.getElementById('start-btn').style.display = 'none';
+      document.getElementById('timer-save-panel').style.display = 'block';
+      document.getElementById('timer-notes').focus();
+    }
+
+    function resumeTimer() {
+      document.getElementById('timer-save-panel').style.display = 'none';
+      document.getElementById('timer-notes').value = '';
+      startTimer();
+    }
+
+    async function saveTimerSession() {
       const secs = Math.floor(elapsedMs / 1000);
-      const loggedAt = new Date().toISOString();
-      elapsedMs = 0;
+      if (secs < 1) { resetTimer(); return; }
+      const notes = document.getElementById('timer-notes').value.trim() || null;
+      const btn = document.getElementById('timer-save-btn');
+      btn.disabled = true; btn.textContent = 'Saving…';
+      await postLog(secs / 60, notes, pausedAt);
+      showToast('Session saved — ' + formatDuration(secs / 60));
+      resetTimer();
+      await loadLogs();
+    }
+
+    function resetTimer() {
+      elapsedMs = 0; pausedAt = null;
       display.textContent = formatTimerMs(0);
+      document.getElementById('timer-save-panel').style.display = 'none';
+      document.getElementById('timer-notes').value = '';
+      document.getElementById('timer-save-btn').disabled = false;
+      document.getElementById('timer-save-btn').textContent = 'Save Session';
       document.getElementById('start-btn').style.display = 'inline-flex';
       document.getElementById('stop-btn').style.display = 'none';
-      if (secs >= 1) {
-        const notes = document.getElementById('timer-notes').value.trim() || null;
-        document.getElementById('timer-notes').value = '';
-        await postLog(secs / 60, notes, loggedAt);
-        showToast('Session saved — ' + formatDuration(secs / 60));
-        await loadLogs();
-      }
     }
 
     document.getElementById('start-btn').addEventListener('click', startTimer);
-    document.getElementById('stop-btn').addEventListener('click', stopTimer);
+    document.getElementById('stop-btn').addEventListener('click', pauseTimer);
+    document.getElementById('timer-save-btn').addEventListener('click', saveTimerSession);
+    document.getElementById('timer-resume-btn').addEventListener('click', resumeTimer);
 
     // ─── Log Form ────────────────────────────────────────────────────────────
     document.getElementById('log-date').value = new Date().toISOString().slice(0, 10);
