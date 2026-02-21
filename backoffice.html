@@ -197,7 +197,7 @@
 
     // Auth guard — redirect if not logged in
     if (!localStorage.getItem(AUTH_KEY)) {
-        window.location.replace('/login.html');
+        window.location.replace('/login');
     }
 
     // Show email in nav + welcome
@@ -211,7 +211,7 @@
     function logout() {
         localStorage.removeItem(AUTH_KEY);
         localStorage.removeItem('userEmail');
-        window.location.href = '/login.html';
+        window.location.href = '/login';
     }
 </script>
 
